@@ -1,12 +1,13 @@
 /**
  * Central route definitions for the Admin Panel.
- * Used for navigation, redirects, and future route protection.
  */
 
 export const routes = {
   dashboard: "/",
   auth: {
     login: "/login",
+    forgotPassword: "/forgot-password",
+    resetPassword: "/reset-password",
   },
   products: "/products",
   collections: "/collections",
@@ -17,7 +18,6 @@ export const routes = {
 
 export type RouteKey = keyof Omit<typeof routes, "auth">;
 
-/** Routes that will require authentication in Phase 2. */
 export const protectedRoutes = [
   routes.dashboard,
   routes.products,
@@ -27,5 +27,22 @@ export const protectedRoutes = [
   routes.analytics,
 ] as const;
 
-/** Routes accessible without authentication (Phase 2). */
-export const publicRoutes = [routes.auth.login] as const;
+export const publicRoutes = [
+  routes.auth.login,
+  routes.auth.forgotPassword,
+  routes.auth.resetPassword,
+] as const;
+
+export function isProtectedRoute(pathname: string): boolean {
+  return protectedRoutes.some((route) =>
+    route === "/"
+      ? pathname === "/"
+      : pathname === route || pathname.startsWith(`${route}/`),
+  );
+}
+
+export function isPublicAuthRoute(pathname: string): boolean {
+  return publicRoutes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
+  );
+}

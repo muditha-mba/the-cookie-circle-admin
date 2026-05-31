@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -11,11 +11,14 @@ import { branding } from "@/config/branding";
 import { env } from "@/config/env";
 import { isNavItemActive, navigation } from "@/config/navigation";
 import { routes } from "@/config/routes";
+import { formatUserRole } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/providers/AuthProvider";
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useAuth();
 
   return (
     <aside
@@ -95,26 +98,63 @@ export function Sidebar() {
 
       <div
         className={cn(
-          "shrink-0 border-t border-border px-4 py-3",
+          "shrink-0 border-t border-border p-3",
           collapsed && "px-2",
         )}
       >
         {!collapsed ? (
-          <div className="space-y-1">
-            <p className="truncate text-xs text-text-muted">{branding.name}</p>
-            {!env.isProduction ? (
-              <p className="truncate text-[11px] uppercase tracking-wide text-text-muted">
-                {env.appEnv}
-              </p>
-            ) : null}
+          <div className="rounded-lg border border-border bg-background px-3 py-2.5">
+            {user ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-surface-hover text-info">
+                    <Shield className="h-3.5 w-3.5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-text-muted">
+                      Signed in as
+                    </p>
+                    <p className="truncate text-sm font-medium text-text-primary">
+                      {formatUserRole(user.role)}
+                    </p>
+                  </div>
+                </div>
+                {!env.isProduction ? (
+                  <p className="truncate pl-8 text-[10px] uppercase tracking-wide text-text-muted">
+                    {env.appEnv}
+                  </p>
+                ) : null}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <p className="truncate text-xs text-text-muted">
+                  {branding.name}
+                </p>
+                {!env.isProduction ? (
+                  <p className="truncate text-[10px] uppercase tracking-wide text-text-muted">
+                    {env.appEnv}
+                  </p>
+                ) : null}
+              </div>
+            )}
           </div>
         ) : (
-          <div className="flex justify-center">
-            <span
-              className="h-2 w-2 rounded-full bg-text-muted"
-              title={env.appEnv}
-              aria-label={`Environment: ${env.appEnv}`}
-            />
+          <div className="flex flex-col items-center gap-2">
+            {user ? (
+              <span
+                className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover text-info"
+                title={formatUserRole(user.role)}
+                aria-label={`Role: ${formatUserRole(user.role)}`}
+              >
+                <Shield className="h-4 w-4" />
+              </span>
+            ) : (
+              <span
+                className="h-2 w-2 rounded-full bg-text-muted"
+                title={env.appEnv}
+                aria-label={`Environment: ${env.appEnv}`}
+              />
+            )}
           </div>
         )}
       </div>

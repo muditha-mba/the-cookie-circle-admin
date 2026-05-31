@@ -1,6 +1,6 @@
 "use client";
 
-import { Moon, Sun } from "lucide-react";
+import { LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 
@@ -16,10 +16,9 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <button
-        type="button"
-        aria-label="Toggle theme"
-        className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-border bg-surface text-text-secondary"
+      <div
+        aria-hidden
+        className="inline-flex h-9 w-[72px] rounded-lg border border-border bg-surface"
       />
     );
   }
@@ -27,16 +26,39 @@ export function ThemeToggle() {
   const isDark = (resolvedTheme ?? theme) === "dark";
 
   return (
-    <button
-      type="button"
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-      className={cn(
-        "inline-flex h-9 w-9 items-center justify-center rounded-md border border-border",
-        "bg-surface text-text-secondary transition-colors hover:bg-surface-hover hover:text-text-primary",
-      )}
+    <div
+      role="group"
+      aria-label="Theme"
+      className="inline-flex items-center gap-0.5 rounded-lg border border-border bg-surface p-1"
     >
-      {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-    </button>
+      <button
+        type="button"
+        aria-label="Light mode"
+        aria-pressed={!isDark}
+        onClick={() => setTheme("light")}
+        className={cn(
+          "inline-flex h-7 w-8 items-center justify-center rounded-md transition-all duration-200",
+          !isDark
+            ? "bg-surface-hover text-text-primary shadow-sm"
+            : "text-text-muted hover:text-text-secondary",
+        )}
+      >
+        <Sun className="h-3.5 w-3.5" />
+      </button>
+      <button
+        type="button"
+        aria-label="Dark mode"
+        aria-pressed={isDark}
+        onClick={() => setTheme("dark")}
+        className={cn(
+          "inline-flex h-7 w-8 items-center justify-center rounded-md transition-all duration-200",
+          isDark
+            ? "bg-surface-hover text-text-primary shadow-sm"
+            : "text-text-muted hover:text-text-secondary",
+        )}
+      >
+        <Moon className="h-3.5 w-3.5" />
+      </button>
+    </div>
   );
 }

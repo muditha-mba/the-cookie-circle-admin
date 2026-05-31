@@ -10,6 +10,8 @@ export {
   type NavItemConfig,
 } from "@/config/navigation";
 export {
+  isProtectedRoute,
+  isPublicAuthRoute,
   protectedRoutes,
   publicRoutes,
   routes,
