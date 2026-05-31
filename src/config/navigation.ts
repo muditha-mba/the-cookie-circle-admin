@@ -1,0 +1,91 @@
+import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Layers,
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+} from "lucide-react";
+
+import { routes } from "@/config/routes";
+
+export type NavBadgeVariant = "default" | "info" | "warning";
+
+export type NavBadge = {
+  label: string;
+  variant?: NavBadgeVariant;
+};
+
+export type NavItemConfig = {
+  /** Stable identifier for module activation in future phases. */
+  id: string;
+  title: string;
+  href: string;
+  icon: LucideIcon;
+  enabled: boolean;
+  badge?: NavBadge;
+  children?: NavItemConfig[];
+};
+
+/**
+ * Primary sidebar navigation structure.
+ * Set `enabled: true` when a module is ready — no sidebar refactor required.
+ */
+export const navigation: NavItemConfig[] = [
+  {
+    id: "dashboard",
+    title: "Dashboard",
+    href: routes.dashboard,
+    icon: LayoutDashboard,
+    enabled: true,
+  },
+  {
+    id: "products",
+    title: "Products",
+    href: routes.products,
+    icon: Package,
+    enabled: false,
+  },
+  {
+    id: "collections",
+    title: "Collections",
+    href: routes.collections,
+    icon: Layers,
+    enabled: false,
+  },
+  {
+    id: "customers",
+    title: "Customers",
+    href: routes.customers,
+    icon: Users,
+    enabled: false,
+  },
+  {
+    id: "orders",
+    title: "Orders",
+    href: routes.orders,
+    icon: ShoppingCart,
+    enabled: false,
+  },
+  {
+    id: "analytics",
+    title: "Analytics",
+    href: routes.analytics,
+    icon: BarChart3,
+    enabled: false,
+  },
+];
+
+export function isNavItemActive(item: NavItemConfig, pathname: string): boolean {
+  if (item.href === routes.dashboard) {
+    return pathname === routes.dashboard;
+  }
+
+  return pathname.startsWith(item.href);
+}
+
+/** Modules not yet enabled — used for dashboard placeholders. */
+export function getUpcomingModules(): NavItemConfig[] {
+  return navigation.filter((item) => !item.enabled && item.id !== "dashboard");
+}
