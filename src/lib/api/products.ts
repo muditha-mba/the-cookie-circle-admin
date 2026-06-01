@@ -15,6 +15,7 @@ export type ProductSummary = {
   yield_quantity: string;
   production_notes: string | null;
   is_active: boolean;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -81,6 +82,7 @@ export type ProductCreate = {
   yield_quantity: number;
   production_notes?: string | null;
   is_active?: boolean;
+  is_public?: boolean;
   recipe_lines?: RecipeLineInput[];
   utility_charge_ids?: string[];
   labour_charge_ids?: string[];

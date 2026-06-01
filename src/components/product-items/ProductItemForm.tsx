@@ -6,6 +6,7 @@ import { useForm } from "react-hook-form";
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
 import type { ProductItemType } from "@/lib/api/product-item-types";
+import type { Supplier } from "@/lib/api/suppliers";
 import {
   productItemSchema,
   type ProductItemFormValues,
@@ -13,6 +14,7 @@ import {
 
 type ProductItemFormProps = {
   itemTypes: ProductItemType[];
+  suppliers: Supplier[];
   defaultValues?: Partial<ProductItemFormValues>;
   submitLabel: string;
   isSubmitting?: boolean;
@@ -22,6 +24,7 @@ type ProductItemFormProps = {
 
 export function ProductItemForm({
   itemTypes,
+  suppliers,
   defaultValues,
   submitLabel,
   isSubmitting = false,
@@ -42,6 +45,7 @@ export function ProductItemForm({
       purchase_price: 0,
       purchase_quantity: 1,
       purchase_unit: "grams",
+      primary_supplier_id: "",
       is_active: true,
       ...defaultValues,
     },
@@ -78,6 +82,26 @@ export function ProductItemForm({
 
       <FormField label="Name" htmlFor="name" error={errors.name?.message}>
         <input id="name" className={formInputClassName} {...register("name")} />
+      </FormField>
+
+      <FormField
+        label="Primary supplier"
+        htmlFor="primary_supplier_id"
+        error={errors.primary_supplier_id?.message}
+        hint="Used for purchase planning. Optional."
+      >
+        <select
+          id="primary_supplier_id"
+          className={formInputClassName}
+          {...register("primary_supplier_id")}
+        >
+          <option value="">No supplier assigned</option>
+          {suppliers.map((supplier) => (
+            <option key={supplier.id} value={supplier.id}>
+              {supplier.supplier_name}
+            </option>
+          ))}
+        </select>
       </FormField>
 
       <FormField

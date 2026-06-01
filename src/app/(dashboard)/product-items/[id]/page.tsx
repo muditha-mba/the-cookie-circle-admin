@@ -106,6 +106,10 @@ export default function ProductItemDetailPage() {
           }
         />
         <DetailField label="Created" value={formatDateTime(data.created_at)} />
+        <DetailField
+          label="Primary supplier"
+          value={data.primary_supplier?.supplier_name ?? "—"}
+        />
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>

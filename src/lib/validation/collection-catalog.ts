@@ -21,6 +21,7 @@ export const collectionSchema = z.object({
   selling_price: z.number().min(0, "Selling price must be zero or greater"),
   buffer_amount: z.number().min(0, "Buffer must be zero or greater"),
   is_active: z.boolean(),
+  is_public: z.boolean(),
   product_lines: z.array(collectionProductLineSchema),
   item_lines: z.array(collectionItemLineSchema),
   utility_charge_ids: z.array(z.string().uuid()),

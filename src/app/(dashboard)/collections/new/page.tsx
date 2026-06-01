@@ -29,6 +29,7 @@ export default function NewCollectionPage() {
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         is_active: values.is_active,
+        is_public: values.is_public,
         product_lines: values.product_lines,
         item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,

@@ -38,6 +38,7 @@ export default function EditProductPage() {
         yield_quantity: values.yield_quantity,
         production_notes: values.production_notes || null,
         is_active: values.is_active,
+        is_public: values.is_public,
         recipe_lines: values.recipe_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,
@@ -87,6 +88,7 @@ export default function EditProductPage() {
           yield_quantity: Number(data.yield_quantity),
           production_notes: data.production_notes ?? "",
           is_active: data.is_active,
+          is_public: data.is_public,
           recipe_lines: data.recipe_lines.map((line) => ({
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),

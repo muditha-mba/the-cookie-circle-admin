@@ -11,6 +11,7 @@ import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
+import { suppliersApi } from "@/lib/api/suppliers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
 
@@ -26,6 +27,11 @@ export default function NewProductItemPage() {
       productItemTypesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
   });
 
+  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
+    queryKey: ["suppliers", "active"],
+    queryFn: () => suppliersApi.listActive(),
+  });
+
   const handleSubmit = async (values: ProductItemFormValues) => {
     setError(null);
     setIsSubmitting(true);
@@ -37,6 +43,7 @@ export default function NewProductItemPage() {
         purchase_price: values.purchase_price,
         purchase_quantity: values.purchase_quantity,
         purchase_unit: values.purchase_unit,
+        primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
       });
       cacheEntitySave(
@@ -62,11 +69,12 @@ export default function NewProductItemPage() {
     >
       <PageActions backHref={routes.productItems.list} className="mb-6" />
 
-      {typesLoading ? (
+      {typesLoading || suppliersLoading ? (
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
       ) : typesData && typesData.items.length > 0 ? (
         <ProductItemForm
           itemTypes={typesData.items}
+          suppliers={suppliers}
           submitLabel="Create product item"
           isSubmitting={isSubmitting}
           error={error}

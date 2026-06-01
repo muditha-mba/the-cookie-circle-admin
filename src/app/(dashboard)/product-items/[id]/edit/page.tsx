@@ -11,6 +11,7 @@ import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
+import { suppliersApi } from "@/lib/api/suppliers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
 
@@ -33,6 +34,11 @@ export default function EditProductItemPage() {
       productItemTypesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
   });
 
+  const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
+    queryKey: ["suppliers", "active"],
+    queryFn: () => suppliersApi.listActive(),
+  });
+
   const handleSubmit = async (values: ProductItemFormValues) => {
     setError(null);
     setIsSubmitting(true);
@@ -44,6 +50,7 @@ export default function EditProductItemPage() {
         purchase_price: values.purchase_price,
         purchase_quantity: values.purchase_quantity,
         purchase_unit: values.purchase_unit,
+        primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
       });
       cacheEntitySave(
@@ -62,7 +69,7 @@ export default function EditProductItemPage() {
     }
   };
 
-  if (isLoading || typesLoading) {
+  if (isLoading || typesLoading || suppliersLoading) {
     return (
       <DashboardPageShell title="Edit Product Item" description="Loading...">
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
@@ -87,6 +94,7 @@ export default function EditProductItemPage() {
       <PageActions backHref={routes.productItems.detail(params.id)} className="mb-6" />
       <ProductItemForm
         itemTypes={typesData.items}
+        suppliers={suppliers}
         defaultValues={{
           item_type_id: data.item_type_id,
           name: data.name,
@@ -94,6 +102,7 @@ export default function EditProductItemPage() {
           purchase_price: Number(data.purchase_price),
           purchase_quantity: Number(data.purchase_quantity),
           purchase_unit: data.purchase_unit,
+          primary_supplier_id: data.primary_supplier_id ?? "",
           is_active: data.is_active,
         }}
         submitLabel="Save changes"

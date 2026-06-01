@@ -110,6 +110,7 @@ export function CollectionForm({
       selling_price: 0,
       buffer_amount: 0,
       is_active: true,
+      is_public: true,
       product_lines: [],
       item_lines: [],
       utility_charge_ids: [],
@@ -291,17 +292,30 @@ export function CollectionForm({
           </FormField>
         </div>
 
-        <FormField label="Status" htmlFor="is_active">
-          <label className="flex items-center gap-2 text-sm text-text-primary">
-            <input
-              id="is_active"
-              type="checkbox"
-              className="h-4 w-4 rounded border-border"
-              {...register("is_active")}
-            />
-            Active
-          </label>
-        </FormField>
+        <div className="flex flex-wrap gap-6">
+          <FormField label="Status" htmlFor="is_active">
+            <label className="flex items-center gap-2 text-sm text-text-primary">
+              <input
+                id="is_active"
+                type="checkbox"
+                className="h-4 w-4 rounded border-border"
+                {...register("is_active")}
+              />
+              Active (operational)
+            </label>
+          </FormField>
+          <FormField label="Visibility" htmlFor="is_public">
+            <label className="flex items-center gap-2 text-sm text-text-primary">
+              <input
+                id="is_public"
+                type="checkbox"
+                className="h-4 w-4 rounded border-border"
+                {...register("is_public")}
+              />
+              Public (customer-facing)
+            </label>
+          </FormField>
+        </div>
 
         <div className="space-y-3 border-t border-border pt-6">
           <div className="flex items-center justify-between gap-3">

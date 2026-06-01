@@ -36,6 +36,7 @@ export default function EditCollectionPage() {
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         is_active: values.is_active,
+        is_public: values.is_public,
         product_lines: values.product_lines,
         item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,
@@ -82,6 +83,7 @@ export default function EditCollectionPage() {
           selling_price: Number(data.selling_price),
           buffer_amount: Number(data.buffer_amount),
           is_active: data.is_active,
+          is_public: data.is_public,
           product_lines: data.product_lines.map((line) => ({
             product_id: line.product_id,
             quantity: Number(line.quantity),

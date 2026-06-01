@@ -1,0 +1,208 @@
+import { apiClient } from "@/lib/api/client";
+import type { ListQueryParams, PaginatedResponse } from "@/lib/api/pagination";
+
+export type OrderSource =
+  | "website"
+  | "whatsapp"
+  | "instagram"
+  | "facebook"
+  | "manual"
+  | "walk_in"
+  | "phone";
+export type PaymentMethod = "cash_on_delivery" | "bank_transfer" | "stripe" | "manual";
+export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
+export type OrderStatus =
+  | "draft"
+  | "pending"
+  | "confirmed"
+  | "preparing"
+  | "ready"
+  | "delivered"
+  | "cancelled";
+
+export type OrderProductLineInput = {
+  product_id: string;
+  quantity: number;
+};
+
+export type OrderCollectionLineInput = {
+  collection_id: string;
+  quantity: number;
+};
+
+export type OrderProductLine = {
+  id: string;
+  product_id: string;
+  quantity: string;
+  product_name_snapshot: string;
+  product_selling_price_snapshot: string;
+  product_cost_snapshot: string;
+  product_profit_snapshot: string;
+  line_revenue_snapshot: string;
+  line_cost_snapshot: string;
+  line_profit_snapshot: string;
+};
+
+export type OrderCollectionLine = {
+  id: string;
+  collection_id: string;
+  quantity: string;
+  collection_name_snapshot: string;
+  collection_selling_price_snapshot: string;
+  collection_cost_snapshot: string;
+  collection_profit_snapshot: string;
+  line_revenue_snapshot: string;
+  line_cost_snapshot: string;
+  line_profit_snapshot: string;
+};
+
+export type OrderFinancialSnapshot = {
+  products_subtotal_snapshot: string;
+  collections_subtotal_snapshot: string;
+  delivery_fee_snapshot: string;
+  total_revenue_snapshot: string;
+  total_cost_snapshot: string;
+  total_profit_snapshot: string;
+  margin_percentage_snapshot: string;
+};
+
+export type OrderFinancialPerformance = {
+  snapshot: OrderFinancialSnapshot;
+  is_historical_snapshot: boolean;
+};
+
+export type OrderStatusEvent = {
+  id: string;
+  status: OrderStatus;
+  created_at: string;
+};
+
+export type OrderLifecycle = {
+  confirmed_at: string | null;
+  preparing_at: string | null;
+  ready_at: string | null;
+  delivered_at: string | null;
+  cancelled_at: string | null;
+};
+
+export type OrderCustomer = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string | null;
+  phone: string | null;
+  address_line_1: string | null;
+  address_line_2: string | null;
+  city: string | null;
+  postal_code: string | null;
+  landmark: string | null;
+};
+
+export type OrderDeliveryArea = {
+  id: string;
+  name: string;
+  pickup_only: boolean;
+};
+
+export type OrderDeliveryFields = {
+  delivery_contact_name: string | null;
+  delivery_phone_primary: string | null;
+  delivery_phone_secondary: string | null;
+  delivery_address_line_1: string | null;
+  delivery_address_line_2: string | null;
+  delivery_city: string | null;
+  delivery_postal_code: string | null;
+  delivery_landmark: string | null;
+  delivery_notes: string | null;
+  delivery_latitude: number | null;
+  delivery_longitude: number | null;
+};
+
+export type OrderSummary = {
+  id: string;
+  order_number: string;
+  customer_id: string;
+  customer_name: string;
+  source: OrderSource;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  status: OrderStatus;
+  requested_delivery_date: string;
+  scheduled_delivery_date: string;
+  total_revenue_snapshot: string;
+  total_profit_snapshot: string;
+  created_at: string;
+};
+
+export type OrderDetail = OrderDeliveryFields & {
+  id: string;
+  order_number: string;
+  customer: OrderCustomer;
+  delivery_area: OrderDeliveryArea | null;
+  source: OrderSource;
+  payment_method: PaymentMethod;
+  payment_status: PaymentStatus;
+  status: OrderStatus;
+  customer_notes: string | null;
+  internal_notes: string | null;
+  requested_delivery_date: string;
+  scheduled_delivery_date: string;
+  financial_performance: OrderFinancialPerformance;
+  product_lines: OrderProductLine[];
+  collection_lines: OrderCollectionLine[];
+  status_timeline: OrderStatusEvent[];
+  lifecycle: OrderLifecycle;
+  created_at: string;
+  updated_at: string;
+};
+
+export type OrderCreate = OrderDeliveryFields & {
+  customer_id: string;
+  delivery_area_id?: string | null;
+  source: OrderSource;
+  payment_method: PaymentMethod;
+  payment_status?: PaymentStatus;
+  status?: OrderStatus;
+  customer_notes?: string | null;
+  internal_notes?: string | null;
+  requested_delivery_date: string;
+  product_lines: OrderProductLineInput[];
+  collection_lines: OrderCollectionLineInput[];
+};
+
+export type OrderUpdate = Partial<
+  Omit<OrderCreate, "customer_id" | "requested_delivery_date">
+> & {
+  requested_delivery_date?: string;
+  scheduled_delivery_date?: string;
+};
+
+export type OrderPreviewRequest = {
+  delivery_area_id?: string | null;
+  product_lines: OrderProductLineInput[];
+  collection_lines: OrderCollectionLineInput[];
+};
+
+export type OrderPreview = OrderFinancialSnapshot & {
+  product_lines: OrderProductLine[];
+  collection_lines: OrderCollectionLine[];
+};
+
+const BASE = "/api/v1/orders";
+
+export const ordersApi = {
+  list: (params?: ListQueryParams) =>
+    apiClient.get<PaginatedResponse<OrderSummary>>(BASE, { params }),
+
+  get: (id: string) => apiClient.get<OrderDetail>(`${BASE}/${id}`),
+
+  create: (payload: OrderCreate) => apiClient.post<OrderDetail>(BASE, payload),
+
+  update: (id: string, payload: OrderUpdate) =>
+    apiClient.patch<OrderDetail>(`${BASE}/${id}`, payload),
+
+  delete: (id: string) => apiClient.delete<void>(`${BASE}/${id}`),
+
+  preview: (payload: OrderPreviewRequest) =>
+    apiClient.post<OrderPreview>(`${BASE}/preview`, payload),
+};

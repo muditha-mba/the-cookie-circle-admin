@@ -31,6 +31,7 @@ export default function NewProductPage() {
         yield_quantity: values.yield_quantity,
         production_notes: values.production_notes || null,
         is_active: values.is_active,
+        is_public: values.is_public,
         recipe_lines: values.recipe_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,

@@ -21,8 +21,32 @@ export const routes = {
     detail: (id: string) => `/collections/${id}`,
     edit: (id: string) => `/collections/${id}/edit`,
   },
-  customers: "/customers",
-  orders: "/orders",
+  businessSettings: "/business-settings",
+  customers: {
+    list: "/customers",
+    create: "/customers/new",
+    detail: (id: string) => `/customers/${id}`,
+    edit: (id: string) => `/customers/${id}/edit`,
+  },
+  deliveryAreas: {
+    list: "/delivery-areas",
+    create: "/delivery-areas/new",
+    detail: (id: string) => `/delivery-areas/${id}`,
+    edit: (id: string) => `/delivery-areas/${id}/edit`,
+  },
+  orders: {
+    list: "/orders",
+    create: "/orders/new",
+    detail: (id: string) => `/orders/${id}`,
+    edit: (id: string) => `/orders/${id}/edit`,
+  },
+  production: "/production",
+  suppliers: {
+    list: "/suppliers",
+    create: "/suppliers/new",
+    detail: (id: string) => `/suppliers/${id}`,
+    edit: (id: string) => `/suppliers/${id}/edit`,
+  },
   analytics: "/analytics",
   productItemTypes: {
     list: "/product-item-types",
@@ -61,6 +85,10 @@ export type RouteKey = keyof Omit<
   | "auth"
   | "products"
   | "collections"
+  | "customers"
+  | "deliveryAreas"
+  | "orders"
+  | "businessSettings"
   | "productItemTypes"
   | "productItems"
   | "utilityCharges"
@@ -71,8 +99,12 @@ export type RouteKey = keyof Omit<
 const protectedPrefixes = [
   routes.products.list,
   routes.collections.list,
-  routes.customers,
-  routes.orders,
+  routes.businessSettings,
+  routes.customers.list,
+  routes.deliveryAreas.list,
+  routes.orders.list,
+  routes.production,
+  routes.suppliers.list,
   routes.analytics,
   routes.productItemTypes.list,
   routes.productItems.list,

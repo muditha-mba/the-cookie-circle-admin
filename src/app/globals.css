@@ -70,3 +70,9 @@ body {
   outline: 2px solid var(--info);
   outline-offset: 2px;
 }
+
+/* Custom delivery pin from /public/map-location-pointer-icon.png */
+.leaflet-marker-icon.delivery-location-marker {
+  border: none;
+  background: transparent;
+}

@@ -19,6 +19,7 @@ export type CollectionSummary = {
   selling_price: string;
   buffer_amount: string;
   is_active: boolean;
+  is_public: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -88,6 +89,7 @@ export type CollectionCreate = {
   selling_price: number;
   buffer_amount?: number;
   is_active?: boolean;
+  is_public?: boolean;
   product_lines?: CollectionProductLineInput[];
   item_lines?: CollectionItemLineInput[];
   utility_charge_ids?: string[];

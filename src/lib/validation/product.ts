@@ -25,6 +25,7 @@ export const productItemSchema = z.object({
   purchase_price: z.number().min(0, "Purchase price must be zero or greater"),
   purchase_quantity: z.number().positive("Purchase quantity must be greater than zero"),
   purchase_unit: z.string().trim().min(1, "Purchase unit is required").max(50),
+  primary_supplier_id: z.string().uuid().optional().or(z.literal("")),
   is_active: z.boolean(),
 });
 
