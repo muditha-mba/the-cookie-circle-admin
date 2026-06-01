@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -11,11 +11,13 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { productItemsApi } from "@/lib/api/product-items";
+import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
 
 export default function ProductItemDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -37,6 +39,9 @@ export default function ProductItemDetailPage() {
     setIsDeleting(true);
     try {
       await productItemsApi.delete(data.id);
+      cacheEntityRemove(queryClient, ["product-item", data.id], ["product-items"], {
+        alsoInvalidate: [["products"]],
+      });
       router.push(routes.productItems.list);
     } catch (err) {
       const apiError = err as ApiError;

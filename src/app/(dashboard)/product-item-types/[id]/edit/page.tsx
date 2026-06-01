@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,11 +10,13 @@ import { ProductItemTypeForm } from "@/components/product-item-types/ProductItem
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
+import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemTypeFormValues } from "@/lib/validation/product";
 
 export default function EditProductItemTypePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -28,11 +30,18 @@ export default function EditProductItemTypePage() {
     setError(null);
     setIsSubmitting(true);
     try {
-      await productItemTypesApi.update(params.id, {
+      const updated = await productItemTypesApi.update(params.id, {
         name: values.name,
         description: values.description || null,
         is_active: values.is_active,
       });
+      cacheEntitySave(
+        queryClient,
+        ["product-item-type", params.id],
+        ["product-item-types"],
+        updated,
+        { alsoInvalidate: [["product-item-types", "all"], ["product-items"]] },
+      );
       router.push(routes.productItemTypes.detail(params.id));
     } catch (err) {
       const apiError = err as ApiError;

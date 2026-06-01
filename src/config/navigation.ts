@@ -83,9 +83,9 @@ export const navigation: NavItemConfig[] = [
   {
     id: "products",
     title: "Products",
-    href: routes.products,
+    href: routes.products.list,
     icon: Package,
-    enabled: false,
+    enabled: true,
   },
   {
     id: "collections",

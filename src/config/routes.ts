@@ -9,7 +9,12 @@ export const routes = {
     forgotPassword: "/forgot-password",
     resetPassword: "/reset-password",
   },
-  products: "/products",
+  products: {
+    list: "/products",
+    create: "/products/new",
+    detail: (id: string) => `/products/${id}`,
+    edit: (id: string) => `/products/${id}/edit`,
+  },
   collections: "/collections",
   customers: "/customers",
   orders: "/orders",
@@ -49,6 +54,7 @@ export const routes = {
 export type RouteKey = keyof Omit<
   typeof routes,
   | "auth"
+  | "products"
   | "productItemTypes"
   | "productItems"
   | "utilityCharges"
@@ -57,7 +63,7 @@ export type RouteKey = keyof Omit<
 >;
 
 const protectedPrefixes = [
-  routes.products,
+  routes.products.list,
   routes.collections,
   routes.customers,
   routes.orders,

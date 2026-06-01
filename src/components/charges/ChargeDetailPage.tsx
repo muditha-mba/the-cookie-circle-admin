@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -12,6 +12,7 @@ import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
 import type { ApiError } from "@/lib/api/types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
+import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 
 type ChargeDetailPageProps = {
   moduleId: ChargeModuleId;
@@ -21,6 +22,7 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
   const module = getChargeModule(moduleId);
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -42,6 +44,9 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
     setIsDeleting(true);
     try {
       await module.api.delete(data.id);
+      cacheEntityRemove(queryClient, [module.queryKey, data.id], [module.queryKey], {
+        alsoInvalidate: [["products"]],
+      });
       router.push(module.routes.list);
     } catch (err) {
       const apiError = err as ApiError;

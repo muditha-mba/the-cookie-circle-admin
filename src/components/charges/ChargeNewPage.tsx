@@ -1,5 +1,6 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,6 +10,7 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
 import type { ApiError } from "@/lib/api/types";
+import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ChargeFormValues } from "@/lib/validation/charge";
 
 type ChargeNewPageProps = {
@@ -18,6 +20,7 @@ type ChargeNewPageProps = {
 export function ChargeNewPage({ moduleId }: ChargeNewPageProps) {
   const module = getChargeModule(moduleId);
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -31,6 +34,9 @@ export function ChargeNewPage({ moduleId }: ChargeNewPageProps) {
         charge_type: values.charge_type,
         amount: values.amount,
         is_active: values.is_active,
+      });
+      cacheEntitySave(queryClient, [module.queryKey, created.id], [module.queryKey], created, {
+        alsoInvalidate: [["products"]],
       });
       router.push(module.routes.detail(created.id));
     } catch (err) {

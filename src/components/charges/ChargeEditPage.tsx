@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -10,6 +10,7 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
 import type { ApiError } from "@/lib/api/types";
+import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ChargeFormValues } from "@/lib/validation/charge";
 
 type ChargeEditPageProps = {
@@ -20,6 +21,7 @@ export function ChargeEditPage({ moduleId }: ChargeEditPageProps) {
   const module = getChargeModule(moduleId);
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,13 +35,20 @@ export function ChargeEditPage({ moduleId }: ChargeEditPageProps) {
     setError(null);
     setIsSubmitting(true);
     try {
-      await module.api.update(params.id, {
+      const updated = await module.api.update(params.id, {
         name: values.name,
         description: values.description || null,
         charge_type: values.charge_type,
         amount: values.amount,
         is_active: values.is_active,
       });
+      cacheEntitySave(
+        queryClient,
+        [module.queryKey, params.id],
+        [module.queryKey],
+        updated,
+        { alsoInvalidate: [["products"]] },
+      );
       router.push(module.routes.detail(params.id));
     } catch (err) {
       const apiError = err as ApiError;

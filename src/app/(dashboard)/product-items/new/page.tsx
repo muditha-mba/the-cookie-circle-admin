@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -11,10 +11,12 @@ import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
+import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
 
 export default function NewProductItemPage() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -37,6 +39,13 @@ export default function NewProductItemPage() {
         purchase_unit: values.purchase_unit,
         is_active: values.is_active,
       });
+      cacheEntitySave(
+        queryClient,
+        ["product-item", created.id],
+        ["product-items"],
+        created,
+        { alsoInvalidate: [["products"]] },
+      );
       router.push(routes.productItems.detail(created.id));
     } catch (err) {
       const apiError = err as ApiError;
