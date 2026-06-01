@@ -14,18 +14,62 @@ export const routes = {
   customers: "/customers",
   orders: "/orders",
   analytics: "/analytics",
+  productItemTypes: {
+    list: "/product-item-types",
+    create: "/product-item-types/new",
+    detail: (id: string) => `/product-item-types/${id}`,
+    edit: (id: string) => `/product-item-types/${id}/edit`,
+  },
+  productItems: {
+    list: "/product-items",
+    create: "/product-items/new",
+    detail: (id: string) => `/product-items/${id}`,
+    edit: (id: string) => `/product-items/${id}/edit`,
+  },
+  utilityCharges: {
+    list: "/utility-charges",
+    create: "/utility-charges/new",
+    detail: (id: string) => `/utility-charges/${id}`,
+    edit: (id: string) => `/utility-charges/${id}/edit`,
+  },
+  labourCharges: {
+    list: "/labour-charges",
+    create: "/labour-charges/new",
+    detail: (id: string) => `/labour-charges/${id}`,
+    edit: (id: string) => `/labour-charges/${id}/edit`,
+  },
+  taxCharges: {
+    list: "/tax-charges",
+    create: "/tax-charges/new",
+    detail: (id: string) => `/tax-charges/${id}`,
+    edit: (id: string) => `/tax-charges/${id}/edit`,
+  },
 } as const;
 
-export type RouteKey = keyof Omit<typeof routes, "auth">;
+export type RouteKey = keyof Omit<
+  typeof routes,
+  | "auth"
+  | "productItemTypes"
+  | "productItems"
+  | "utilityCharges"
+  | "labourCharges"
+  | "taxCharges"
+>;
 
-export const protectedRoutes = [
-  routes.dashboard,
+const protectedPrefixes = [
   routes.products,
   routes.collections,
   routes.customers,
   routes.orders,
   routes.analytics,
+  routes.productItemTypes.list,
+  routes.productItems.list,
+  routes.utilityCharges.list,
+  routes.labourCharges.list,
+  routes.taxCharges.list,
 ] as const;
+
+export const protectedRoutes = [routes.dashboard, ...protectedPrefixes] as const;
 
 export const publicRoutes = [
   routes.auth.login,
@@ -34,10 +78,16 @@ export const publicRoutes = [
 ] as const;
 
 export function isProtectedRoute(pathname: string): boolean {
-  return protectedRoutes.some((route) =>
-    route === "/"
-      ? pathname === "/"
-      : pathname === route || pathname.startsWith(`${route}/`),
+  if (pathname === routes.dashboard) {
+    return true;
+  }
+
+  if (publicRoutes.some((route) => pathname === route || pathname.startsWith(`${route}/`))) {
+    return false;
+  }
+
+  return protectedPrefixes.some(
+    (route) => pathname === route || pathname.startsWith(`${route}/`),
   );
 }
 

@@ -1,11 +1,16 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  Boxes,
   Layers,
   LayoutDashboard,
   Package,
+  Percent,
   ShoppingCart,
+  Tags,
   Users,
+  Wallet,
+  Wrench,
 } from "lucide-react";
 
 import { routes } from "@/config/routes";
@@ -38,6 +43,41 @@ export const navigation: NavItemConfig[] = [
     title: "Dashboard",
     href: routes.dashboard,
     icon: LayoutDashboard,
+    enabled: true,
+  },
+  {
+    id: "product-item-types",
+    title: "Item Types",
+    href: routes.productItemTypes.list,
+    icon: Tags,
+    enabled: true,
+  },
+  {
+    id: "product-items",
+    title: "Product Items",
+    href: routes.productItems.list,
+    icon: Boxes,
+    enabled: true,
+  },
+  {
+    id: "utility-charges",
+    title: "Utility Charges",
+    href: routes.utilityCharges.list,
+    icon: Wrench,
+    enabled: true,
+  },
+  {
+    id: "labour-charges",
+    title: "Labour Charges",
+    href: routes.labourCharges.list,
+    icon: Wallet,
+    enabled: true,
+  },
+  {
+    id: "tax-charges",
+    title: "Tax Charges",
+    href: routes.taxCharges.list,
+    icon: Percent,
     enabled: true,
   },
   {
@@ -82,7 +122,7 @@ export function isNavItemActive(item: NavItemConfig, pathname: string): boolean 
     return pathname === routes.dashboard;
   }
 
-  return pathname.startsWith(item.href);
+  return pathname === item.href || pathname.startsWith(`${item.href}/`);
 }
 
 /** Modules not yet enabled — used for dashboard placeholders. */
