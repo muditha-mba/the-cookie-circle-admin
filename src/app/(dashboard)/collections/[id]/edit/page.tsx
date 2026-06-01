@@ -4,16 +4,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { CollectionForm } from "@/components/collections/CollectionForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
-import { ProductForm } from "@/components/products/ProductForm";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
-import { productsApi } from "@/lib/api/products";
+import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
-import type { ProductFormValues } from "@/lib/validation/product-catalog";
+import type { CollectionFormValues } from "@/lib/validation/collection-catalog";
 
-export default function EditProductPage() {
+export default function EditCollectionPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -21,35 +21,32 @@ export default function EditProductPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", params.id],
-    queryFn: () => productsApi.get(params.id),
+    queryKey: ["collections", params.id],
+    queryFn: () => collectionsApi.get(params.id),
     enabled: Boolean(params.id),
   });
 
-  const handleSubmit = async (values: ProductFormValues) => {
+  const handleSubmit = async (values: CollectionFormValues) => {
     setError(null);
     setIsSubmitting(true);
     try {
-      const updated = await productsApi.update(params.id, {
+      const updated = await collectionsApi.update(params.id, {
         name: values.name,
         description: values.description || null,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
-        yield_quantity: values.yield_quantity,
-        production_notes: values.production_notes || null,
         is_active: values.is_active,
-        recipe_lines: values.recipe_lines,
+        product_lines: values.product_lines,
+        item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,
         tax_charge_ids: values.tax_charge_ids,
       });
-      cacheEntitySave(queryClient, ["products", params.id], ["products"], updated, {
-        alsoInvalidate: [["collections"]],
-      });
-      router.push(routes.products.detail(params.id));
+      cacheEntitySave(queryClient, ["collections", params.id], ["collections"], updated);
+      router.push(routes.collections.detail(params.id));
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update product.");
+      setError(apiError.message ?? "Unable to update collection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -57,7 +54,7 @@ export default function EditProductPage() {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title="Edit Product" description="Loading...">
+      <DashboardPageShell title="Edit Collection" description="Loading...">
         <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
       </DashboardPageShell>
     );
@@ -65,9 +62,9 @@ export default function EditProductPage() {
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title="Edit Product" description="Not found">
-        <p className="text-sm text-danger">Product not found.</p>
-        <PageActions backHref={routes.products.list} className="mt-6" />
+      <DashboardPageShell title="Edit Collection" description="Not found">
+        <p className="text-sm text-danger">Collection not found.</p>
+        <PageActions backHref={routes.collections.list} className="mt-6" />
       </DashboardPageShell>
     );
   }
@@ -75,19 +72,21 @@ export default function EditProductPage() {
   return (
     <DashboardPageShell
       title={`Edit ${data.name}`}
-      description="Update recipe, charges, and pricing."
+      description="Update products, charges, and pricing."
     >
-      <PageActions backHref={routes.products.detail(params.id)} className="mb-6" />
-      <ProductForm
+      <PageActions backHref={routes.collections.detail(params.id)} className="mb-6" />
+      <CollectionForm
         defaultValues={{
           name: data.name,
           description: data.description ?? "",
           selling_price: Number(data.selling_price),
           buffer_amount: Number(data.buffer_amount),
-          yield_quantity: Number(data.yield_quantity),
-          production_notes: data.production_notes ?? "",
           is_active: data.is_active,
-          recipe_lines: data.recipe_lines.map((line) => ({
+          product_lines: data.product_lines.map((line) => ({
+            product_id: line.product_id,
+            quantity: Number(line.quantity),
+          })),
+          item_lines: data.item_lines.map((line) => ({
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),
           })),

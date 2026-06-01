@@ -4,45 +4,42 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { CollectionForm } from "@/components/collections/CollectionForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
-import { ProductForm } from "@/components/products/ProductForm";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
-import { productsApi } from "@/lib/api/products";
+import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
-import type { ProductFormValues } from "@/lib/validation/product-catalog";
+import type { CollectionFormValues } from "@/lib/validation/collection-catalog";
 
-export default function NewProductPage() {
+export default function NewCollectionPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = async (values: ProductFormValues) => {
+  const handleSubmit = async (values: CollectionFormValues) => {
     setError(null);
     setIsSubmitting(true);
     try {
-      const created = await productsApi.create({
+      const created = await collectionsApi.create({
         name: values.name,
         description: values.description || null,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
-        yield_quantity: values.yield_quantity,
-        production_notes: values.production_notes || null,
         is_active: values.is_active,
-        recipe_lines: values.recipe_lines,
+        product_lines: values.product_lines,
+        item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,
         tax_charge_ids: values.tax_charge_ids,
       });
-      cacheEntitySave(queryClient, ["products", created.id], ["products"], created, {
-        alsoInvalidate: [["collections"]],
-      });
-      router.push(routes.products.detail(created.id));
+      cacheEntitySave(queryClient, ["collections", created.id], ["collections"], created);
+      router.push(routes.collections.detail(created.id));
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create product.");
+      setError(apiError.message ?? "Unable to create collection.");
     } finally {
       setIsSubmitting(false);
     }
@@ -50,12 +47,12 @@ export default function NewProductPage() {
 
   return (
     <DashboardPageShell
-      title="Create Product"
-      description="Build a product recipe and review live costing."
+      title="Create Collection"
+      description="Build a product bundle and review live costing."
     >
-      <PageActions backHref={routes.products.list} className="mb-6" />
-      <ProductForm
-        submitLabel="Create product"
+      <PageActions backHref={routes.collections.list} className="mb-6" />
+      <CollectionForm
+        submitLabel="Create collection"
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}

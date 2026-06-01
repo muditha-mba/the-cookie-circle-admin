@@ -2,34 +2,37 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
-import { ProductCostBreakdownView } from "@/components/products/ProductCostBreakdownView";
+import { CollectionCostBreakdownView } from "@/components/collections/CollectionCostBreakdownView";
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Charge } from "@/lib/api/charge-types";
+import type { CollectionCostBreakdown } from "@/lib/api/collections";
+import { collectionsApi } from "@/lib/api/collections";
+import { chargeAppliesToCollection } from "@/lib/charge-applicability";
 import { labourChargesApi } from "@/lib/api/labour-charges";
-import { productItemsApi } from "@/lib/api/product-items";
 import type { ProductItem } from "@/lib/api/product-items";
-import type { ProductCostBreakdown } from "@/lib/api/products";
+import { productItemsApi } from "@/lib/api/product-items";
+import type { ProductSummary } from "@/lib/api/products";
 import { productsApi } from "@/lib/api/products";
-import { chargeAppliesToProduct } from "@/lib/charge-applicability";
+import { isPackagingItemType } from "@/lib/packaging";
 import { taxChargesApi } from "@/lib/api/tax-charges";
 import { utilityChargesApi } from "@/lib/api/utility-charges";
 import {
-  productSchema,
-  type ProductFormValues,
-} from "@/lib/validation/product-catalog";
+  collectionSchema,
+  type CollectionFormValues,
+} from "@/lib/validation/collection-catalog";
 import { cn } from "@/lib/utils";
 
-type ProductFormProps = {
-  defaultValues?: Partial<ProductFormValues>;
+type CollectionFormProps = {
+  defaultValues?: Partial<CollectionFormValues>;
   submitLabel: string;
   isSubmitting?: boolean;
   error?: string | null;
-  onSubmit: (values: ProductFormValues) => Promise<void>;
+  onSubmit: (values: CollectionFormValues) => Promise<void>;
 };
 
 function ChargeMultiSelect({
@@ -55,7 +58,7 @@ function ChargeMultiSelect({
     <div className="space-y-2">
       <p className="text-sm font-medium text-text-primary">{label}</p>
       {options.length === 0 ? (
-        <p className="text-xs text-text-muted">No charges available.</p>
+        <p className="text-xs text-text-muted">No charges available for collections.</p>
       ) : (
         <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border border-border bg-background p-3">
           {options.map((charge) => (
@@ -83,32 +86,32 @@ function ChargeMultiSelect({
   );
 }
 
-export function ProductForm({
+export function CollectionForm({
   defaultValues,
   submitLabel,
   isSubmitting = false,
   error,
   onSubmit,
-}: ProductFormProps) {
-  const [productItems, setProductItems] = useState<ProductItem[]>([]);
+}: CollectionFormProps) {
+  const [catalogProducts, setCatalogProducts] = useState<ProductSummary[]>([]);
+  const [packagingItems, setPackagingItems] = useState<ProductItem[]>([]);
   const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
   const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
   const [taxCharges, setTaxCharges] = useState<Charge[]>([]);
-  const [preview, setPreview] = useState<ProductCostBreakdown | null>(null);
+  const [preview, setPreview] = useState<CollectionCostBreakdown | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
 
-  const form = useForm<ProductFormValues>({
-    resolver: zodResolver(productSchema),
+  const form = useForm<CollectionFormValues>({
+    resolver: zodResolver(collectionSchema),
     defaultValues: {
       name: "",
       description: "",
       selling_price: 0,
       buffer_amount: 0,
-      yield_quantity: 1,
-      production_notes: "",
       is_active: true,
-      recipe_lines: [],
+      product_lines: [],
+      item_lines: [],
       utility_charge_ids: [],
       labour_charge_ids: [],
       tax_charge_ids: [],
@@ -119,14 +122,21 @@ export function ProductForm({
   const { register, handleSubmit, control, watch, formState: { errors } } = form;
   const { fields, append, remove } = useFieldArray({
     control,
-    name: "recipe_lines",
+    name: "product_lines",
+  });
+  const {
+    fields: itemFields,
+    append: appendItem,
+    remove: removeItem,
+  } = useFieldArray({
+    control,
+    name: "item_lines",
   });
 
   const sellingPrice = watch("selling_price");
   const bufferAmount = watch("buffer_amount");
-  const yieldQuantity = watch("yield_quantity");
-  const productionNotes = watch("production_notes");
-  const recipeLines = watch("recipe_lines");
+  const productLines = watch("product_lines");
+  const itemLines = watch("item_lines");
   const utilityChargeIds = watch("utility_charge_ids");
   const labourChargeIds = watch("labour_charge_ids");
   const taxChargeIds = watch("tax_charge_ids");
@@ -134,8 +144,8 @@ export function ProductForm({
   const previewPayloadKey = JSON.stringify({
     selling_price: sellingPrice,
     buffer_amount: bufferAmount,
-    yield_quantity: yieldQuantity,
-    recipe_lines: recipeLines,
+    product_lines: productLines,
+    item_lines: itemLines,
     utility_charge_ids: utilityChargeIds,
     labour_charge_ids: labourChargeIds,
     tax_charge_ids: taxChargeIds,
@@ -145,55 +155,47 @@ export function ProductForm({
 
   useEffect(() => {
     void (async () => {
-      const [items, utilities, labour, tax] = await Promise.all([
+      const [products, productItems, utilities, labour, tax] = await Promise.all([
+        productsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       ]);
-      setProductItems(items.items);
-      setUtilityCharges(utilities.items.filter(chargeAppliesToProduct));
-      setLabourCharges(labour.items.filter(chargeAppliesToProduct));
-      setTaxCharges(tax.items.filter(chargeAppliesToProduct));
+      setCatalogProducts(products.items.filter((p) => p.is_active));
+      setPackagingItems(
+        productItems.items.filter(
+          (item) => item.is_active && isPackagingItemType(item.item_type.name),
+        ),
+      );
+      setUtilityCharges(utilities.items.filter(chargeAppliesToCollection));
+      setLabourCharges(labour.items.filter(chargeAppliesToCollection));
+      setTaxCharges(tax.items.filter(chargeAppliesToCollection));
     })();
   }, []);
 
-  const recipeItemIds = useMemo(
-    () =>
-      new Set(
-        recipeLines
-          .map((line) => line.product_item_id)
-          .filter((id): id is string => Boolean(id)),
-      ),
-    [recipeLines],
-  );
-
-  const itemOptions = useMemo(
-    () =>
-      productItems.filter(
-        (item) => item.is_active || recipeItemIds.has(item.id),
-      ),
-    [productItems, recipeItemIds],
-  );
-
-  const productItemsReady = productItems.length > 0;
+  const productsReady = catalogProducts.length > 0;
+  const packagingReady = packagingItems.length > 0;
 
   useEffect(() => {
     const input = JSON.parse(debouncedPreviewKey) as Pick<
-      ProductFormValues,
+      CollectionFormValues,
       | "selling_price"
       | "buffer_amount"
-      | "yield_quantity"
-      | "recipe_lines"
+      | "product_lines"
+      | "item_lines"
       | "utility_charge_ids"
       | "labour_charge_ids"
       | "tax_charge_ids"
     >;
 
-    const hasRecipe = input.recipe_lines.some(
+    const hasProducts = input.product_lines.some(
+      (line) => line.product_id && line.quantity > 0,
+    );
+    const hasItems = input.item_lines.some(
       (line) => line.product_item_id && line.quantity > 0,
     );
-    if ((!hasRecipe && input.selling_price <= 0) || input.yield_quantity <= 0) {
+    if (!hasProducts && !hasItems && input.selling_price <= 0) {
       setPreview(null);
       setPreviewError(null);
       setIsPreviewLoading(false);
@@ -206,11 +208,11 @@ export function ProductForm({
       setIsPreviewLoading(true);
       setPreviewError(null);
       try {
-        const result = await productsApi.previewCost({
+        const result = await collectionsApi.previewCost({
           selling_price: input.selling_price,
           buffer_amount: input.buffer_amount,
-          yield_quantity: input.yield_quantity,
-          recipe_lines: input.recipe_lines.filter((line) => line.product_item_id),
+          product_lines: input.product_lines.filter((line) => line.product_id),
+          item_lines: input.item_lines.filter((line) => line.product_item_id),
           utility_charge_ids: input.utility_charge_ids,
           labour_charge_ids: input.labour_charge_ids,
           tax_charge_ids: input.tax_charge_ids,
@@ -276,7 +278,7 @@ export function ProductForm({
             label="Buffer amount (LKR)"
             htmlFor="buffer_amount"
             error={errors.buffer_amount?.message}
-            hint="Optional extra cost for unforeseen production expenses"
+            hint="Optional extra cost for this collection"
           >
             <input
               id="buffer_amount"
@@ -301,61 +303,24 @@ export function ProductForm({
           </label>
         </FormField>
 
-        <div className="space-y-4 border-t border-border pt-6">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary">Production</h3>
-            <p className="text-xs text-text-muted">
-              Internal batch yield and preparation notes (not customer-facing)
-            </p>
-          </div>
-          <FormField
-            label="Yield quantity"
-            htmlFor="yield_quantity"
-            error={errors.yield_quantity?.message}
-            hint="Number of units produced from this recipe batch"
-          >
-            <input
-              id="yield_quantity"
-              type="number"
-              min={0.0001}
-              step="0.0001"
-              className={formInputClassName}
-              {...register("yield_quantity", { valueAsNumber: true })}
-            />
-          </FormField>
-          <FormField
-            label="Production notes"
-            htmlFor="production_notes"
-            error={errors.production_notes?.message}
-            hint="Optional internal instructions for production"
-          >
-            <textarea
-              id="production_notes"
-              rows={4}
-              className={formInputClassName}
-              {...register("production_notes")}
-            />
-          </FormField>
-        </div>
-
         <div className="space-y-3 border-t border-border pt-6">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <h3 className="text-sm font-semibold text-text-primary">Recipe</h3>
-              <p className="text-xs text-text-muted">Product items and quantities used</p>
+              <h3 className="text-sm font-semibold text-text-primary">Products</h3>
+              <p className="text-xs text-text-muted">Products included in this bundle</p>
             </div>
             <button
               type="button"
-              onClick={() => append({ product_item_id: "", quantity: 1 })}
+              onClick={() => append({ product_id: "", quantity: 1 })}
               className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-hover"
             >
               <Plus className="h-3.5 w-3.5" />
-              Add line
+              Add product
             </button>
           </div>
 
           {fields.length === 0 ? (
-            <p className="text-sm text-text-muted">No recipe lines yet.</p>
+            <p className="text-sm text-text-muted">No products yet.</p>
           ) : (
             <div className="space-y-3">
               {fields.map((field, index) => (
@@ -364,24 +329,104 @@ export function ProductForm({
                   className="grid gap-3 rounded-md border border-border bg-background p-3 sm:grid-cols-[1fr_140px_auto]"
                 >
                   <div>
+                    <label className="mb-1 block text-xs text-text-muted">Product</label>
+                    <Controller
+                      control={control}
+                      name={`product_lines.${index}.product_id`}
+                      render={({ field: productField }) => (
+                        <select
+                          key={`${field.id}-${productsReady ? "ready" : "loading"}`}
+                          className={formInputClassName}
+                          value={productField.value ?? ""}
+                          onChange={productField.onChange}
+                          onBlur={productField.onBlur}
+                          ref={productField.ref}
+                        >
+                          <option value="">Select product</option>
+                          {catalogProducts.map((product) => (
+                            <option key={product.id} value={product.id}>
+                              {product.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-text-muted">Quantity</label>
+                    <input
+                      type="number"
+                      min={0}
+                      step="1"
+                      className={formInputClassName}
+                      {...register(`product_lines.${index}.quantity`, {
+                        valueAsNumber: true,
+                      })}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <button
+                      type="button"
+                      onClick={() => remove(index)}
+                      className="inline-flex h-[38px] w-[38px] items-center justify-center rounded-md border border-border text-danger hover:bg-danger/10"
+                      aria-label="Remove product line"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="space-y-3 border-t border-border pt-6">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">
+                Packaging & collection items
+              </h3>
+              <p className="text-xs text-text-muted">
+                Packaging materials such as boxes, ribbons, and labels
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => appendItem({ product_item_id: "", quantity: 1 })}
+              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-hover"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add item
+            </button>
+          </div>
+
+          {itemFields.length === 0 ? (
+            <p className="text-sm text-text-muted">No packaging items yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {itemFields.map((field, index) => (
+                <div
+                  key={field.id}
+                  className="grid gap-3 rounded-md border border-border bg-background p-3 sm:grid-cols-[1fr_140px_auto]"
+                >
+                  <div>
                     <label className="mb-1 block text-xs text-text-muted">Product item</label>
                     <Controller
                       control={control}
-                      name={`recipe_lines.${index}.product_item_id`}
+                      name={`item_lines.${index}.product_item_id`}
                       render={({ field: itemField }) => (
                         <select
-                          key={`${field.id}-${productItemsReady ? "ready" : "loading"}`}
-                          id={`recipe_lines.${index}.product_item_id`}
+                          key={`${field.id}-${packagingReady ? "ready" : "loading"}`}
                           className={formInputClassName}
                           value={itemField.value ?? ""}
                           onChange={itemField.onChange}
                           onBlur={itemField.onBlur}
                           ref={itemField.ref}
                         >
-                          <option value="">Select item</option>
-                          {itemOptions.map((item) => (
+                          <option value="">Select packaging item</option>
+                          {packagingItems.map((item) => (
                             <option key={item.id} value={item.id}>
-                              {item.name} ({item.purchase_unit})
+                              {item.name}
                             </option>
                           ))}
                         </select>
@@ -395,7 +440,7 @@ export function ProductForm({
                       min={0}
                       step="0.0001"
                       className={formInputClassName}
-                      {...register(`recipe_lines.${index}.quantity`, {
+                      {...register(`item_lines.${index}.quantity`, {
                         valueAsNumber: true,
                       })}
                     />
@@ -403,9 +448,9 @@ export function ProductForm({
                   <div className="flex items-end">
                     <button
                       type="button"
-                      onClick={() => remove(index)}
+                      onClick={() => removeItem(index)}
                       className="inline-flex h-[38px] w-[38px] items-center justify-center rounded-md border border-border text-danger hover:bg-danger/10"
-                      aria-label="Remove recipe line"
+                      aria-label="Remove packaging item line"
                     >
                       <Trash2 className="h-4 w-4" />
                     </button>
@@ -418,9 +463,9 @@ export function ProductForm({
 
         <div className="space-y-4 border-t border-border pt-6">
           <div>
-            <h3 className="text-sm font-semibold text-text-primary">Attached charges</h3>
+            <h3 className="text-sm font-semibold text-text-primary">Collection charges</h3>
             <p className="text-xs text-text-muted">
-              References global charges — amounts are not duplicated
+              Only charges marked for collections or both
             </p>
           </div>
           <ChargeMultiSelect
@@ -454,7 +499,7 @@ export function ProductForm({
         <div className="rounded-lg border border-border bg-surface p-4">
           <h3 className="text-sm font-semibold text-text-primary">Live cost preview</h3>
           <p className="mt-1 text-xs text-text-muted">
-            Updates as you edit recipe, charges, and pricing
+            Updates as you edit products, packaging items, charges, and pricing
           </p>
         </div>
         {isPreviewLoading ? (
@@ -462,14 +507,10 @@ export function ProductForm({
         ) : previewError ? (
           <p className="text-sm text-danger">{previewError}</p>
         ) : preview ? (
-          <ProductCostBreakdownView
-            breakdown={preview}
-            yieldQuantity={yieldQuantity}
-            productionNotes={productionNotes}
-          />
+          <CollectionCostBreakdownView breakdown={preview} />
         ) : (
           <p className={cn("text-sm text-text-muted")}>
-            Add recipe lines or pricing to see a cost preview.
+            Add products, packaging items, or pricing to see a cost preview.
           </p>
         )}
       </aside>

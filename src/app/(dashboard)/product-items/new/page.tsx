@@ -44,7 +44,7 @@ export default function NewProductItemPage() {
         ["product-item", created.id],
         ["product-items"],
         created,
-        { alsoInvalidate: [["products"]] },
+        { alsoInvalidate: [["products"], ["collections"]] },
       );
       router.push(routes.productItems.detail(created.id));
     } catch (err) {

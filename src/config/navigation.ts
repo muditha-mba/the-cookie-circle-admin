@@ -90,9 +90,9 @@ export const navigation: NavItemConfig[] = [
   {
     id: "collections",
     title: "Collections",
-    href: routes.collections,
+    href: routes.collections.list,
     icon: Layers,
-    enabled: false,
+    enabled: true,
   },
   {
     id: "customers",

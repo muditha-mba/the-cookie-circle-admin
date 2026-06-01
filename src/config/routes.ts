@@ -15,7 +15,12 @@ export const routes = {
     detail: (id: string) => `/products/${id}`,
     edit: (id: string) => `/products/${id}/edit`,
   },
-  collections: "/collections",
+  collections: {
+    list: "/collections",
+    create: "/collections/new",
+    detail: (id: string) => `/collections/${id}`,
+    edit: (id: string) => `/collections/${id}/edit`,
+  },
   customers: "/customers",
   orders: "/orders",
   analytics: "/analytics",
@@ -55,6 +60,7 @@ export type RouteKey = keyof Omit<
   typeof routes,
   | "auth"
   | "products"
+  | "collections"
   | "productItemTypes"
   | "productItems"
   | "utilityCharges"
@@ -64,7 +70,7 @@ export type RouteKey = keyof Omit<
 
 const protectedPrefixes = [
   routes.products.list,
-  routes.collections,
+  routes.collections.list,
   routes.customers,
   routes.orders,
   routes.analytics,

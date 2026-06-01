@@ -51,7 +51,7 @@ export default function EditProductItemPage() {
         ["product-item", params.id],
         ["product-items"],
         updated,
-        { alsoInvalidate: [["products"]] },
+        { alsoInvalidate: [["products"], ["collections"]] },
       );
       router.push(routes.productItems.detail(params.id));
     } catch (err) {

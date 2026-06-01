@@ -4,6 +4,7 @@ import { apiClient } from "@/lib/api/client";
 import type { PaginatedResponse, ListQueryParams } from "@/lib/api/pagination";
 
 export type ChargeType = "fixed" | "percentage";
+export type ChargeApplicability = "product" | "collection" | "both";
 
 export type Charge = {
   id: string;
@@ -11,6 +12,7 @@ export type Charge = {
   description: string | null;
   charge_type: ChargeType;
   amount: string;
+  applicability: ChargeApplicability;
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -21,6 +23,7 @@ export type ChargeCreate = {
   description?: string | null;
   charge_type: ChargeType;
   amount: number;
+  applicability?: ChargeApplicability;
   is_active?: boolean;
 };
 
@@ -29,6 +32,7 @@ export type ChargeUpdate = {
   description?: string | null;
   charge_type?: ChargeType;
   amount?: number;
+  applicability?: ChargeApplicability;
   is_active?: boolean;
 };
 

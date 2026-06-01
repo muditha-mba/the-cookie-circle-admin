@@ -4,19 +4,19 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
+import { CollectionCostBreakdownView } from "@/components/collections/CollectionCostBreakdownView";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
+import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
-import { ProductCostBreakdownView } from "@/components/products/ProductCostBreakdownView";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
-import { productsApi } from "@/lib/api/products";
+import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 
-export default function ProductDetailPage() {
+export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -24,8 +24,8 @@ export default function ProductDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", params.id],
-    queryFn: () => productsApi.get(params.id),
+    queryKey: ["collections", params.id],
+    queryFn: () => collectionsApi.get(params.id),
     enabled: Boolean(params.id),
   });
 
@@ -40,12 +40,12 @@ export default function ProductDetailPage() {
     setDeleteError(null);
     setIsDeleting(true);
     try {
-      await productsApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["products", data.id], ["products"]);
-      router.push(routes.products.list);
+      await collectionsApi.delete(data.id);
+      cacheEntityRemove(queryClient, ["collections", data.id], ["collections"]);
+      router.push(routes.collections.list);
     } catch (err) {
       const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete product.");
+      setDeleteError(apiError.message ?? "Unable to delete collection.");
     } finally {
       setIsDeleting(false);
     }
@@ -53,7 +53,7 @@ export default function ProductDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title="Product" description="Loading...">
+      <DashboardPageShell title="Collection" description="Loading...">
         <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
       </DashboardPageShell>
     );
@@ -61,9 +61,9 @@ export default function ProductDetailPage() {
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title="Product" description="Not found">
-        <p className="text-sm text-danger">Product not found.</p>
-        <PageActions backHref={routes.products.list} className="mt-6" />
+      <DashboardPageShell title="Collection" description="Not found">
+        <p className="text-sm text-danger">Collection not found.</p>
+        <PageActions backHref={routes.collections.list} className="mt-6" />
       </DashboardPageShell>
     );
   }
@@ -71,10 +71,10 @@ export default function ProductDetailPage() {
   return (
     <DashboardPageShell
       title={data.name}
-      description="Full cost breakdown and profitability analysis."
+      description="Full collection cost breakdown and profitability analysis."
     >
-      <PageActions backHref={routes.products.list} className="mb-6">
-        <PrimaryLink href={routes.products.edit(data.id)}>Edit</PrimaryLink>
+      <PageActions backHref={routes.collections.list} className="mb-6">
+        <PrimaryLink href={routes.collections.edit(data.id)}>Edit</PrimaryLink>
         <SecondaryButton
           variant="danger"
           disabled={isDeleting}
@@ -94,11 +94,7 @@ export default function ProductDetailPage() {
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>
 
-      <ProductCostBreakdownView
-        breakdown={data.cost_breakdown}
-        yieldQuantity={data.yield_quantity}
-        productionNotes={data.production_notes}
-      />
+      <CollectionCostBreakdownView breakdown={data.cost_breakdown} />
     </DashboardPageShell>
   );
 }

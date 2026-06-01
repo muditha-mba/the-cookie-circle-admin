@@ -33,10 +33,11 @@ export function ChargeNewPage({ moduleId }: ChargeNewPageProps) {
         description: values.description || null,
         charge_type: values.charge_type,
         amount: values.amount,
+        applicability: values.applicability,
         is_active: values.is_active,
       });
       cacheEntitySave(queryClient, [module.queryKey, created.id], [module.queryKey], created, {
-        alsoInvalidate: [["products"]],
+        alsoInvalidate: [["products"], ["collections"]],
       });
       router.push(module.routes.detail(created.id));
     } catch (err) {

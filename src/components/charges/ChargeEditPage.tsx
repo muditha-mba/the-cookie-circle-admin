@@ -40,6 +40,7 @@ export function ChargeEditPage({ moduleId }: ChargeEditPageProps) {
         description: values.description || null,
         charge_type: values.charge_type,
         amount: values.amount,
+        applicability: values.applicability,
         is_active: values.is_active,
       });
       cacheEntitySave(
@@ -47,7 +48,7 @@ export function ChargeEditPage({ moduleId }: ChargeEditPageProps) {
         [module.queryKey, params.id],
         [module.queryKey],
         updated,
-        { alsoInvalidate: [["products"]] },
+        { alsoInvalidate: [["products"], ["collections"]] },
       );
       router.push(module.routes.detail(params.id));
     } catch (err) {
@@ -87,6 +88,7 @@ export function ChargeEditPage({ moduleId }: ChargeEditPageProps) {
           description: data.description ?? "",
           charge_type: data.charge_type,
           amount: Number(data.amount),
+          applicability: data.applicability,
           is_active: data.is_active,
         }}
         submitLabel="Save changes"

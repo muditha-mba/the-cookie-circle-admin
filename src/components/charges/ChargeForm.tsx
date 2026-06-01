@@ -34,6 +34,7 @@ export function ChargeForm({
       description: "",
       charge_type: "fixed",
       amount: 1,
+      applicability: "both",
       is_active: true,
       ...defaultValues,
     },
@@ -62,6 +63,19 @@ export function ChargeForm({
           className={formInputClassName}
           {...register("description")}
         />
+      </FormField>
+
+      <FormField
+        label="Applicability"
+        htmlFor="applicability"
+        error={errors.applicability?.message}
+        hint="Where this charge can be attached"
+      >
+        <select id="applicability" className={formInputClassName} {...register("applicability")}>
+          <option value="product">Product only</option>
+          <option value="collection">Collection only</option>
+          <option value="both">Product and collection</option>
+        </select>
       </FormField>
 
       <FormField

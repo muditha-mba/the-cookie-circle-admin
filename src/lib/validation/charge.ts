@@ -11,6 +11,7 @@ export const chargeSchema = z
       .or(z.literal("")),
     charge_type: z.enum(["fixed", "percentage"]),
     amount: z.number().positive("Amount must be greater than zero"),
+    applicability: z.enum(["product", "collection", "both"]),
     is_active: z.boolean(),
   })
   .superRefine((data, ctx) => {
