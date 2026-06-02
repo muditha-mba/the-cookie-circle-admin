@@ -33,6 +33,7 @@ export default function EditCollectionPage() {
       const updated = await collectionsApi.update(params.id, {
         name: values.name,
         description: values.description || null,
+        package_id: values.package_id,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         is_active: values.is_active,
@@ -80,6 +81,7 @@ export default function EditCollectionPage() {
         defaultValues={{
           name: data.name,
           description: data.description ?? "",
+          package_id: data.package_id,
           selling_price: Number(data.selling_price),
           buffer_amount: Number(data.buffer_amount),
           is_active: data.is_active,

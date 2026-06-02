@@ -30,6 +30,7 @@ export type AnalyticsVisualCategory =
   | "products"
   | "customers"
   | "collections"
+  | "packages"
   | "production"
   | "operations";
 
@@ -44,6 +45,7 @@ export type AnalyticsKpiVariant = Extract<
   | "products"
   | "customers"
   | "collections"
+  | "packages"
   | "production"
   | "operations"
 >;
@@ -61,6 +63,7 @@ export const ANALYTICS_CATEGORY_ACCENT_VAR: Record<AnalyticsVisualCategory, stri
   products: "var(--analytics-products)",
   customers: "var(--analytics-customers)",
   collections: "var(--analytics-collections)",
+  packages: "var(--analytics-packages)",
   production: "var(--analytics-production)",
   operations: "var(--analytics-operations)",
 };
@@ -75,6 +78,7 @@ const CSS_VAR_MAP: Record<AnalyticsVisualCategory, string> = {
   products: "--analytics-products",
   customers: "--analytics-customers",
   collections: "--analytics-collections",
+  packages: "--analytics-packages",
   production: "--analytics-production",
   operations: "--analytics-operations",
 };
@@ -89,6 +93,7 @@ const FALLBACK_ACCENT: Record<AnalyticsVisualCategory, string> = {
   products: "#7c3aed",
   customers: "#0d9488",
   collections: "#0891b2",
+  packages: "#7c3aed",
   production: "#ea580c",
   operations: "#334155",
 };
@@ -103,6 +108,7 @@ export const KPI_VARIANT_ICONS: Record<AnalyticsKpiVariant, LucideIcon> = {
   products: Package,
   customers: Users,
   collections: Layers,
+  packages: Layers,
   production: Factory,
   operations: Gauge,
 };

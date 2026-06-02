@@ -3,7 +3,7 @@
 import { useQuery, useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -25,14 +25,14 @@ import {
 import { routes } from "@/config/routes";
 import {
   analyticsApi,
+  analyticsExportUrl,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
   type ProductionDemandItem,
-  type TrendGranularity,
 } from "@/lib/api/analytics";
 import { formatCurrency, formatDate, formatQuantity } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const CHART_LIMIT = 10;
 const TABLE_LIMIT = 100;
@@ -130,10 +130,16 @@ const packagingColumns: ColumnDef<ProductionDemandItem>[] = [
 ];
 
 export function ProductionAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [granularity, setGranularity] = useState<TrendGranularity>("day");
+  const {
+    preset,
+    customStart,
+    customEnd,
+    granularity,
+    setPreset,
+    setCustomStart,
+    setCustomEnd,
+    setGranularity,
+  } = useAnalyticsUrlFilters();
 
   const chartParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -296,6 +302,12 @@ export function ProductionAnalyticsDashboard() {
     queries.some((query) => query.isError) ||
     upcomingQuery.isError ||
     hintQuery.isError;
+  const ingredientExportUrl = tableParams
+    ? analyticsExportUrl("production-ingredients", tableParams)
+    : null;
+  const packagingExportUrl = tableParams
+    ? analyticsExportUrl("production-packaging", tableParams)
+    : null;
 
   return (
     <div className="space-y-8">
@@ -328,6 +340,27 @@ export function ProductionAnalyticsDashboard() {
         resolvedRange={kpis?.date_range}
         presets={PRODUCTION_ANALYTICS_DATE_PRESETS}
       />
+
+      {(ingredientExportUrl || packagingExportUrl) ? (
+        <div className="flex flex-wrap justify-end gap-2">
+          {ingredientExportUrl ? (
+            <a
+              href={ingredientExportUrl}
+              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+            >
+              Export Ingredients CSV
+            </a>
+          ) : null}
+          {packagingExportUrl ? (
+            <a
+              href={packagingExportUrl}
+              className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+            >
+              Export Packaging CSV
+            </a>
+          ) : null}
+        </div>
+      ) : null}
 
       <AnalyticsInfoNotice>
         <p>
@@ -431,40 +464,52 @@ export function ProductionAnalyticsDashboard() {
               <AnalyticsKpiCard
                 variant="production"
                 label="Total products produced"
-                value={formatQuantity(kpis.total_products_produced, "units")}
+                value={formatQuantity(kpis.total_products_produced.value, "units")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_products_produced.trend_percentage}
+                trendDirection={kpis.total_products_produced.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="production"
                 label="Total collections produced"
-                value={formatQuantity(kpis.total_collections_produced, "units")}
+                value={formatQuantity(kpis.total_collections_produced.value, "units")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_collections_produced.trend_percentage}
+                trendDirection={kpis.total_collections_produced.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="production"
                 label="Total ingredient consumption"
-                value={formatCurrency(kpis.total_ingredient_consumption_cost)}
+                value={formatCurrency(kpis.total_ingredient_consumption_cost.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_ingredient_consumption_cost.trend_percentage}
+                trendDirection={kpis.total_ingredient_consumption_cost.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="production"
                 label="Total packaging consumption"
-                value={formatCurrency(kpis.total_packaging_consumption_cost)}
+                value={formatCurrency(kpis.total_packaging_consumption_cost.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_packaging_consumption_cost.trend_percentage}
+                trendDirection={kpis.total_packaging_consumption_cost.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="production"
                 label="Total production batches"
-                value={kpis.total_production_batches.toLocaleString("en-LK")}
+                value={Number(kpis.total_production_batches.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_production_batches.trend_percentage}
+                trendDirection={kpis.total_production_batches.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="production"
                 label="Average batch size"
-                value={Number(kpis.average_batch_size).toLocaleString("en-LK", {
+                value={Number(kpis.average_batch_size.value).toLocaleString("en-LK", {
                   maximumFractionDigits: 1,
                 })}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_batch_size.trend_percentage}
+                trendDirection={kpis.average_batch_size.trend_direction}
               />
             </dl>
           ) : null}

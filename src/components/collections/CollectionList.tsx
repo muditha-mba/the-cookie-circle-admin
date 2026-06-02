@@ -10,15 +10,18 @@ import { DataTable } from "@/components/data/DataTable";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
+import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
+import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { collectionsApi } from "@/lib/api/collections";
 import { formatCurrency } from "@/lib/format";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
+  { value: "package", label: "Package" },
   { value: "selling_price", label: "Selling price" },
   { value: "created_at", label: "Created" },
 ];
@@ -29,10 +32,29 @@ export function CollectionList() {
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
+  const [packageId, setPackageId] = useState<string>("all");
   const debouncedSearch = useDebouncedValue(search);
 
+  const { data: packageData } = useQuery({
+    queryKey: ["collection-packages", "all"],
+    queryFn: () =>
+      collectionPackagesApi.list({
+        page: 1,
+        page_size: 100,
+        sort_by: "name",
+        sort_order: "asc",
+      }),
+  });
+  const packageMap = useMemo(
+    () =>
+      new Map(
+        (packageData?.items ?? []).map((pkg) => [pkg.id, { name: pkg.name, tone: pkg.badge_tone }]),
+      ),
+    [packageData?.items],
+  );
+
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["collections", page, debouncedSearch, sortBy, sortOrder],
+    queryKey: ["collections", page, debouncedSearch, sortBy, sortOrder, packageId],
     queryFn: () =>
       collectionsApi.list({
         page,
@@ -40,6 +62,7 @@ export function CollectionList() {
         search: debouncedSearch || undefined,
         sort_by: sortBy,
         sort_order: sortOrder,
+        package_id: packageId === "all" ? undefined : packageId,
       }),
   });
 
@@ -51,6 +74,14 @@ export function CollectionList() {
         cell: ({ row }) => (
           <span className="font-medium">{row.original.name}</span>
         ),
+      },
+      {
+        header: "Package",
+        accessorKey: "package_id",
+        cell: ({ row }) => {
+          const pkg = packageMap.get(row.original.package_id);
+          return <CollectionPackageBadge name={pkg?.name} tone={pkg?.tone} />;
+        },
       },
       {
         header: "Selling price",
@@ -68,7 +99,7 @@ export function CollectionList() {
         cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
       },
     ],
-    [],
+    [packageMap],
   );
 
   return (
@@ -83,9 +114,32 @@ export function CollectionList() {
         sortBy={sortBy}
         sortOrder={sortOrder}
         sortOptions={SORT_OPTIONS}
-        onSortByChange={setSortBy}
+        onSortByChange={(value) => {
+          setSortBy(value);
+          setPage(1);
+        }}
         onSortOrderChange={setSortOrder}
-        actions={<PrimaryLink href={routes.collections.create}>Add collection</PrimaryLink>}
+        actions={
+          <div className="flex items-center gap-3">
+            <select
+              value={packageId}
+              onChange={(event) => {
+                setPackageId(event.target.value);
+                setPage(1);
+              }}
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm text-text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-info"
+              aria-label="Filter by package"
+            >
+              <option value="all">All packages</option>
+              {(packageData?.items ?? []).map((pkg) => (
+                <option key={pkg.id} value={pkg.id}>
+                  {pkg.name}
+                </option>
+              ))}
+            </select>
+            <PrimaryLink href={routes.collections.create}>Add collection</PrimaryLink>
+          </div>
+        }
       />
 
       {isError ? (

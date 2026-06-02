@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -24,17 +24,17 @@ import { CustomerSegmentBadge } from "@/components/customers/CustomerSegmentBadg
 import { routes } from "@/config/routes";
 import {
   analyticsApi,
+  analyticsExportUrl,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
   type CustomerAnalyticsRow,
   type CustomerSegment,
-  type TrendGranularity,
 } from "@/lib/api/analytics";
 import type { CustomerSegment as CrmCustomerSegment } from "@/lib/api/customers";
 import { CUSTOMER_SEGMENT_BADGES } from "@/config/status-badges";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const TABLE_LIMIT = 100;
 
@@ -163,10 +163,16 @@ const segmentTableColumns: ColumnDef<CustomerAnalyticsRow>[] = [
 ];
 
 export function CustomerAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [granularity, setGranularity] = useState<TrendGranularity>("day");
+  const {
+    preset,
+    customStart,
+    customEnd,
+    granularity,
+    setPreset,
+    setCustomStart,
+    setCustomEnd,
+    setGranularity,
+  } = useAnalyticsUrlFilters();
 
   const chartParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -252,10 +258,8 @@ export function CustomerAnalyticsDashboard() {
   const formatCount = useCallback((value: number) => value.toLocaleString("en-LK"), []);
 
   const hasQueryError = queries.some((query) => query.isError);
-  const chartsLoading =
-    growthQuery.isLoading || segmentsQuery.isLoading || marketingQuery.isLoading;
-
   const performanceRows = performanceQuery.data?.items ?? [];
+  const exportUrl = chartParams ? analyticsExportUrl("customers", chartParams) : null;
 
   return (
     <div className="space-y-8">
@@ -280,6 +284,17 @@ export function CustomerAnalyticsDashboard() {
         resolvedRange={kpis?.date_range}
       />
 
+      {exportUrl ? (
+        <div className="flex justify-end">
+          <a
+            href={exportUrl}
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+          >
+            Export CSV
+          </a>
+        </div>
+      ) : null}
+
       {!enabled ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-8 text-center text-sm text-text-secondary">
           Choose a start and end date to load customer analytics.
@@ -301,38 +316,50 @@ export function CustomerAnalyticsDashboard() {
               <AnalyticsKpiCard
                 variant="customers"
                 label="Total customers"
-                value={kpis.total_customers.toLocaleString("en-LK")}
+                value={Number(kpis.total_customers.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_customers.trend_percentage}
+                trendDirection={kpis.total_customers.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="New customers"
-                value={kpis.new_customers.toLocaleString("en-LK")}
+                value={Number(kpis.new_customers.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.new_customers.trend_percentage}
+                trendDirection={kpis.new_customers.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="Returning customers"
-                value={kpis.returning_customers.toLocaleString("en-LK")}
+                value={Number(kpis.returning_customers.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.returning_customers.trend_percentage}
+                trendDirection={kpis.returning_customers.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="VIP customers"
-                value={kpis.vip_customers.toLocaleString("en-LK")}
+                value={Number(kpis.vip_customers.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.vip_customers.trend_percentage}
+                trendDirection={kpis.vip_customers.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="Inactive customers"
-                value={kpis.inactive_customers.toLocaleString("en-LK")}
+                value={Number(kpis.inactive_customers.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.inactive_customers.trend_percentage}
+                trendDirection={kpis.inactive_customers.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="Avg customer lifetime value"
-                value={formatCurrency(kpis.average_customer_lifetime_value)}
+                value={formatCurrency(kpis.average_customer_lifetime_value.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_customer_lifetime_value.trend_percentage}
+                trendDirection={kpis.average_customer_lifetime_value.trend_direction}
               />
             </dl>
           ) : null}

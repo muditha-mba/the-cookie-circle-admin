@@ -18,6 +18,7 @@ const CATEGORY_SOFT_VAR: Record<AnalyticsVisualCategory, string> = {
   products: "var(--analytics-products-soft)",
   customers: "var(--analytics-customers-soft)",
   collections: "var(--analytics-collections-soft)",
+  packages: "var(--analytics-packages-soft)",
   production: "var(--analytics-production-soft)",
   operations: "var(--analytics-operations-soft)",
 };

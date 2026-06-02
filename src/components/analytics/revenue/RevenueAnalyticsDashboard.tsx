@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -20,14 +20,14 @@ import { DataTable } from "@/components/data/DataTable";
 import { routes } from "@/config/routes";
 import {
   analyticsApi,
+  analyticsExportUrl,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
   type TopProfitableOrder,
-  type TrendGranularity,
 } from "@/lib/api/analytics";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 function formatRangeLabel(start: string, end: string) {
   return `${formatDate(start)} – ${formatDate(end)}`;
@@ -98,10 +98,16 @@ const topOrderColumns: ColumnDef<TopProfitableOrder>[] = [
 ];
 
 export function RevenueAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [granularity, setGranularity] = useState<TrendGranularity>("day");
+  const {
+    preset,
+    customStart,
+    customEnd,
+    granularity,
+    setPreset,
+    setCustomStart,
+    setCustomEnd,
+    setGranularity,
+  } = useAnalyticsUrlFilters();
 
   const queryParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -185,6 +191,7 @@ export function RevenueAnalyticsDashboard() {
     (value: number) => value.toLocaleString("en-LK"),
     [],
   );
+  const exportUrl = queryParams ? analyticsExportUrl("revenue", queryParams) : null;
 
   return (
     <div className="space-y-8">
@@ -198,6 +205,17 @@ export function RevenueAnalyticsDashboard() {
         </Link>
         <AnalyticsGranularityToggle value={granularity} onChange={setGranularity} />
       </div>
+
+      {exportUrl ? (
+        <div className="flex justify-end">
+          <a
+            href={exportUrl}
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+          >
+            Export CSV
+          </a>
+        </div>
+      ) : null}
 
       <AnalyticsDateRangeControls
         preset={preset}
@@ -230,38 +248,50 @@ export function RevenueAnalyticsDashboard() {
               <AnalyticsKpiCard
                 variant="revenue"
                 label="Total revenue"
-                value={formatCurrency(kpis.total_revenue)}
+                value={formatCurrency(kpis.total_revenue.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_revenue.trend_percentage}
+                trendDirection={kpis.total_revenue.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="profit"
                 label="Total profit"
-                value={formatCurrency(kpis.total_profit)}
+                value={formatCurrency(kpis.total_profit.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_profit.trend_percentage}
+                trendDirection={kpis.total_profit.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
                 label="Total orders"
-                value={kpis.total_orders}
+                value={Number(kpis.total_orders.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_orders.trend_percentage}
+                trendDirection={kpis.total_orders.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="average_order_value"
                 label="Average order value"
-                value={formatCurrency(kpis.average_order_value)}
+                value={formatCurrency(kpis.average_order_value.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_order_value.trend_percentage}
+                trendDirection={kpis.average_order_value.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="margin"
                 label="Profit margin"
-                value={formatPercent(kpis.profit_margin_percentage)}
+                value={formatPercent(kpis.profit_margin_percentage.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.profit_margin_percentage.trend_percentage}
+                trendDirection={kpis.profit_margin_percentage.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="repeat_customer_rate"
                 label="Repeat customer rate"
-                value={formatPercent(kpis.repeat_customer_rate)}
+                value={formatPercent(kpis.repeat_customer_rate.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.repeat_customer_rate.trend_percentage}
+                trendDirection={kpis.repeat_customer_rate.trend_direction}
               />
             </dl>
           ) : null}

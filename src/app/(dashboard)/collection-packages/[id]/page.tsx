@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { CollectionCostBreakdownView } from "@/components/collections/CollectionCostBreakdownView";
 import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
@@ -12,12 +11,12 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import type { ApiError } from "@/lib/api/types";
-import { collectionsApi } from "@/lib/api/collections";
+import { formatDateTime } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
-import { formatCurrency, formatDateTime } from "@/lib/format";
 
-export default function CollectionDetailPage() {
+export default function CollectionPackageDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -25,8 +24,8 @@ export default function CollectionDetailPage() {
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["collections", params.id],
-    queryFn: () => collectionsApi.get(params.id),
+    queryKey: ["collection-package", params.id],
+    queryFn: () => collectionPackagesApi.get(params.id),
     enabled: Boolean(params.id),
   });
 
@@ -34,19 +33,27 @@ export default function CollectionDetailPage() {
     if (!data) {
       return;
     }
-    if (!window.confirm(`Delete "${data.name}"? This cannot be undone.`)) {
+    if (
+      !window.confirm(
+        `Delete "${data.name}"? This cannot be undone if collections are linked.`,
+      )
+    ) {
       return;
     }
-
     setDeleteError(null);
     setIsDeleting(true);
     try {
-      await collectionsApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["collections", data.id], ["collections"]);
-      router.push(routes.collections.list);
+      await collectionPackagesApi.delete(data.id);
+      cacheEntityRemove(
+        queryClient,
+        ["collection-package", data.id],
+        ["collection-packages"],
+        { alsoInvalidate: [["collections"]] },
+      );
+      router.push(routes.collectionPackages.list);
     } catch (err) {
       const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete collection.");
+      setDeleteError(apiError.message ?? "Unable to delete collection package.");
     } finally {
       setIsDeleting(false);
     }
@@ -54,28 +61,25 @@ export default function CollectionDetailPage() {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title="Collection" description="Loading...">
-        <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
+      <DashboardPageShell title="Collection Package" description="Loading...">
+        <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
       </DashboardPageShell>
     );
   }
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title="Collection" description="Not found">
-        <p className="text-sm text-danger">Collection not found.</p>
-        <PageActions backHref={routes.collections.list} className="mt-6" />
+      <DashboardPageShell title="Collection Package" description="Not found">
+        <p className="text-sm text-danger">Collection package not found.</p>
+        <PageActions backHref={routes.collectionPackages.list} className="mt-6" />
       </DashboardPageShell>
     );
   }
 
   return (
-    <DashboardPageShell
-      title={data.name}
-      description="Full collection cost breakdown and profitability analysis."
-    >
-      <PageActions backHref={routes.collections.list} className="mb-6">
-        <PrimaryLink href={routes.collections.edit(data.id)}>Edit</PrimaryLink>
+    <DashboardPageShell title={data.name} description="Collection package definition details.">
+      <PageActions backHref={routes.collectionPackages.list} className="mb-6">
+        <PrimaryLink href={routes.collectionPackages.edit(data.id)}>Edit</PrimaryLink>
         <SecondaryButton
           variant="danger"
           disabled={isDeleting}
@@ -84,22 +88,18 @@ export default function CollectionDetailPage() {
           {isDeleting ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
-
       {deleteError ? <p className="mb-4 text-sm text-danger">{deleteError}</p> : null}
-
       <DetailMetadataCard>
+        <DetailField label="Code" value={data.code} />
         <DetailField
-          label="Package"
-          value={<CollectionPackageBadge name={data.package.name} tone={data.package.badge_tone} />}
+          label="Badge"
+          value={<CollectionPackageBadge name={data.name} tone={data.badge_tone} />}
         />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
-        <DetailField label="Selling price" value={formatCurrency(data.selling_price)} />
-        <DetailField label="Buffer" value={formatCurrency(data.buffer_amount)} />
+        <DetailField label="Created" value={formatDateTime(data.created_at)} />
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>
-
-      <CollectionCostBreakdownView breakdown={data.cost_breakdown} />
     </DashboardPageShell>
   );
 }

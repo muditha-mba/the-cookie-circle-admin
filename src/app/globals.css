@@ -36,6 +36,8 @@
   --analytics-production-soft: rgb(194 65 12 / 0.1);
   --analytics-collections: #0e7490;
   --analytics-collections-soft: rgb(14 116 144 / 0.1);
+  --analytics-packages: #7c3aed;
+  --analytics-packages-soft: rgb(124 58 237 / 0.1);
   --analytics-operations: #334155;
   --analytics-operations-soft: rgb(51 65 85 / 0.1);
 }
@@ -73,6 +75,8 @@
   --analytics-production-soft: rgb(251 146 60 / 0.12);
   --analytics-collections: #22d3ee;
   --analytics-collections-soft: rgb(34 211 238 / 0.12);
+  --analytics-packages: #c4b5fd;
+  --analytics-packages-soft: rgb(196 181 253 / 0.14);
   --analytics-operations: #94a3b8;
   --analytics-operations-soft: rgb(148 163 184 / 0.14);
 }

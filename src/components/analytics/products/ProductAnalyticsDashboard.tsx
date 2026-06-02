@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -18,14 +18,15 @@ import {
 import { routes } from "@/config/routes";
 import {
   analyticsApi,
+  analyticsExportUrl,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
   type CollectionAnalyticsRow,
   type ProductAnalyticsRow,
 } from "@/lib/api/analytics";
 import { formatCurrency, formatDate, formatPercent, formatQuantity } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const CHART_LIMIT = 10;
 const TABLE_LIMIT = 100;
@@ -156,9 +157,14 @@ const collectionColumns: ColumnDef<CollectionAnalyticsRow>[] = [
 ];
 
 export function ProductAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const {
+    preset,
+    customStart,
+    customEnd,
+    setPreset,
+    setCustomStart,
+    setCustomEnd,
+  } = useAnalyticsUrlFilters();
 
   const chartParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -265,6 +271,7 @@ export function ProductAnalyticsDashboard() {
 
   const formatUnits = (value: number) => formatQuantity(value, "units");
   const formatProfit = (value: number) => formatCurrency(value);
+  const exportUrl = chartParams ? analyticsExportUrl("products", chartParams) : null;
 
   return (
     <div className="space-y-8">
@@ -275,6 +282,17 @@ export function ProductAnalyticsDashboard() {
         <ArrowLeft className="h-4 w-4" />
         Analytics
       </Link>
+
+      {exportUrl ? (
+        <div className="flex justify-end">
+          <a
+            href={exportUrl}
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+          >
+            Export CSV
+          </a>
+        </div>
+      ) : null}
 
       <AnalyticsDateRangeControls
         preset={preset}
@@ -331,14 +349,18 @@ export function ProductAnalyticsDashboard() {
               <AnalyticsKpiCard
                 variant="products"
                 label="Total products sold"
-                value={formatQuantity(kpis.total_products_sold, "units")}
+                value={formatQuantity(kpis.total_products_sold.value, "units")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_products_sold.trend_percentage}
+                trendDirection={kpis.total_products_sold.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="customers"
                 label="Total collections sold"
-                value={formatQuantity(kpis.total_collections_sold, "units")}
+                value={formatQuantity(kpis.total_collections_sold.value, "units")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_collections_sold.trend_percentage}
+                trendDirection={kpis.total_collections_sold.trend_direction}
               />
             </dl>
           ) : null}

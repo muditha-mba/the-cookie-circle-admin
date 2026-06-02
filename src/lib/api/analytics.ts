@@ -41,14 +41,14 @@ export type AnalyticsOverview = {
 
 export type CoreKpis = {
   date_range: AnalyticsDateRange;
-  total_revenue: string;
-  total_profit: string;
-  total_orders: number;
-  total_customers: number;
-  average_order_value: string;
-  repeat_customer_rate: string;
-  customer_lifetime_value: string;
-  profit_margin_percentage: string;
+  total_revenue: AnalyticsKpiMetric;
+  total_profit: AnalyticsKpiMetric;
+  total_orders: AnalyticsKpiMetric;
+  total_customers: AnalyticsKpiMetric;
+  average_order_value: AnalyticsKpiMetric;
+  repeat_customer_rate: AnalyticsKpiMetric;
+  customer_lifetime_value: AnalyticsKpiMetric;
+  profit_margin_percentage: AnalyticsKpiMetric;
 };
 
 export type TrendDataPoint = {
@@ -94,6 +94,7 @@ export type ProductAnalyticsRow = {
 export type CollectionAnalyticsRow = {
   collection_id: string;
   name: string;
+  package_name: string | null;
   units_sold: string;
   revenue_snapshot: string;
   cost_snapshot: string;
@@ -146,6 +147,55 @@ export type CollectionTrendSeries = {
   points: CollectionTrendPoint[];
 };
 
+export type CollectionPackageKpiMetric = {
+  package_name: string | null;
+  value: string;
+  trend_percentage: string | null;
+  trend_direction: string | null;
+};
+
+export type CollectionPackageAnalyticsKpis = {
+  date_range: AnalyticsDateRange;
+  highest_revenue_package: CollectionPackageKpiMetric;
+  most_profitable_package: CollectionPackageKpiMetric;
+  highest_margin_package: CollectionPackageKpiMetric;
+  most_ordered_package: CollectionPackageKpiMetric;
+  most_sold_package: CollectionPackageKpiMetric;
+  active_package_types: CollectionPackageKpiMetric;
+};
+
+export type CollectionPackageAnalyticsRow = {
+  package_id: string | null;
+  package_code: string;
+  package_name: string;
+  revenue_snapshot: string;
+  cost_snapshot: string;
+  profit_snapshot: string;
+  average_margin_percentage: string;
+  order_count: number;
+  units_sold: string;
+  average_order_value: string;
+  revenue_share_percentage: string;
+};
+
+export type CollectionPackageAnalyticsPerformance = {
+  date_range: AnalyticsDateRange;
+  items: CollectionPackageAnalyticsRow[];
+};
+
+export type CollectionPackageAnalyticsInsight = {
+  id: string;
+  title: string;
+  name: string | null;
+  metric_label: string;
+  metric_value: string;
+};
+
+export type CollectionPackageAnalyticsInsights = {
+  date_range: AnalyticsDateRange;
+  items: CollectionPackageAnalyticsInsight[];
+};
+
 export type RankedProductsResponse = {
   date_range: AnalyticsDateRange;
   items: ProductAnalyticsRow[];
@@ -162,8 +212,8 @@ export type ProductAnalyticsKpis = {
   most_profitable_product_name: string | null;
   most_ordered_collection_name: string | null;
   most_profitable_collection_name: string | null;
-  total_products_sold: string;
-  total_collections_sold: string;
+  total_products_sold: AnalyticsKpiMetric;
+  total_collections_sold: AnalyticsKpiMetric;
 };
 
 export type ProductAnalyticsInsight = {
@@ -184,12 +234,12 @@ export type CustomerSegment = "new" | "returning" | "vip" | "inactive";
 
 export type CustomerAnalyticsKpis = {
   date_range: AnalyticsDateRange;
-  total_customers: number;
-  new_customers: number;
-  returning_customers: number;
-  vip_customers: number;
-  inactive_customers: number;
-  average_customer_lifetime_value: string;
+  total_customers: AnalyticsKpiMetric;
+  new_customers: AnalyticsKpiMetric;
+  returning_customers: AnalyticsKpiMetric;
+  vip_customers: AnalyticsKpiMetric;
+  inactive_customers: AnalyticsKpiMetric;
+  average_customer_lifetime_value: AnalyticsKpiMetric;
 };
 
 export type CustomerGrowthPoint = {
@@ -298,12 +348,12 @@ export type ProductionDemandList = {
 
 export type ProductionAnalyticsKpis = {
   date_range: AnalyticsDateRange;
-  total_products_produced: string;
-  total_collections_produced: string;
-  total_ingredient_consumption_cost: string;
-  total_packaging_consumption_cost: string;
-  total_production_batches: number;
-  average_batch_size: string;
+  total_products_produced: AnalyticsKpiMetric;
+  total_collections_produced: AnalyticsKpiMetric;
+  total_ingredient_consumption_cost: AnalyticsKpiMetric;
+  total_packaging_consumption_cost: AnalyticsKpiMetric;
+  total_production_batches: AnalyticsKpiMetric;
+  average_batch_size: AnalyticsKpiMetric;
 };
 
 export type ProductionAnalyticsInsight = {
@@ -353,10 +403,12 @@ export type OrderAnalyticsKpis = {
   date_range: AnalyticsDateRange;
   total_orders: AnalyticsKpiMetric;
   completed_orders: AnalyticsKpiMetric;
+  cancelled_orders: AnalyticsKpiMetric;
+  completion_rate: AnalyticsKpiMetric;
   average_order_value: AnalyticsKpiMetric;
-  fulfillment_rate: AnalyticsKpiMetric;
-  delivery_success_rate: AnalyticsKpiMetric;
-  average_delivery_fee: AnalyticsKpiMetric;
+  revenue_from_orders: AnalyticsKpiMetric;
+  average_profit_per_order: AnalyticsKpiMetric;
+  average_margin_percentage: AnalyticsKpiMetric;
 };
 
 export type OrderAnalyticsInsight = {
@@ -394,13 +446,67 @@ export type OrderTrendSeries = {
   points: OrderTrendPoint[];
 };
 
+export type OrderLifecycleTrendPoint = {
+  period_start: string;
+  draft: number;
+  confirmed: number;
+  preparing: number;
+  ready: number;
+  delivered: number;
+  cancelled: number;
+};
+
+export type OrderLifecycleTrendSeries = {
+  date_range: AnalyticsDateRange;
+  granularity: TrendGranularity;
+  points: OrderLifecycleTrendPoint[];
+};
+
+export type OrderDeliveryAreaPerformanceRow = {
+  area_name: string;
+  order_count: number;
+  revenue_snapshot: string;
+  delivery_fee_revenue: string;
+  average_delivery_fee: string;
+};
+
+export type OrderDeliveryAreaPerformance = {
+  date_range: AnalyticsDateRange;
+  items: OrderDeliveryAreaPerformanceRow[];
+};
+
+export type OrderPaymentMethodPerformanceRow = {
+  payment_method: string;
+  order_count: number;
+  revenue_snapshot: string;
+  average_order_value: string;
+};
+
+export type OrderPaymentMethodPerformance = {
+  date_range: AnalyticsDateRange;
+  items: OrderPaymentMethodPerformanceRow[];
+};
+
+export type OrderCustomerBehaviour = {
+  date_range: AnalyticsDateRange;
+  first_time_customers: number;
+  returning_customers: number;
+  repeat_purchase_rate: string;
+  average_orders_per_customer: string;
+};
+
 export type OrderAnalyticsPerformanceRow = {
   order_id: string;
   order_number: string;
   customer_id: string;
   customer_name: string;
+  package_type: string;
+  collections_value_snapshot: string;
+  products_value_snapshot: string;
   total_revenue_snapshot: string;
+  total_cost_snapshot: string;
   total_profit_snapshot: string;
+  margin_percentage_snapshot: string;
   delivery_fee_snapshot: string;
   payment_method: string;
   payment_status: string;
@@ -500,6 +606,43 @@ export type OperationsBusinessHealth = {
   date_range: AnalyticsDateRange;
   highlights: OperationsBusinessHealthItem[];
   summary_rows: OperationsExecutiveSummaryRow[];
+};
+
+export type ExecutiveOverviewKpis = {
+  date_range: AnalyticsDateRange;
+  total_revenue: AnalyticsKpiMetric;
+  total_profit: AnalyticsKpiMetric;
+  total_orders: AnalyticsKpiMetric;
+  total_customers: AnalyticsKpiMetric;
+  average_order_value: AnalyticsKpiMetric;
+  average_margin_percentage: AnalyticsKpiMetric;
+};
+
+export type ExecutiveOverviewHighlights = {
+  date_range: AnalyticsDateRange;
+  top_product: string | null;
+  top_collection: string | null;
+  top_package: string | null;
+  top_customer: string | null;
+  highest_revenue_delivery_area: string | null;
+  most_used_payment_method: string | null;
+};
+
+export type ExecutiveRevenueContributionItem = {
+  name: string;
+  value: string;
+};
+
+export type ExecutiveRevenueContribution = {
+  date_range: AnalyticsDateRange;
+  items: ExecutiveRevenueContributionItem[];
+};
+
+export type ExecutiveOperationsSnapshot = {
+  upcoming_production_batch: string | null;
+  upcoming_orders: number;
+  orders_awaiting_preparation: number;
+  orders_awaiting_delivery: number;
 };
 
 const BASE = "/api/v1/analytics";
@@ -622,6 +765,22 @@ export const analyticsApi = {
   getCollectionOrderTrends: (params?: AnalyticsQueryParams) =>
     apiClient.get<CollectionTrendSeries>(`${BASE}/collections/order-trends`, { params }),
 
+  getCollectionPackageKpis: (params?: AnalyticsQueryParams) =>
+    apiClient.get<CollectionPackageAnalyticsKpis>(`${BASE}/collections/packages/kpis`, {
+      params,
+    }),
+
+  getCollectionPackageInsights: (params?: AnalyticsQueryParams) =>
+    apiClient.get<CollectionPackageAnalyticsInsights>(`${BASE}/collections/packages/insights`, {
+      params,
+    }),
+
+  getCollectionPackagePerformance: (params?: AnalyticsQueryParams) =>
+    apiClient.get<CollectionPackageAnalyticsPerformance>(
+      `${BASE}/collections/packages/performance`,
+      { params },
+    ),
+
   getTopRevenueCollections: (params?: AnalyticsQueryParams) =>
     apiClient.get<RankedCollectionsResponse>(`${BASE}/collections/top-revenue`, { params }),
 
@@ -669,6 +828,22 @@ export const analyticsApi = {
   getOrderDeliveryTrends: (params?: AnalyticsQueryParams) =>
     apiClient.get<OrderTrendSeries>(`${BASE}/orders/delivery-trends`, { params }),
 
+  getOrderLifecycleTrends: (params?: AnalyticsQueryParams) =>
+    apiClient.get<OrderLifecycleTrendSeries>(`${BASE}/orders/lifecycle-trends`, { params }),
+
+  getOrderDeliveryAreaPerformance: (params?: AnalyticsQueryParams) =>
+    apiClient.get<OrderDeliveryAreaPerformance>(`${BASE}/orders/delivery-area-performance`, {
+      params,
+    }),
+
+  getOrderPaymentMethodPerformance: (params?: AnalyticsQueryParams) =>
+    apiClient.get<OrderPaymentMethodPerformance>(`${BASE}/orders/payment-method-performance`, {
+      params,
+    }),
+
+  getOrderCustomerBehaviour: (params?: AnalyticsQueryParams) =>
+    apiClient.get<OrderCustomerBehaviour>(`${BASE}/orders/customer-behaviour`, { params }),
+
   getOrderPerformance: (params?: AnalyticsQueryParams) =>
     apiClient.get<OrderAnalyticsPerformance>(`${BASE}/orders/performance`, { params }),
 
@@ -697,6 +872,20 @@ export const analyticsApi = {
     apiClient.get<OperationsBusinessHealth>(`${BASE}/operations/business-health`, {
       params,
     }),
+
+  getExecutiveKpis: (params?: AnalyticsQueryParams) =>
+    apiClient.get<ExecutiveOverviewKpis>(`${BASE}/executive/kpis`, { params }),
+
+  getExecutiveHighlights: (params?: AnalyticsQueryParams) =>
+    apiClient.get<ExecutiveOverviewHighlights>(`${BASE}/executive/highlights`, { params }),
+
+  getExecutiveRevenueContribution: (params?: AnalyticsQueryParams) =>
+    apiClient.get<ExecutiveRevenueContribution>(`${BASE}/executive/revenue-contribution`, {
+      params,
+    }),
+
+  getExecutiveOperationsSnapshot: () =>
+    apiClient.get<ExecutiveOperationsSnapshot>(`${BASE}/executive/operations-snapshot`),
 };
 
 export const ANALYTICS_DATE_PRESETS: {
@@ -741,4 +930,15 @@ export function analyticsQueryKey(
   params: AnalyticsQueryParams,
 ): readonly ["analytics", string, AnalyticsQueryParams] {
   return ["analytics", scope, params];
+}
+
+export function analyticsExportUrl(scope: string, params: AnalyticsQueryParams): string {
+  const search = new URLSearchParams();
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      search.set(key, String(value));
+    }
+  });
+  const qs = search.toString();
+  return `/api/v1/analytics/export/${scope}${qs ? `?${qs}` : ""}`;
 }

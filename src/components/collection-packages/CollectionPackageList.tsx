@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
+import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { DataTable } from "@/components/data/DataTable";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
@@ -13,18 +14,17 @@ import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type { ProductSummary } from "@/lib/api/products";
-import { productsApi } from "@/lib/api/products";
-import { formatCurrency } from "@/lib/format";
+import type { CollectionPackage } from "@/lib/api/collection-packages";
+import { collectionPackagesApi } from "@/lib/api/collection-packages";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
-  { value: "selling_price", label: "Selling price" },
-  { value: "yield_quantity", label: "Yield" },
+  { value: "code", label: "Code" },
+  { value: "badge_tone", label: "Badge tone" },
   { value: "created_at", label: "Created" },
 ];
 
-export function ProductList() {
+export function CollectionPackageList() {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -33,9 +33,9 @@ export function ProductList() {
   const debouncedSearch = useDebouncedValue(search);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["products", page, debouncedSearch, sortBy, sortOrder],
+    queryKey: ["collection-packages", page, debouncedSearch, sortBy, sortOrder],
     queryFn: () =>
-      productsApi.list({
+      collectionPackagesApi.list({
         page,
         page_size: 20,
         search: debouncedSearch || undefined,
@@ -44,30 +44,25 @@ export function ProductList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<ProductSummary>[]>(
+  const columns = useMemo<ColumnDef<CollectionPackage>[]>(
     () => [
       {
         header: "Name",
         accessorKey: "name",
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
+      },
+      {
+        header: "Code",
+        accessorKey: "code",
+      },
+      {
+        header: "Badge",
+        accessorKey: "badge_tone",
         cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
-      },
-      {
-        header: "Selling price",
-        accessorKey: "selling_price",
-        cell: ({ row }) => formatCurrency(row.original.selling_price),
-      },
-      {
-        header: "Buffer",
-        accessorKey: "buffer_amount",
-        cell: ({ row }) => formatCurrency(row.original.buffer_amount),
-      },
-      {
-        header: "Yield",
-        accessorKey: "yield_quantity",
-        cell: ({ row }) => (
-          <span className="tabular-nums">{Number(row.original.yield_quantity).toLocaleString("en-LK")}</span>
+          <CollectionPackageBadge
+            name={row.original.name}
+            tone={row.original.badge_tone}
+          />
         ),
       },
       {
@@ -87,7 +82,7 @@ export function ProductList() {
           setSearch(value);
           setPage(1);
         }}
-        searchPlaceholder="Search products..."
+        searchPlaceholder="Search collection packages..."
         sortBy={sortBy}
         sortOrder={sortOrder}
         sortOptions={SORT_OPTIONS}
@@ -96,17 +91,17 @@ export function ProductList() {
           setPage(1);
         }}
         onSortOrderChange={setSortOrder}
-        actions={<PrimaryLink href={routes.products.create}>Add product</PrimaryLink>}
+        actions={<PrimaryLink href={routes.collectionPackages.create}>Add package</PrimaryLink>}
       />
 
       {isError ? (
-        <p className="text-sm text-danger">Unable to load products.</p>
+        <p className="text-sm text-danger">Unable to load collection packages.</p>
       ) : (
         <DataTable
           columns={columns}
           data={data?.items ?? []}
           isLoading={isLoading}
-          onRowClick={(row) => router.push(routes.products.detail(row.id))}
+          onRowClick={(row) => router.push(routes.collectionPackages.detail(row.id))}
         />
       )}
 
@@ -122,12 +117,12 @@ export function ProductList() {
 
       {!isLoading && data?.total === 0 ? (
         <p className="text-center text-sm text-text-secondary">
-          No products yet.{" "}
+          No collection packages yet.{" "}
           <Link
-            href={routes.products.create}
+            href={routes.collectionPackages.create}
             className="text-text-primary underline-offset-4 hover:underline"
           >
-            Create your first product
+            Create your first package
           </Link>
         </p>
       ) : null}

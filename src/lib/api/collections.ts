@@ -16,6 +16,7 @@ export type CollectionSummary = {
   id: string;
   name: string;
   description: string | null;
+  package_id: string;
   selling_price: string;
   buffer_amount: string;
   is_active: boolean;
@@ -80,12 +81,23 @@ export type CollectionDetail = CollectionSummary & {
   utility_charges: AttachedCharge[];
   labour_charges: AttachedCharge[];
   tax_charges: AttachedCharge[];
+  package: {
+    id: string;
+    code: string;
+    name: string;
+    description: string | null;
+    badge_tone: string;
+    is_active: boolean;
+    created_at: string;
+    updated_at: string;
+  };
   cost_breakdown: CollectionCostBreakdown;
 };
 
 export type CollectionCreate = {
   name: string;
   description?: string | null;
+  package_id: string;
   selling_price: number;
   buffer_amount?: number;
   is_active?: boolean;

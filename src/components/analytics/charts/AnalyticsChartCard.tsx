@@ -24,6 +24,7 @@ const CATEGORY_ACCENT_VAR: Record<AnalyticsVisualCategory, string> = {
   products: "var(--analytics-products)",
   customers: "var(--analytics-customers)",
   collections: "var(--analytics-collections)",
+  packages: "var(--analytics-packages)",
   production: "var(--analytics-production)",
   operations: "var(--analytics-operations)",
 };
@@ -38,6 +39,7 @@ const CATEGORY_PANEL_CLASS: Record<AnalyticsVisualCategory, string> = {
   products: "from-[var(--analytics-products-soft)]",
   customers: "from-[var(--analytics-customers-soft)]",
   collections: "from-[var(--analytics-collections-soft)]",
+  packages: "from-[var(--analytics-packages-soft)]",
   production: "from-[var(--analytics-production-soft)]",
   operations: "from-[var(--analytics-operations-soft)]",
 };

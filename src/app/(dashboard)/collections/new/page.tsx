@@ -26,6 +26,7 @@ export default function NewCollectionPage() {
       const created = await collectionsApi.create({
         name: values.name,
         description: values.description || null,
+        package_id: values.package_id,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         is_active: values.is_active,

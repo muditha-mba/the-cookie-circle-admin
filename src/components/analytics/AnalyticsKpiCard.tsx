@@ -15,6 +15,9 @@ type AnalyticsKpiCardProps = {
   value: ReactNode;
   variant: AnalyticsKpiVariant;
   dateRangeLabel?: string;
+  trendPercentage?: string | number | null;
+  trendDirection?: "up" | "down" | "flat" | string | null;
+  trendComparisonLabel?: string;
   isLoading?: boolean;
   className?: string;
 };
@@ -24,11 +27,19 @@ export function AnalyticsKpiCard({
   value,
   variant,
   dateRangeLabel,
+  trendPercentage,
+  trendDirection,
+  trendComparisonLabel = "vs previous period",
   isLoading = false,
   className,
 }: AnalyticsKpiCardProps) {
   const { accent, soft } = useAnalyticsCategoryAccent(variant);
   const Icon = KPI_VARIANT_ICONS[variant];
+
+  const hasTrend = trendPercentage !== null && trendPercentage !== undefined && trendDirection;
+  const trendGlyph =
+    trendDirection === "up" ? "↑" : trendDirection === "down" ? "↓" : trendDirection === "flat" ? "→" : null;
+  const trendText = hasTrend ? `${trendGlyph} ${trendPercentage}% ${trendComparisonLabel}` : "Trend —";
 
   return (
     <article
@@ -74,10 +85,14 @@ export function AnalyticsKpiCard({
           className="mt-4 flex items-center gap-1.5 border-t border-border/60 pt-3 text-xs"
           style={{ color: accent }}
           aria-hidden
-          title="Period-over-period trends will appear in a future release"
+          title={hasTrend ? "Period-over-period trend" : "Period-over-period trends will appear in a future release"}
         >
-          <Minus className="h-3 w-3 shrink-0 opacity-70" />
-          <span className="opacity-80">Trend —</span>
+          {hasTrend ? <span className="opacity-90">{trendText}</span> : (
+            <>
+              <Minus className="h-3 w-3 shrink-0 opacity-70" />
+              <span className="opacity-80">Trend —</span>
+            </>
+          )}
         </div>
       </div>
     </article>

@@ -10,8 +10,10 @@ import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Charge } from "@/lib/api/charge-types";
+import type { CollectionPackage } from "@/lib/api/collection-packages";
 import type { CollectionCostBreakdown } from "@/lib/api/collections";
 import { collectionsApi } from "@/lib/api/collections";
+import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { chargeAppliesToCollection } from "@/lib/charge-applicability";
 import { labourChargesApi } from "@/lib/api/labour-charges";
 import type { ProductItem } from "@/lib/api/product-items";
@@ -98,6 +100,7 @@ export function CollectionForm({
   const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
   const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
   const [taxCharges, setTaxCharges] = useState<Charge[]>([]);
+  const [collectionPackages, setCollectionPackages] = useState<CollectionPackage[]>([]);
   const [preview, setPreview] = useState<CollectionCostBreakdown | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -109,6 +112,7 @@ export function CollectionForm({
       description: "",
       selling_price: 0,
       buffer_amount: 0,
+      package_id: "",
       is_active: true,
       is_public: true,
       product_lines: [],
@@ -156,12 +160,18 @@ export function CollectionForm({
 
   useEffect(() => {
     void (async () => {
-      const [products, productItems, utilities, labour, tax] = await Promise.all([
+      const [products, productItems, utilities, labour, tax, packages] = await Promise.all([
         productsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
+        collectionPackagesApi.list({
+          page: 1,
+          page_size: 100,
+          sort_by: "name",
+          sort_order: "asc",
+        }),
       ]);
       setCatalogProducts(products.items.filter((p) => p.is_active));
       setPackagingItems(
@@ -172,8 +182,13 @@ export function CollectionForm({
       setUtilityCharges(utilities.items.filter(chargeAppliesToCollection));
       setLabourCharges(labour.items.filter(chargeAppliesToCollection));
       setTaxCharges(tax.items.filter(chargeAppliesToCollection));
+      setCollectionPackages(packages.items);
+      if (!form.getValues("package_id") && packages.items.length > 0) {
+        const defaultPackage = packages.items.find((pkg) => pkg.is_active) ?? packages.items[0];
+        form.setValue("package_id", defaultPackage.id, { shouldValidate: true });
+      }
     })();
-  }, []);
+  }, [form]);
 
   const productsReady = catalogProducts.length > 0;
   const packagingReady = packagingItems.length > 0;
@@ -260,7 +275,7 @@ export function CollectionForm({
           />
         </FormField>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-3">
           <FormField
             label="Selling price (LKR)"
             htmlFor="selling_price"
@@ -289,6 +304,24 @@ export function CollectionForm({
               className={formInputClassName}
               {...register("buffer_amount", { valueAsNumber: true })}
             />
+          </FormField>
+          <FormField
+            label="Package"
+            htmlFor="package_id"
+            error={errors.package_id?.message}
+          >
+            <select
+              id="package_id"
+              className={formInputClassName}
+              {...register("package_id")}
+            >
+              <option value="">Select package</option>
+              {collectionPackages.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.name}{option.is_active ? "" : " (inactive)"}
+                </option>
+              ))}
+            </select>
           </FormField>
         </div>
 

@@ -11,12 +11,26 @@ type AnalyticsInsightCardProps = {
   name: string | null;
   metricLabel: string;
   metricValue: string;
-  entityType: "product" | "collection" | "customer" | "production" | "order" | "operations";
+  entityType:
+    | "product"
+    | "collection"
+    | "package"
+    | "customer"
+    | "production"
+    | "order"
+    | "operations";
   className?: string;
 };
 
 function categoryForEntity(
-  entityType: "product" | "collection" | "customer" | "production" | "order" | "operations",
+  entityType:
+    | "product"
+    | "collection"
+    | "package"
+    | "customer"
+    | "production"
+    | "order"
+    | "operations",
 ): AnalyticsVisualCategory {
   if (entityType === "operations") {
     return "operations";
@@ -29,6 +43,9 @@ function categoryForEntity(
   }
   if (entityType === "collection") {
     return "collections";
+  }
+  if (entityType === "package") {
+    return "packages";
   }
   if (entityType === "order") {
     return "orders";
@@ -53,6 +70,8 @@ export function AnalyticsInsightCard({
         ? "var(--analytics-production-soft)"
         : category === "collections"
           ? "var(--analytics-collections-soft)"
+          : category === "packages"
+            ? "var(--analytics-packages-soft)"
           : category === "orders"
             ? "var(--analytics-orders-soft)"
             : category === "operations"
@@ -63,6 +82,8 @@ export function AnalyticsInsightCard({
       ? Package
       : entityType === "collection"
         ? Layers
+        : entityType === "package"
+          ? Layers
         : entityType === "production"
           ? Factory
           : entityType === "order"

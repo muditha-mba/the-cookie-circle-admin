@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -24,13 +24,13 @@ import {
   analyticsApi,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
   type OperationsExecutiveSummaryRow,
   type OrderDistributionItem,
   type UpcomingProductionDemand,
 } from "@/lib/api/analytics";
 import { formatCurrency, formatDate, formatQuantity } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const CHART_LIMIT = 10;
 
@@ -93,9 +93,8 @@ const summaryColumns: ColumnDef<OperationsExecutiveSummaryRow>[] = [
 ];
 
 export function OperationsAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
+  const { preset, customStart, customEnd, setPreset, setCustomStart, setCustomEnd } =
+    useAnalyticsUrlFilters();
 
   const chartParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -249,34 +248,46 @@ export function OperationsAnalyticsDashboard() {
               label="Revenue this period"
               value={formatCurrency(kpis.revenue_this_period.value)}
               dateRangeLabel={rangeLabel}
+              trendPercentage={kpis.revenue_this_period.trend_percentage}
+              trendDirection={kpis.revenue_this_period.trend_direction}
             />
             <AnalyticsKpiCard
               variant="profit"
               label="Profit this period"
               value={formatCurrency(kpis.profit_this_period.value)}
               dateRangeLabel={rangeLabel}
+              trendPercentage={kpis.profit_this_period.trend_percentage}
+              trendDirection={kpis.profit_this_period.trend_direction}
             />
             <AnalyticsKpiCard
               variant="orders"
               label="Orders this period"
               value={Number(kpis.orders_this_period.value).toLocaleString("en-LK")}
               dateRangeLabel={rangeLabel}
+              trendPercentage={kpis.orders_this_period.trend_percentage}
+              trendDirection={kpis.orders_this_period.trend_direction}
             />
             <AnalyticsKpiCard
               variant="operations"
               label="Upcoming deliveries"
               value={Number(kpis.upcoming_deliveries.value).toLocaleString("en-LK")}
+              trendPercentage={kpis.upcoming_deliveries.trend_percentage}
+              trendDirection={kpis.upcoming_deliveries.trend_direction}
             />
             <AnalyticsKpiCard
               variant="customers"
               label="Active customers"
               value={Number(kpis.active_customers.value).toLocaleString("en-LK")}
               dateRangeLabel={rangeLabel}
+              trendPercentage={kpis.active_customers.trend_percentage}
+              trendDirection={kpis.active_customers.trend_direction}
             />
             <AnalyticsKpiCard
               variant="production"
               label="Production workload"
               value={Number(kpis.production_workload.value).toLocaleString("en-LK")}
+              trendPercentage={kpis.production_workload.trend_percentage}
+              trendDirection={kpis.production_workload.trend_direction}
             />
           </div>
         )}

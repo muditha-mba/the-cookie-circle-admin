@@ -1,13 +1,13 @@
-import { AnalyticsLanding } from "@/components/analytics/AnalyticsLanding";
+import { ExecutiveOverviewDashboard } from "@/components/analytics/executive/ExecutiveOverviewDashboard";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 
 export default function AnalyticsPage() {
   return (
     <DashboardPageShell
-      title="Analytics"
-      description="Metrics foundation for revenue, customers, products, production, and orders."
+      title="Analytics Executive Overview"
+      description="Executive KPIs, highlights, trends, and operations snapshot."
     >
-      <AnalyticsLanding />
+      <ExecutiveOverviewDashboard />
     </DashboardPageShell>
   );
 }

@@ -3,7 +3,7 @@
 import { useQueries } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 import { ArrowLeft } from "lucide-react";
 
 import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDateRangeControls";
@@ -25,15 +25,17 @@ import {
 import { routes } from "@/config/routes";
 import {
   analyticsApi,
+  analyticsExportUrl,
   analyticsQueryKey,
   buildAnalyticsQueryParams,
-  type AnalyticsDatePreset,
   type AnalyticsQueryParams,
+  type OrderDeliveryAreaPerformanceRow,
+  type OrderPaymentMethodPerformanceRow,
   type OrderAnalyticsPerformanceRow,
   type OrderDistributionItem,
-  type TrendGranularity,
 } from "@/lib/api/analytics";
 import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const CHART_LIMIT = 10;
 const TABLE_LIMIT = 100;
@@ -71,6 +73,27 @@ function toBarData(items: OrderDistributionItem[]): AnalyticsChartDatum[] {
     }));
 }
 
+function toDeliveryAreaRevenueBar(items: OrderDeliveryAreaPerformanceRow[]): AnalyticsChartDatum[] {
+  return items.map((item) => ({
+    label: truncateLabel(item.area_name),
+    value: Number(item.revenue_snapshot) || 0,
+  }));
+}
+
+function toDeliveryAreaOrdersBar(items: OrderDeliveryAreaPerformanceRow[]): AnalyticsChartDatum[] {
+  return items.map((item) => ({
+    label: truncateLabel(item.area_name),
+    value: item.order_count,
+  }));
+}
+
+function toPaymentMethodRevenueBar(items: OrderPaymentMethodPerformanceRow[]): AnalyticsChartDatum[] {
+  return items.map((item) => ({
+    label: truncateLabel(formatEnumLabel(item.payment_method)),
+    value: Number(item.revenue_snapshot) || 0,
+  }));
+}
+
 function toTrendPoints(
   points: { period_start: string; count: number }[],
 ): AnalyticsChartPoint[] {
@@ -106,6 +129,27 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
     ),
   },
   {
+    accessorKey: "package_type",
+    header: "Package type",
+    cell: ({ row }) => <span className="text-text-secondary">{row.original.package_type}</span>,
+  },
+  {
+    accessorKey: "collections_value_snapshot",
+    header: "Collections value",
+    cell: ({ row }) => (
+      <span className="tabular-nums">
+        {formatCurrency(row.original.collections_value_snapshot)}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "products_value_snapshot",
+    header: "Products value",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.products_value_snapshot)}</span>
+    ),
+  },
+  {
     accessorKey: "total_revenue_snapshot",
     header: "Revenue",
     cell: ({ row }) => (
@@ -113,10 +157,24 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
     ),
   },
   {
+    accessorKey: "total_cost_snapshot",
+    header: "Cost",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.total_cost_snapshot)}</span>
+    ),
+  },
+  {
     accessorKey: "total_profit_snapshot",
     header: "Profit",
     cell: ({ row }) => (
       <span className="tabular-nums">{formatCurrency(row.original.total_profit_snapshot)}</span>
+    ),
+  },
+  {
+    accessorKey: "margin_percentage_snapshot",
+    header: "Margin %",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatPercent(row.original.margin_percentage_snapshot)}</span>
     ),
   },
   {
@@ -167,10 +225,16 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
 ];
 
 export function OrderAnalyticsDashboard() {
-  const [preset, setPreset] = useState<AnalyticsDatePreset>("last_30_days");
-  const [customStart, setCustomStart] = useState("");
-  const [customEnd, setCustomEnd] = useState("");
-  const [granularity, setGranularity] = useState<TrendGranularity>("day");
+  const {
+    preset,
+    customStart,
+    customEnd,
+    granularity,
+    setPreset,
+    setCustomStart,
+    setCustomEnd,
+    setGranularity,
+  } = useAnalyticsUrlFilters();
 
   const chartParams = useMemo((): AnalyticsQueryParams | null => {
     if (preset === "custom" && (!customStart || !customEnd)) {
@@ -231,8 +295,23 @@ export function OrderAnalyticsDashboard() {
         enabled,
       },
       {
-        queryKey: analyticsQueryKey("order-delivery-area-distribution", chartParams ?? {}),
-        queryFn: () => analyticsApi.getOrderDeliveryAreaDistribution(chartParams!),
+        queryKey: analyticsQueryKey("order-lifecycle-trends", chartParams ?? {}),
+        queryFn: () => analyticsApi.getOrderLifecycleTrends(chartParams!),
+        enabled,
+      },
+      {
+        queryKey: analyticsQueryKey("order-delivery-area-performance", chartParams ?? {}),
+        queryFn: () => analyticsApi.getOrderDeliveryAreaPerformance(chartParams!),
+        enabled,
+      },
+      {
+        queryKey: analyticsQueryKey("order-payment-method-performance", chartParams ?? {}),
+        queryFn: () => analyticsApi.getOrderPaymentMethodPerformance(chartParams!),
+        enabled,
+      },
+      {
+        queryKey: analyticsQueryKey("order-customer-behaviour", chartParams ?? {}),
+        queryFn: () => analyticsApi.getOrderCustomerBehaviour(chartParams!),
         enabled,
       },
       {
@@ -252,7 +331,10 @@ export function OrderAnalyticsDashboard() {
     sourceQuery,
     fulfillmentQuery,
     deliveryTrendsQuery,
-    deliveryAreaQuery,
+    lifecycleTrendsQuery,
+    deliveryAreaPerformanceQuery,
+    paymentMethodPerformanceQuery,
+    customerBehaviourQuery,
     performanceQuery,
   ] = queries;
 
@@ -286,9 +368,25 @@ export function OrderAnalyticsDashboard() {
     [paymentMethodQuery.data],
   );
   const sourceBar = useMemo(() => toBarData(sourceQuery.data?.items ?? []), [sourceQuery.data]);
-  const deliveryAreaBar = useMemo(
-    () => toBarData(deliveryAreaQuery.data?.items ?? []),
-    [deliveryAreaQuery.data],
+  const lifecycleDeliveredData = useMemo(() => {
+    const points =
+      lifecycleTrendsQuery.data?.points.map((point) => ({
+        periodStart: point.period_start,
+        value: point.delivered,
+      })) ?? [];
+    return toAnalyticsChartData(points, chartGranularity);
+  }, [lifecycleTrendsQuery.data, chartGranularity]);
+  const deliveryAreaRevenueBar = useMemo(
+    () => toDeliveryAreaRevenueBar(deliveryAreaPerformanceQuery.data?.items ?? []),
+    [deliveryAreaPerformanceQuery.data],
+  );
+  const deliveryAreaOrdersBar = useMemo(
+    () => toDeliveryAreaOrdersBar(deliveryAreaPerformanceQuery.data?.items ?? []),
+    [deliveryAreaPerformanceQuery.data],
+  );
+  const paymentMethodRevenueBar = useMemo(
+    () => toPaymentMethodRevenueBar(paymentMethodPerformanceQuery.data?.items ?? []),
+    [paymentMethodPerformanceQuery.data],
   );
 
   const formatCount = useCallback((value: number) => value.toLocaleString("en-LK"), []);
@@ -300,6 +398,7 @@ export function OrderAnalyticsDashboard() {
     sourceQuery.isLoading;
 
   const hasQueryError = queries.some((query) => query.isError);
+  const exportUrl = tableParams ? analyticsExportUrl("orders", tableParams) : null;
 
   return (
     <div className="space-y-8">
@@ -324,6 +423,17 @@ export function OrderAnalyticsDashboard() {
         resolvedRange={kpis?.date_range}
       />
 
+      {exportUrl ? (
+        <div className="flex justify-end">
+          <a
+            href={exportUrl}
+            className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm font-medium text-text-primary hover:bg-surface-hover"
+          >
+            Export CSV
+          </a>
+        </div>
+      ) : null}
+
       {!enabled ? (
         <p className="rounded-lg border border-border bg-surface px-4 py-8 text-center text-sm text-text-secondary">
           Choose a start and end date to load order analytics.
@@ -347,36 +457,64 @@ export function OrderAnalyticsDashboard() {
                 label="Total orders"
                 value={Number(kpis.total_orders.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.total_orders.trend_percentage}
+                trendDirection={kpis.total_orders.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
                 label="Completed orders"
                 value={Number(kpis.completed_orders.value).toLocaleString("en-LK")}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.completed_orders.trend_percentage}
+                trendDirection={kpis.completed_orders.trend_direction}
+              />
+              <AnalyticsKpiCard
+                variant="orders"
+                label="Cancelled orders"
+                value={Number(kpis.cancelled_orders.value).toLocaleString("en-LK")}
+                dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.cancelled_orders.trend_percentage}
+                trendDirection={kpis.cancelled_orders.trend_direction}
+              />
+              <AnalyticsKpiCard
+                variant="orders"
+                label="Completion rate"
+                value={formatPercent(kpis.completion_rate.value)}
+                dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.completion_rate.trend_percentage}
+                trendDirection={kpis.completion_rate.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
                 label="Average order value"
                 value={formatCurrency(kpis.average_order_value.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_order_value.trend_percentage}
+                trendDirection={kpis.average_order_value.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
-                label="Fulfillment rate"
-                value={formatPercent(kpis.fulfillment_rate.value)}
+                label="Revenue from orders"
+                value={formatCurrency(kpis.revenue_from_orders.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.revenue_from_orders.trend_percentage}
+                trendDirection={kpis.revenue_from_orders.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
-                label="Delivery success rate"
-                value={formatPercent(kpis.delivery_success_rate.value)}
+                label="Average profit per order"
+                value={formatCurrency(kpis.average_profit_per_order.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_profit_per_order.trend_percentage}
+                trendDirection={kpis.average_profit_per_order.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
-                label="Average delivery fee"
-                value={formatCurrency(kpis.average_delivery_fee.value)}
+                label="Average margin"
+                value={formatPercent(kpis.average_margin_percentage.value)}
                 dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.average_margin_percentage.trend_percentage}
+                trendDirection={kpis.average_margin_percentage.trend_direction}
               />
             </dl>
           ) : null}
@@ -473,6 +611,23 @@ export function OrderAnalyticsDashboard() {
 
             <AnalyticsChartCard
               category="orders"
+              title="Revenue by payment method"
+              description="Snapshot revenue grouped by payment method."
+            >
+              <AnalyticsBarChart
+                category="orders"
+                data={paymentMethodRevenueBar}
+                formatValue={(value) => formatCurrency(value)}
+                valueLabel="Revenue"
+                isLoading={paymentMethodPerformanceQuery.isLoading}
+                isError={paymentMethodPerformanceQuery.isError}
+                emptyTitle="No payment revenue in this period"
+                emptyDescription="Revenue reflects immutable order snapshot totals."
+              />
+            </AnalyticsChartCard>
+
+            <AnalyticsChartCard
+              category="orders"
               title="Order source distribution"
               description="Manual, phone, walk-in, and online channels (grouped)."
             >
@@ -509,6 +664,23 @@ export function OrderAnalyticsDashboard() {
 
             <AnalyticsChartCard
               category="orders"
+              title="Delivery completion trend"
+              description="Delivered status counts over time."
+            >
+              <AnalyticsLineChart
+                category="orders"
+                data={lifecycleDeliveredData}
+                formatValue={formatCount}
+                valueLabel="Delivered"
+                isLoading={lifecycleTrendsQuery.isLoading}
+                isError={lifecycleTrendsQuery.isError}
+                emptyTitle="No lifecycle data in this period"
+                emptyDescription="Completion trend appears when orders move through lifecycle statuses."
+              />
+            </AnalyticsChartCard>
+
+            <AnalyticsChartCard
+              category="orders"
               title="Deliveries over time"
               description="Delivered orders by scheduled delivery date."
             >
@@ -527,20 +699,71 @@ export function OrderAnalyticsDashboard() {
 
           <AnalyticsChartCard
             category="orders"
-            title="Delivery area distribution"
-            description="Top delivery areas by order count."
+            title="Delivery area revenue"
+            description="Revenue by delivery area from order snapshots."
           >
             <AnalyticsBarChart
               category="orders"
-              data={deliveryAreaBar}
+              data={deliveryAreaRevenueBar}
               layout="horizontal"
-              formatValue={formatCount}
-              valueLabel="Orders"
-              isLoading={deliveryAreaQuery.isLoading}
-              isError={deliveryAreaQuery.isError}
+              formatValue={(value) => formatCurrency(value)}
+              valueLabel="Revenue"
+              isLoading={deliveryAreaPerformanceQuery.isLoading}
+              isError={deliveryAreaPerformanceQuery.isError}
               emptyTitle="No delivery activity in this period"
               emptyDescription="Assign delivery areas on orders to see geographic distribution."
             />
+          </AnalyticsChartCard>
+
+          <AnalyticsChartCard
+            category="orders"
+            title="Delivery area order volume"
+            description="Order count by delivery area."
+          >
+            <AnalyticsBarChart
+              category="orders"
+              data={deliveryAreaOrdersBar}
+              layout="horizontal"
+              formatValue={formatCount}
+              valueLabel="Orders"
+              isLoading={deliveryAreaPerformanceQuery.isLoading}
+              isError={deliveryAreaPerformanceQuery.isError}
+              emptyTitle="No delivery activity in this period"
+              emptyDescription="Delivery area volumes appear when orders include delivery areas."
+            />
+          </AnalyticsChartCard>
+
+          <AnalyticsChartCard
+            category="orders"
+            title="Customer order behaviour"
+            description="First-time vs returning behaviour from order history."
+          >
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <dt className="text-xs text-text-secondary">First-time customers</dt>
+                <dd className="mt-1 text-base font-semibold tabular-nums text-text-primary">
+                  {(customerBehaviourQuery.data?.first_time_customers ?? 0).toLocaleString("en-LK")}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <dt className="text-xs text-text-secondary">Returning customers</dt>
+                <dd className="mt-1 text-base font-semibold tabular-nums text-text-primary">
+                  {(customerBehaviourQuery.data?.returning_customers ?? 0).toLocaleString("en-LK")}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <dt className="text-xs text-text-secondary">Repeat purchase rate</dt>
+                <dd className="mt-1 text-base font-semibold tabular-nums text-text-primary">
+                  {formatPercent(customerBehaviourQuery.data?.repeat_purchase_rate ?? 0)}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-border bg-surface p-3">
+                <dt className="text-xs text-text-secondary">Average orders per customer</dt>
+                <dd className="mt-1 text-base font-semibold tabular-nums text-text-primary">
+                  {Number(customerBehaviourQuery.data?.average_orders_per_customer ?? 0).toFixed(2)}
+                </dd>
+              </div>
+            </dl>
           </AnalyticsChartCard>
 
           <AnalyticsChartCard
