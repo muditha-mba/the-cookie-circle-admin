@@ -1,6 +1,19 @@
 import { apiClient } from "@/lib/api/client";
 import type { PaginatedResponse, ListQueryParams } from "@/lib/api/pagination";
 
+/**
+ * Product items are purchasable inputs (ingredients, packaging) used in costing
+ * and production demand. Phase 8+ inventory will extend this entity — not Products
+ * or Collections — with configuration such as:
+ *
+ * - `reorder_level` (minimum stock before replenishment)
+ * - `track_inventory` / inventory settings flags
+ * - optional default warehouse or location (if introduced)
+ *
+ * Stock balances and movement transactions will live in dedicated inventory
+ * tables; this type remains the catalog anchor for what is tracked.
+ */
+
 export type ProductItemTypeSummary = {
   id: string;
   name: string;

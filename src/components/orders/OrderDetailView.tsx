@@ -7,6 +7,7 @@ import { OrderFinancialPerformance } from "@/components/orders/OrderFinancialPer
 import { OrderFinancialSummary } from "@/components/orders/OrderFinancialSummary";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
+import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
 import type { OrderDetail } from "@/lib/api/orders";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -57,9 +58,15 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           }
         />
         <DetailField label="Source" value={formatLabel(order.source)} />
-        <DetailField label="Order status" value={formatLabel(order.status)} />
+        <DetailField
+          label="Order status"
+          value={<EnumStatusBadge kind="order" value={order.status} />}
+        />
         <DetailField label="Payment method" value={formatLabel(order.payment_method)} />
-        <DetailField label="Payment status" value={formatLabel(order.payment_status)} />
+        <DetailField
+          label="Payment status"
+          value={<EnumStatusBadge kind="payment" value={order.payment_status} />}
+        />
         <DetailField
           label="Delivery area"
           value={
@@ -177,7 +184,7 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           <ol className="mt-4 space-y-3">
             {order.status_timeline.map((event) => (
               <li key={event.id} className="flex items-start justify-between gap-4 text-sm">
-                <span className="font-medium text-text-primary">{formatLabel(event.status)}</span>
+                <EnumStatusBadge kind="order" value={event.status} />
                 <span className="text-text-muted">{formatDateTime(event.created_at)}</span>
               </li>
             ))}

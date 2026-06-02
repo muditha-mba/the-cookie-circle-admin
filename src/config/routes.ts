@@ -47,7 +47,16 @@ export const routes = {
     detail: (id: string) => `/suppliers/${id}`,
     edit: (id: string) => `/suppliers/${id}/edit`,
   },
-  analytics: "/analytics",
+  analytics: {
+    home: "/analytics",
+    revenue: "/analytics/revenue",
+    products: "/analytics/products",
+    customers: "/analytics/customers",
+    production: "/analytics/production",
+    collections: "/analytics/collections",
+    orders: "/analytics/orders",
+    operations: "/analytics/operations",
+  },
   productItemTypes: {
     list: "/product-item-types",
     create: "/product-item-types/new",
@@ -94,6 +103,7 @@ export type RouteKey = keyof Omit<
   | "utilityCharges"
   | "labourCharges"
   | "taxCharges"
+  | "analytics"
 >;
 
 const protectedPrefixes = [
@@ -105,7 +115,7 @@ const protectedPrefixes = [
   routes.orders.list,
   routes.production,
   routes.suppliers.list,
-  routes.analytics,
+  routes.analytics.home,
   routes.productItemTypes.list,
   routes.productItems.list,
   routes.utilityCharges.list,

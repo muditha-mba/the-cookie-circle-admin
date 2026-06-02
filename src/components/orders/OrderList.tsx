@@ -9,6 +9,7 @@ import { DataTable } from "@/components/data/DataTable";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
+import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { OrderSummary } from "@/lib/api/orders";
@@ -54,7 +55,13 @@ export function OrderList() {
         new Date(row.original.scheduled_delivery_date).toLocaleDateString()},
       { header: "Requested", accessorKey: "requested_delivery_date", cell: ({ row }) =>
         new Date(row.original.requested_delivery_date).toLocaleDateString()},
-      { header: "Status", accessorKey: "status" },
+      {
+        header: "Status",
+        accessorKey: "status",
+        cell: ({ row }) => (
+          <EnumStatusBadge kind="order" value={row.original.status} />
+        ),
+      },
       { header: "Revenue", accessorKey: "total_revenue_snapshot", cell: ({ row }) =>
         formatCurrency(row.original.total_revenue_snapshot)},
       { header: "Profit", accessorKey: "total_profit_snapshot", cell: ({ row }) =>

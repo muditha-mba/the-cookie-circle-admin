@@ -14,36 +14,18 @@ import {
 import { routes } from "@/config/routes";
 import type {
   FulfillmentStatusGroup,
-  OrderStatus,
   ProductionBatchStatus,
   ProductionSummaryResponse,
   PurchasePlanningStatus,
 } from "@/lib/api/production";
 import { productionApi } from "@/lib/api/production";
+import {
+  getStatusLabel,
+  PRODUCTION_BATCH_STATUS_OPTIONS,
+  PURCHASE_PLANNING_STATUS_OPTIONS,
+} from "@/config/status-badges";
 import { formatCurrency, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  draft: "Draft",
-  pending: "Pending",
-  confirmed: "Confirmed",
-  preparing: "Preparing",
-  ready: "Ready",
-  delivered: "Delivered",
-  cancelled: "Cancelled",
-};
-
-const PURCHASE_STATUS_LABELS: Record<PurchasePlanningStatus, string> = {
-  not_planned: "Not Planned",
-  planned: "Planned",
-  ordered: "Ordered",
-};
-
-const BATCH_STATUS_LABELS: Record<ProductionBatchStatus, string> = {
-  draft: "Draft",
-  planning: "Planning",
-  ready: "Ready",
-};
 
 function FulfillmentGroups({ groups }: { groups: FulfillmentStatusGroup[] }) {
   if (groups.length === 0) {
@@ -55,7 +37,7 @@ function FulfillmentGroups({ groups }: { groups: FulfillmentStatusGroup[] }) {
       {groups.map((group) => (
         <div key={group.status}>
           <h3 className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-            {STATUS_LABELS[group.status]} ({group.orders.length})
+            {getStatusLabel("order", group.status)} ({group.orders.length})
           </h3>
           <ul className="mt-2 divide-y divide-border rounded-md border border-border">
             {group.orders.map((order) => (
@@ -233,6 +215,15 @@ export function ProductionDashboard() {
 
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-end">
+        <Link
+          href={routes.analytics.production}
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          View Production Analytics
+        </Link>
+      </div>
+
       <SectionCard
         title="Production date"
         description="Select a scheduled delivery date or Saturday batch to plan weekly production."
@@ -381,13 +372,11 @@ export function ProductionDashboard() {
                           }
                           className="rounded-md border border-border bg-background px-3 py-2 text-sm"
                         >
-                          {(Object.keys(BATCH_STATUS_LABELS) as ProductionBatchStatus[]).map(
-                            (status) => (
-                              <option key={status} value={status}>
-                                {BATCH_STATUS_LABELS[status]}
-                              </option>
-                            ),
-                          )}
+                          {PRODUCTION_BATCH_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div className="min-w-0 flex-1 space-y-2">
@@ -460,11 +449,9 @@ export function ProductionDashboard() {
                             "rounded-md border border-border bg-background px-2 py-1 text-xs",
                           )}
                         >
-                          {(
-                            Object.keys(PURCHASE_STATUS_LABELS) as PurchasePlanningStatus[]
-                          ).map((status) => (
-                            <option key={status} value={status}>
-                              {PURCHASE_STATUS_LABELS[status]}
+                          {PURCHASE_PLANNING_STATUS_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
                             </option>
                           ))}
                         </select>,

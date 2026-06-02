@@ -20,6 +20,10 @@ import {
 } from "@/components/orders/ProductSearchSelect";
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
+import {
+  ORDER_STATUS_OPTIONS,
+  PAYMENT_STATUS_OPTIONS,
+} from "@/config/status-badges";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { businessSettingsApi } from "@/lib/api/business-settings";
 import { customersApi } from "@/lib/api/customers";
@@ -268,23 +272,22 @@ export function OrderForm({
             error={errors.payment_status?.message}
           >
             <select id="payment_status" className={formInputClassName} {...register("payment_status")}>
-              <option value="pending">Pending</option>
-              <option value="paid">Paid</option>
-              <option value="failed">Failed</option>
-              <option value="refunded">Refunded</option>
+              {PAYMENT_STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
           </FormField>
         </div>
 
         <FormField label="Order status" htmlFor="status" error={errors.status?.message}>
           <select id="status" className={formInputClassName} {...register("status")}>
-            <option value="draft">Draft</option>
-            <option value="pending">Pending</option>
-            <option value="confirmed">Confirmed</option>
-            <option value="preparing">Preparing</option>
-            <option value="ready">Ready</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
+            {ORDER_STATUS_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </FormField>
 

@@ -70,7 +70,10 @@ export default function ProductItemDetailPage() {
   }
 
   return (
-    <DashboardPageShell title={data.name} description="Product item details.">
+    <DashboardPageShell
+      title={data.name}
+      description="Purchased ingredient or packaging input. Future inventory settings (reorder level, stock tracking) will be managed on this record."
+    >
       <PageActions backHref={routes.productItems.list} className="mb-6">
         <PrimaryLink href={routes.productItems.edit(data.id)}>Edit</PrimaryLink>
         <SecondaryButton

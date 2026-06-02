@@ -29,6 +29,20 @@ export function formatDateTime(value: string): string {
   }).format(new Date(value));
 }
 
+export function formatDate(value: string): string {
+  return new Intl.DateTimeFormat("en-LK", {
+    dateStyle: "medium",
+  }).format(new Date(value.includes("T") ? value : `${value}T12:00:00`));
+}
+
+export function formatPercent(value: string | number, fractionDigits = 1): string {
+  const amount = typeof value === "string" ? Number(value) : value;
+  if (Number.isNaN(amount)) {
+    return "—";
+  }
+  return `${amount.toFixed(fractionDigits)}%`;
+}
+
 export function formatChargeAmount(
   amount: string | number,
   chargeType: "fixed" | "percentage",

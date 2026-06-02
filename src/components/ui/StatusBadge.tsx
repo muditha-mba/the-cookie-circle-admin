@@ -1,5 +1,9 @@
 import { cn } from "@/lib/utils";
 
+/**
+ * Active / inactive flag for catalog and CRM entities.
+ * For order, payment, and workflow enums use {@link EnumStatusBadge}.
+ */
 type StatusBadgeProps = {
   active: boolean;
   className?: string;

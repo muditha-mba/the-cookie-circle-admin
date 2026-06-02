@@ -15,6 +15,29 @@
   --warning: #ca8a04;
   --danger: #dc2626;
   --info: #2563eb;
+  /* Analytics category accents (intentional, restrained) */
+  --analytics-revenue: #a16207;
+  --analytics-revenue-soft: rgb(161 98 7 / 0.1);
+  --analytics-profit: #047857;
+  --analytics-profit-soft: rgb(4 120 87 / 0.1);
+  --analytics-orders: #4338ca;
+  --analytics-orders-soft: rgb(67 56 202 / 0.1);
+  --analytics-average-order-value: #6d28d9;
+  --analytics-average-order-value-soft: rgb(109 40 217 / 0.09);
+  --analytics-margin: #b45309;
+  --analytics-margin-soft: rgb(180 83 9 / 0.1);
+  --analytics-repeat-customer-rate: #0f766e;
+  --analytics-repeat-customer-rate-soft: rgb(15 118 110 / 0.1);
+  --analytics-products: #6d28d9;
+  --analytics-products-soft: rgb(109 40 217 / 0.09);
+  --analytics-customers: #0f766e;
+  --analytics-customers-soft: rgb(15 118 110 / 0.1);
+  --analytics-production: #c2410c;
+  --analytics-production-soft: rgb(194 65 12 / 0.1);
+  --analytics-collections: #0e7490;
+  --analytics-collections-soft: rgb(14 116 144 / 0.1);
+  --analytics-operations: #334155;
+  --analytics-operations-soft: rgb(51 65 85 / 0.1);
 }
 
 .dark {
@@ -30,6 +53,28 @@
   --warning: #eab308;
   --danger: #ef4444;
   --info: #3b82f6;
+  --analytics-revenue: #eab308;
+  --analytics-revenue-soft: rgb(234 179 8 / 0.12);
+  --analytics-profit: #34d399;
+  --analytics-profit-soft: rgb(52 211 153 / 0.12);
+  --analytics-orders: #818cf8;
+  --analytics-orders-soft: rgb(129 140 248 / 0.12);
+  --analytics-average-order-value: #a78bfa;
+  --analytics-average-order-value-soft: rgb(167 139 250 / 0.12);
+  --analytics-margin: #fbbf24;
+  --analytics-margin-soft: rgb(251 191 36 / 0.12);
+  --analytics-repeat-customer-rate: #2dd4bf;
+  --analytics-repeat-customer-rate-soft: rgb(45 212 191 / 0.12);
+  --analytics-products: #a78bfa;
+  --analytics-products-soft: rgb(167 139 250 / 0.12);
+  --analytics-customers: #2dd4bf;
+  --analytics-customers-soft: rgb(45 212 191 / 0.12);
+  --analytics-production: #fb923c;
+  --analytics-production-soft: rgb(251 146 60 / 0.12);
+  --analytics-collections: #22d3ee;
+  --analytics-collections-soft: rgb(34 211 238 / 0.12);
+  --analytics-operations: #94a3b8;
+  --analytics-operations-soft: rgb(148 163 184 / 0.14);
 }
 
 @theme inline {

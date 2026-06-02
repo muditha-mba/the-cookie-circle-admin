@@ -9,7 +9,12 @@ import { Logo } from "@/components/brand/Logo";
 import { SidebarNavItem } from "@/components/layout/SidebarNavItem";
 import { branding } from "@/config/branding";
 import { env } from "@/config/env";
-import { isNavItemActive, navigation } from "@/config/navigation";
+import {
+  dashboardNavItem,
+  getVisibleNavigationSections,
+  isNavItemActive,
+} from "@/config/navigation";
+import { SidebarNavSection } from "@/components/layout/SidebarNavSection";
 import { routes } from "@/config/routes";
 import { formatUserRole } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
@@ -83,16 +88,32 @@ export function Sidebar() {
       ) : null}
 
       <nav
-        className="min-h-0 flex-1 space-y-1 overflow-y-auto overscroll-contain p-3"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3"
         aria-label="Main"
       >
-        {navigation.map((item) => (
+        <div className="space-y-1">
           <SidebarNavItem
-            key={item.id}
-            item={item}
+            item={dashboardNavItem}
             collapsed={collapsed}
-            isActive={isNavItemActive(item, pathname)}
+            isActive={isNavItemActive(dashboardNavItem, pathname)}
           />
+        </div>
+        {getVisibleNavigationSections().map((section, index) => (
+          <SidebarNavSection
+            key={section.id}
+            title={section.title}
+            collapsed={collapsed}
+            showDivider={index > 0 || collapsed}
+          >
+            {section.items.map((item) => (
+              <SidebarNavItem
+                key={item.id}
+                item={item}
+                collapsed={collapsed}
+                isActive={isNavItemActive(item, pathname)}
+              />
+            ))}
+          </SidebarNavSection>
         ))}
       </nav>
 
