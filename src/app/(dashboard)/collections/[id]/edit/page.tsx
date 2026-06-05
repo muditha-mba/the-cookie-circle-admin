@@ -34,11 +34,11 @@ export default function EditCollectionPage() {
         name: values.name,
         description: values.description || null,
         package_id: values.package_id,
-        selling_price: values.selling_price,
-        buffer_amount: values.buffer_amount,
+        package_size: values.package_size,
+        package_fee: values.package_fee,
         is_active: values.is_active,
         is_public: values.is_public,
-        product_lines: values.product_lines,
+        allowed_category_ids: values.allowed_category_ids,
         item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,
@@ -74,7 +74,7 @@ export default function EditCollectionPage() {
   return (
     <DashboardPageShell
       title={`Edit ${data.name}`}
-      description="Update products, charges, and pricing."
+      description="Update package configuration."
     >
       <PageActions backHref={routes.collections.detail(params.id)} className="mb-6" />
       <CollectionForm
@@ -82,14 +82,11 @@ export default function EditCollectionPage() {
           name: data.name,
           description: data.description ?? "",
           package_id: data.package_id,
-          selling_price: Number(data.selling_price),
-          buffer_amount: Number(data.buffer_amount),
+          package_size: data.package_size,
+          package_fee: Number(data.package_fee),
           is_active: data.is_active,
           is_public: data.is_public,
-          product_lines: data.product_lines.map((line) => ({
-            product_id: line.product_id,
-            quantity: Number(line.quantity),
-          })),
+          allowed_category_ids: data.allowed_category_ids,
           item_lines: data.item_lines.map((line) => ({
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),

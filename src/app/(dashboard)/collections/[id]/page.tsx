@@ -4,7 +4,6 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
-import { CollectionCostBreakdownView } from "@/components/collections/CollectionCostBreakdownView";
 import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
@@ -72,7 +71,7 @@ export default function CollectionDetailPage() {
   return (
     <DashboardPageShell
       title={data.name}
-      description="Full collection cost breakdown and profitability analysis."
+      description="Package configuration for the customer-facing builder."
     >
       <PageActions backHref={routes.collections.list} className="mb-6">
         <PrimaryLink href={routes.collections.edit(data.id)}>Edit</PrimaryLink>
@@ -93,13 +92,29 @@ export default function CollectionDetailPage() {
           value={<CollectionPackageBadge name={data.package.name} tone={data.package.badge_tone} />}
         />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
-        <DetailField label="Selling price" value={formatCurrency(data.selling_price)} />
-        <DetailField label="Buffer" value={formatCurrency(data.buffer_amount)} />
+        <DetailField label="Public" value={data.is_public ? "Yes" : "No"} />
+        <DetailField label="Package size" value={`${data.package_size} cookies`} />
+        <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+        <DetailField
+          label="Allowed categories"
+          value={data.allowed_categories.map((row) => row.name).join(", ") || "—"}
+        />
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>
 
-      <CollectionCostBreakdownView breakdown={data.cost_breakdown} />
+      {data.item_lines.length > 0 ? (
+        <section className="mt-8 rounded-lg border border-border bg-surface p-6">
+          <h2 className="text-lg font-semibold text-text-primary mb-4">Packaging items</h2>
+          <ul className="space-y-2 text-sm">
+            {data.item_lines.map((line) => (
+              <li key={line.id}>
+                {line.product_item_name} — {line.quantity} {line.unit}
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </DashboardPageShell>
   );
 }

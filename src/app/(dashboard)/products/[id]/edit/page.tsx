@@ -33,6 +33,7 @@ export default function EditProductPage() {
       const updated = await productsApi.update(params.id, {
         name: values.name,
         description: values.description || null,
+        category_id: values.category_id,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         yield_quantity: values.yield_quantity,
@@ -83,6 +84,7 @@ export default function EditProductPage() {
         defaultValues={{
           name: data.name,
           description: data.description ?? "",
+          category_id: data.category_id,
           selling_price: Number(data.selling_price),
           buffer_amount: Number(data.buffer_amount),
           yield_quantity: Number(data.yield_quantity),

@@ -14,6 +14,7 @@ import { labourChargesApi } from "@/lib/api/labour-charges";
 import { productItemsApi } from "@/lib/api/product-items";
 import type { ProductItem } from "@/lib/api/product-items";
 import type { ProductCostBreakdown } from "@/lib/api/products";
+import { productCategoriesApi } from "@/lib/api/product-categories";
 import { productsApi } from "@/lib/api/products";
 import { chargeAppliesToProduct } from "@/lib/charge-applicability";
 import { taxChargesApi } from "@/lib/api/tax-charges";
@@ -94,6 +95,7 @@ export function ProductForm({
   const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
   const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
   const [taxCharges, setTaxCharges] = useState<Charge[]>([]);
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [preview, setPreview] = useState<ProductCostBreakdown | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -103,6 +105,7 @@ export function ProductForm({
     defaultValues: {
       name: "",
       description: "",
+      category_id: "",
       selling_price: 0,
       buffer_amount: 0,
       yield_quantity: 1,
@@ -146,13 +149,15 @@ export function ProductForm({
 
   useEffect(() => {
     void (async () => {
-      const [items, utilities, labour, tax] = await Promise.all([
+      const [items, categoryRows, utilities, labour, tax] = await Promise.all([
         productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
+        productCategoriesApi.list(),
         utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       ]);
       setProductItems(items.items);
+      setCategories(categoryRows.map((row) => ({ id: row.id, name: row.name })));
       setUtilityCharges(utilities.items.filter(chargeAppliesToProduct));
       setLabourCharges(labour.items.filter(chargeAppliesToProduct));
       setTaxCharges(tax.items.filter(chargeAppliesToProduct));
@@ -256,6 +261,17 @@ export function ProductForm({
             className={formInputClassName}
             {...register("description")}
           />
+        </FormField>
+
+        <FormField label="Category" htmlFor="category_id" error={errors.category_id?.message}>
+          <select id="category_id" className={formInputClassName} {...register("category_id")}>
+            <option value="">Select category</option>
+            {categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}
+              </option>
+            ))}
+          </select>
         </FormField>
 
         <div className="grid gap-4 sm:grid-cols-2">

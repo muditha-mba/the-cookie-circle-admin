@@ -10,6 +10,7 @@ export type ProductSummary = {
   id: string;
   name: string;
   description: string | null;
+  category_id: string;
   selling_price: string;
   buffer_amount: string;
   yield_quantity: string;
@@ -77,6 +78,7 @@ export type ProductDetail = ProductSummary & {
 export type ProductCreate = {
   name: string;
   description?: string | null;
+  category_id: string;
   selling_price: number;
   buffer_amount?: number;
   yield_quantity: number;

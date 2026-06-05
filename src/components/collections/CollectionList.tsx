@@ -22,7 +22,7 @@ import { formatCurrency } from "@/lib/format";
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
   { value: "package", label: "Package" },
-  { value: "selling_price", label: "Selling price" },
+  { value: "package_size", label: "Package size" },
   { value: "created_at", label: "Created" },
 ];
 
@@ -84,9 +84,14 @@ export function CollectionList() {
         },
       },
       {
-        header: "Selling price",
-        accessorKey: "selling_price",
-        cell: ({ row }) => formatCurrency(row.original.selling_price),
+        header: "Size",
+        accessorKey: "package_size",
+        cell: ({ row }) => `${row.original.package_size} cookies`,
+      },
+      {
+        header: "Fee",
+        accessorKey: "package_fee",
+        cell: ({ row }) => formatCurrency(row.original.package_fee),
       },
       {
         header: "Status",

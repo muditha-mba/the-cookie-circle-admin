@@ -13,6 +13,7 @@ export const productSchema = z.object({
     .max(2000)
     .optional()
     .or(z.literal("")),
+  category_id: z.string().uuid("Select a category"),
   selling_price: z.number().min(0, "Selling price must be zero or greater"),
   buffer_amount: z.number().min(0, "Buffer must be zero or greater"),
   yield_quantity: z.number().positive("Yield quantity must be greater than zero"),

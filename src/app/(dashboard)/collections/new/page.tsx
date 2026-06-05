@@ -27,11 +27,11 @@ export default function NewCollectionPage() {
         name: values.name,
         description: values.description || null,
         package_id: values.package_id,
-        selling_price: values.selling_price,
-        buffer_amount: values.buffer_amount,
+        package_size: values.package_size,
+        package_fee: values.package_fee,
         is_active: values.is_active,
         is_public: values.is_public,
-        product_lines: values.product_lines,
+        allowed_category_ids: values.allowed_category_ids,
         item_lines: values.item_lines,
         utility_charge_ids: values.utility_charge_ids,
         labour_charge_ids: values.labour_charge_ids,
@@ -50,7 +50,7 @@ export default function NewCollectionPage() {
   return (
     <DashboardPageShell
       title="Create Collection"
-      description="Build a product bundle and review live costing."
+      description="Configure a customer-facing package template."
     >
       <PageActions backHref={routes.collections.list} className="mb-6" />
       <CollectionForm

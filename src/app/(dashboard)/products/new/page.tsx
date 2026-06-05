@@ -26,6 +26,7 @@ export default function NewProductPage() {
       const created = await productsApi.create({
         name: values.name,
         description: values.description || null,
+        category_id: values.category_id,
         selling_price: values.selling_price,
         buffer_amount: values.buffer_amount,
         yield_quantity: values.yield_quantity,

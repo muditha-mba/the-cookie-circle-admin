@@ -95,7 +95,8 @@ export default function EditOrderPage() {
         collectionSnapshots={data.collection_lines.map((line) => ({
           id: line.collection_id,
           name: line.collection_name_snapshot,
-          selling_price: line.collection_selling_price_snapshot,
+          package_size: 0,
+          package_name: "Package",
         }))}
         defaultValues={{
           customer_id: data.customer.id,

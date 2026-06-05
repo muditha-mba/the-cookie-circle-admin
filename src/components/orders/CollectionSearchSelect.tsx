@@ -7,12 +7,11 @@ import { formInputClassName } from "@/components/forms/FormField";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionsApi } from "@/lib/api/collections";
-import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type CollectionSearchOption = Pick<
   CollectionSummary,
-  "id" | "name" | "selling_price"
+  "id" | "name" | "package_size" | "package_name"
 >;
 
 type CollectionSearchSelectProps = {
@@ -57,7 +56,8 @@ export function CollectionSearchSelect({
         setSelected({
           id: collection.id,
           name: collection.name,
-          selling_price: collection.selling_price,
+          package_size: collection.package_size,
+          package_name: collection.package_name,
         }),
       )
       .catch(() => setSelected(null));
@@ -103,7 +103,8 @@ export function CollectionSearchSelect({
     const option: CollectionSearchOption = {
       id: collection.id,
       name: collection.name,
-      selling_price: collection.selling_price,
+      package_size: collection.package_size,
+      package_name: collection.package_name,
     };
     setSelected(option);
     setQuery("");
@@ -120,7 +121,7 @@ export function CollectionSearchSelect({
   const inputValue = open
     ? query
     : selected
-      ? `${selected.name} · ${formatCurrency(selected.selling_price)}`
+      ? `${selected.name} · ${selected.package_size} cookies`
       : "";
 
   return (
@@ -199,7 +200,7 @@ export function CollectionSearchSelect({
                     {collection.name}
                     <span className="font-normal text-text-muted">
                       {" "}
-                      · {formatCurrency(collection.selling_price)}
+                      · {collection.package_size} cookies · {collection.package_name}
                     </span>
                   </span>
                   <span className="mt-0.5 block font-mono text-xs text-text-muted">
