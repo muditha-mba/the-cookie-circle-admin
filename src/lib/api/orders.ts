@@ -41,6 +41,23 @@ export type OrderProductLine = {
   line_revenue_snapshot: string;
   line_cost_snapshot: string;
   line_profit_snapshot: string;
+  margin_percentage_snapshot: string;
+};
+
+export type OrderCollectionLineSelection = {
+  id: string;
+  product_id: string;
+  quantity: string;
+  product_name_snapshot: string;
+  is_premium_snapshot: boolean;
+  product_selling_price_snapshot: string | null;
+  product_cost_snapshot: string | null;
+  product_profit_snapshot: string | null;
+  line_revenue_snapshot: string | null;
+  line_cost_snapshot: string | null;
+  line_profit_snapshot: string | null;
+  margin_percentage_snapshot: string | null;
+  profit_contribution_percentage_snapshot: string | null;
 };
 
 export type OrderCollectionLine = {
@@ -51,9 +68,14 @@ export type OrderCollectionLine = {
   collection_selling_price_snapshot: string;
   collection_cost_snapshot: string;
   collection_profit_snapshot: string;
+  package_fee_snapshot: string | null;
+  cookies_subtotal_snapshot: string | null;
+  total_cookies_per_pack: string | null;
   line_revenue_snapshot: string;
   line_cost_snapshot: string;
   line_profit_snapshot: string;
+  margin_percentage_snapshot: string;
+  selections?: OrderCollectionLineSelection[];
 };
 
 export type OrderFinancialSnapshot = {
@@ -139,6 +161,8 @@ export type OrderDetail = OrderDeliveryFields & {
   order_number: string;
   customer: OrderCustomer;
   delivery_area: OrderDeliveryArea | null;
+  order_type?: "weekly_delivery" | "catering";
+  event_name?: string | null;
   source: OrderSource;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;

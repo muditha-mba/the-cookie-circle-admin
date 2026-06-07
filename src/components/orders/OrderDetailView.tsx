@@ -3,8 +3,10 @@
 import Link from "next/link";
 
 import { DeliveryLocationPickerLazy } from "@/components/orders/DeliveryLocationPickerLazy";
+import { OrderCollectionLineDetail } from "@/components/orders/OrderCollectionLineDetail";
 import { OrderFinancialPerformance } from "@/components/orders/OrderFinancialPerformance";
-import { OrderFinancialSummary } from "@/components/orders/OrderFinancialSummary";
+import { OrderProductFinancialBreakdown } from "@/components/orders/OrderProductFinancialBreakdown";
+import { OrderSnapshotIntegrityNotice } from "@/components/orders/OrderSnapshotIntegrityNotice";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
@@ -58,6 +60,12 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           }
         />
         <DetailField label="Source" value={formatLabel(order.source)} />
+        {order.order_type ? (
+          <DetailField label="Order type" value={formatLabel(order.order_type)} />
+        ) : null}
+        {order.event_name ? (
+          <DetailField label="Event name" value={order.event_name} />
+        ) : null}
         <DetailField
           label="Order status"
           value={<EnumStatusBadge kind="order" value={order.status} />}
@@ -210,10 +218,31 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
 
       <OrderFinancialPerformance performance={order.financial_performance} />
 
-      <OrderFinancialSummary
-        productLines={order.product_lines}
-        collectionLines={order.collection_lines}
-      />
+      {order.order_type === "catering" && order.product_lines.length > 0 ? (
+        <section className="space-y-4">
+          <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
+            Catering cookies
+          </h3>
+          <OrderProductFinancialBreakdown productLines={order.product_lines} />
+        </section>
+      ) : (
+        <OrderProductFinancialBreakdown productLines={order.product_lines} />
+      )}
+
+      {order.collection_lines.length > 0 ? (
+        <section className="space-y-4">
+          {order.order_type === "catering" ? (
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
+              Collection lines
+            </h3>
+          ) : null}
+          {order.collection_lines.map((line) => (
+            <OrderCollectionLineDetail key={line.id} line={line} />
+          ))}
+        </section>
+      ) : null}
+
+      <OrderSnapshotIntegrityNotice />
     </div>
   );
 }

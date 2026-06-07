@@ -817,6 +817,11 @@ export const analyticsApi = {
       params,
     }),
 
+  getOrderTypeDistribution: (params?: AnalyticsQueryParams) =>
+    apiClient.get<OrderDistribution>(`${BASE}/orders/order-type-distribution`, {
+      params,
+    }),
+
   getOrderDeliveryAreaDistribution: (params?: AnalyticsQueryParams) =>
     apiClient.get<OrderDistribution>(`${BASE}/orders/delivery-area-distribution`, {
       params,

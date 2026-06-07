@@ -11,6 +11,7 @@ export type Weekday =
 
 export type BusinessSettings = {
   delivery_fee: string;
+  use_fixed_delivery_fee: boolean;
   order_cutoff_day: Weekday;
   delivery_day: Weekday;
   business_phone: string;
@@ -22,6 +23,7 @@ export type BusinessSettings = {
 
 export type BusinessSettingsUpdate = Partial<{
   delivery_fee: number;
+  use_fixed_delivery_fee: boolean;
   order_cutoff_day: Weekday;
   delivery_day: Weekday;
   business_phone: string;

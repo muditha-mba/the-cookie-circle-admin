@@ -40,6 +40,7 @@ export function BusinessSettingsForm({
     resolver: zodResolver(businessSettingsSchema),
     defaultValues: {
       delivery_fee: Number(defaultValues.delivery_fee),
+      use_fixed_delivery_fee: defaultValues.use_fixed_delivery_fee,
       order_cutoff_day: defaultValues.order_cutoff_day,
       delivery_day: defaultValues.delivery_day,
       business_phone: defaultValues.business_phone,
@@ -93,6 +94,23 @@ export function BusinessSettingsForm({
           </select>
         </FormField>
       </div>
+
+      <label className="flex items-start gap-3 rounded-md border border-border bg-surface-elevated px-4 py-3">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 rounded border-border"
+          {...register("use_fixed_delivery_fee")}
+        />
+        <span className="space-y-1">
+          <span className="block text-sm font-medium text-text-primary">
+            Use fixed delivery fee
+          </span>
+          <span className="block text-xs text-text-muted">
+            When enabled, every order uses the delivery fee below. When disabled,
+            delivery fees come from each delivery area&apos;s configured rate.
+          </span>
+        </span>
+      </label>
 
       <FormField
         label="Delivery fee (LKR)"

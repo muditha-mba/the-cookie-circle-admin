@@ -285,6 +285,11 @@ export function OrderAnalyticsDashboard() {
         enabled,
       },
       {
+        queryKey: analyticsQueryKey("order-type-distribution", chartParams ?? {}),
+        queryFn: () => analyticsApi.getOrderTypeDistribution(chartParams!),
+        enabled,
+      },
+      {
         queryKey: analyticsQueryKey("order-fulfillment-trends", chartParams ?? {}),
         queryFn: () => analyticsApi.getOrderFulfillmentTrends(chartParams!),
         enabled,
@@ -329,6 +334,7 @@ export function OrderAnalyticsDashboard() {
     paymentStatusQuery,
     paymentMethodQuery,
     sourceQuery,
+    orderTypeQuery,
     fulfillmentQuery,
     deliveryTrendsQuery,
     lifecycleTrendsQuery,
@@ -368,6 +374,10 @@ export function OrderAnalyticsDashboard() {
     [paymentMethodQuery.data],
   );
   const sourceBar = useMemo(() => toBarData(sourceQuery.data?.items ?? []), [sourceQuery.data]);
+  const orderTypeDonut = useMemo(
+    () => toDonutData(orderTypeQuery.data?.items ?? []),
+    [orderTypeQuery.data],
+  );
   const lifecycleDeliveredData = useMemo(() => {
     const points =
       lifecycleTrendsQuery.data?.points.map((point) => ({
@@ -395,7 +405,8 @@ export function OrderAnalyticsDashboard() {
     statusQuery.isLoading ||
     paymentStatusQuery.isLoading ||
     paymentMethodQuery.isLoading ||
-    sourceQuery.isLoading;
+    sourceQuery.isLoading ||
+    orderTypeQuery.isLoading;
 
   const hasQueryError = queries.some((query) => query.isError);
   const exportUrl = tableParams ? analyticsExportUrl("orders", tableParams) : null;
@@ -640,6 +651,22 @@ export function OrderAnalyticsDashboard() {
                 isError={sourceQuery.isError}
                 emptyTitle="No orders found in this period"
                 emptyDescription="Source distribution reflects how orders were captured."
+              />
+            </AnalyticsChartCard>
+
+            <AnalyticsChartCard
+              category="orders"
+              title="Order type distribution"
+              description="Weekly delivery collections versus catering cookie orders."
+            >
+              <AnalyticsDonutChart
+                category="orders"
+                data={orderTypeDonut}
+                formatValue={formatCount}
+                isLoading={orderTypeQuery.isLoading}
+                isError={orderTypeQuery.isError}
+                emptyTitle="No orders found in this period"
+                emptyDescription="Order type breakdown appears when orders are recorded."
               />
             </AnalyticsChartCard>
           </div>

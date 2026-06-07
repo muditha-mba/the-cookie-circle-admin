@@ -12,6 +12,7 @@ const weekdaySchema = z.enum([
 
 export const businessSettingsSchema = z.object({
   delivery_fee: z.number().min(0, "Delivery fee must be zero or greater"),
+  use_fixed_delivery_fee: z.boolean(),
   order_cutoff_day: weekdaySchema,
   delivery_day: weekdaySchema,
   business_phone: z.string().max(50),

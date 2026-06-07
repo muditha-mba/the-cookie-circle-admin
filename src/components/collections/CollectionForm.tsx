@@ -125,7 +125,7 @@ export function CollectionForm({
     void Promise.all([
       collectionPackagesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       productCategoriesApi.list(),
-      productItemsApi.list({ page: 1, page_size: 200, sort_by: "name", sort_order: "asc" }),
+      productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       utilityChargesApi.list({ page: 1, page_size: 100 }),
       labourChargesApi.list({ page: 1, page_size: 100 }),
       taxChargesApi.list({ page: 1, page_size: 100 }),
