@@ -34,7 +34,7 @@ import {
   type OrderAnalyticsPerformanceRow,
   type OrderDistributionItem,
 } from "@/lib/api/analytics";
-import { formatCurrency, formatDate, formatPercent } from "@/lib/format";
+import { formatCurrency, formatDate, formatDecimal, formatPercent } from "@/lib/format";
 import { useAnalyticsUrlFilters } from "@/components/analytics/useAnalyticsUrlFilters";
 
 const CHART_LIMIT = 10;
@@ -787,7 +787,9 @@ export function OrderAnalyticsDashboard() {
               <div className="rounded-lg border border-border bg-surface p-3">
                 <dt className="text-xs text-text-secondary">Average orders per customer</dt>
                 <dd className="mt-1 text-base font-semibold tabular-nums text-text-primary">
-                  {Number(customerBehaviourQuery.data?.average_orders_per_customer ?? 0).toFixed(2)}
+                  {formatDecimal(
+                    customerBehaviourQuery.data?.average_orders_per_customer ?? 0,
+                  )}
                 </dd>
               </div>
             </dl>

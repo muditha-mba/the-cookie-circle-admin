@@ -1,5 +1,34 @@
 /** Display formatting helpers. */
 
+function toDisplayNumber(value: string | number): number | null {
+  const amount = typeof value === "string" ? Number(value) : value;
+  return Number.isNaN(amount) ? null : amount;
+}
+
+/** Whole-number counts (cookies, packs, order quantities, yield). */
+export function formatCount(value: string | number): string {
+  const amount = toDisplayNumber(value);
+  if (amount == null) {
+    return "—";
+  }
+  return Math.round(amount).toLocaleString("en-LK");
+}
+
+/** Measurable quantities that may include decimals (shown to 2 dp). */
+export function formatDecimal(value: string | number): string {
+  const amount = toDisplayNumber(value);
+  if (amount == null) {
+    return "—";
+  }
+  if (Number.isInteger(amount)) {
+    return amount.toLocaleString("en-LK");
+  }
+  return amount.toLocaleString("en-LK", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
 export function formatCurrency(value: string | number): string {
   const amount = typeof value === "string" ? Number(value) : value;
   if (Number.isNaN(amount)) {
@@ -14,11 +43,10 @@ export function formatCurrency(value: string | number): string {
 }
 
 export function formatQuantity(value: string | number, unit: string): string {
-  const qty = typeof value === "string" ? Number(value) : value;
-  if (Number.isNaN(qty)) {
+  const formatted = formatDecimal(value);
+  if (formatted === "—") {
     return unit;
   }
-  const formatted = Number.isInteger(qty) ? qty.toString() : qty.toFixed(2);
   return `${formatted} ${unit}`;
 }
 

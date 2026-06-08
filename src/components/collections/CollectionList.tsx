@@ -17,7 +17,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { collectionsApi } from "@/lib/api/collections";
-import { formatCurrency } from "@/lib/format";
+import { formatCount, formatCurrency } from "@/lib/format";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -86,7 +86,7 @@ export function CollectionList() {
       {
         header: "Size",
         accessorKey: "package_size",
-        cell: ({ row }) => `${row.original.package_size} cookies`,
+        cell: ({ row }) => `${formatCount(row.original.package_size)} cookies`,
       },
       {
         header: "Fee",

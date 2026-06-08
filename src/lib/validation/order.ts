@@ -7,9 +7,15 @@ export const orderProductLineSchema = z.object({
   quantity: lineQuantity,
 });
 
+export const orderCollectionSelectionSchema = z.object({
+  product_id: z.string().uuid(),
+  quantity: lineQuantity,
+});
+
 export const orderCollectionLineSchema = z.object({
   collection_id: z.string().uuid("Select a collection"),
   quantity: lineQuantity,
+  selections: z.array(orderCollectionSelectionSchema).optional(),
 });
 
 const orderSourceSchema = z.enum([
@@ -66,6 +72,7 @@ export const orderSchema = deliveryFieldsSchema
       z.object({
         collection_id: z.string(),
         quantity: z.number(),
+        selections: z.array(orderCollectionSelectionSchema).optional(),
       }),
     ),
   })
@@ -120,6 +127,7 @@ export function toValidCollectionLines(values: OrderFormValues) {
     .map((line) => ({
       collection_id: line.collection_id,
       quantity: line.quantity,
+      ...(line.selections?.length ? { selections: line.selections } : {}),
     }));
 }
 

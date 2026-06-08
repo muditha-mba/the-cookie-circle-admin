@@ -25,9 +25,15 @@ export type OrderProductLineInput = {
   quantity: number;
 };
 
+export type OrderCollectionSelectionInput = {
+  product_id: string;
+  quantity: number;
+};
+
 export type OrderCollectionLineInput = {
   collection_id: string;
   quantity: number;
+  selections?: OrderCollectionSelectionInput[];
 };
 
 export type OrderProductLine = {
@@ -140,6 +146,15 @@ export type OrderDeliveryFields = {
   delivery_longitude: number | null;
 };
 
+export type OrderBillingFields = {
+  billing_same_as_shipping: boolean;
+  billing_address_line_1: string | null;
+  billing_address_line_2: string | null;
+  billing_city: string | null;
+  billing_postal_code: string | null;
+  billing_landmark: string | null;
+};
+
 export type OrderSummary = {
   id: string;
   order_number: string;
@@ -156,7 +171,7 @@ export type OrderSummary = {
   created_at: string;
 };
 
-export type OrderDetail = OrderDeliveryFields & {
+export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
   id: string;
   order_number: string;
   customer: OrderCustomer;
@@ -176,6 +191,10 @@ export type OrderDetail = OrderDeliveryFields & {
   collection_lines: OrderCollectionLine[];
   status_timeline: OrderStatusEvent[];
   lifecycle: OrderLifecycle;
+  customer_review: {
+    id: string;
+    rating: number;
+  } | null;
   created_at: string;
   updated_at: string;
 };

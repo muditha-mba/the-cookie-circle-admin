@@ -32,7 +32,8 @@ export const deliveryAreasApi = {
 
   get: (id: string) => apiClient.get<DeliveryArea>(`${BASE}/${id}`),
 
-  create: (payload: DeliveryAreaCreate) => apiClient.post<DeliveryArea>(BASE, payload),
+  create: (payload: DeliveryAreaCreate) =>
+    apiClient.post<DeliveryArea>(BASE, payload),
 
   update: (id: string, payload: DeliveryAreaUpdate) =>
     apiClient.patch<DeliveryArea>(`${BASE}/${id}`, payload),

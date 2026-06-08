@@ -28,6 +28,7 @@ import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { businessSettingsApi } from "@/lib/api/business-settings";
 import { customersApi } from "@/lib/api/customers";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
+import type { ApiError } from "@/lib/api/types";
 import type { OrderPreview } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
 import {
@@ -139,12 +140,14 @@ export function OrderForm({
       OrderFormValues["collection_lines"],
     ];
 
-    const validProducts = (productLines ?? []).filter(
-      (line) => line.product_id && line.quantity > 0,
-    );
-    const validCollections = (collectionLines ?? []).filter(
-      (line) => line.collection_id && line.quantity > 0,
-    );
+    const previewValues = {
+      product_lines: productLines ?? [],
+      collection_lines: collectionLines ?? [],
+    } as Pick<OrderFormValues, "product_lines" | "collection_lines">;
+
+    const validProducts = toValidProductLines(previewValues as OrderFormValues);
+    const validCollections = toValidCollectionLines(previewValues as OrderFormValues);
+
     if (validProducts.length === 0 && validCollections.length === 0) {
       setPreview(null);
       return;
@@ -164,10 +167,11 @@ export function OrderForm({
           return;
         }
         setPreview(result);
-      } catch {
+      } catch (err) {
         if (requestId === previewRequestId.current) {
           setPreview(null);
-          setPreviewError("Unable to calculate order preview.");
+          const apiError = err as ApiError;
+          setPreviewError(apiError.message ?? "Unable to calculate order preview.");
         }
       } finally {
         if (requestId === previewRequestId.current) {

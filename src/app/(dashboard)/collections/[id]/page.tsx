@@ -14,7 +14,7 @@ import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
-import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatCount, formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
 
 export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
@@ -93,7 +93,10 @@ export default function CollectionDetailPage() {
         />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
         <DetailField label="Public" value={data.is_public ? "Yes" : "No"} />
-        <DetailField label="Package size" value={`${data.package_size} cookies`} />
+        <DetailField
+          label="Package size"
+          value={`${formatCount(data.package_size)} cookies`}
+        />
         <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
         <DetailField
           label="Allowed categories"
@@ -109,7 +112,7 @@ export default function CollectionDetailPage() {
           <ul className="space-y-2 text-sm">
             {data.item_lines.map((line) => (
               <li key={line.id}>
-                {line.product_item_name} — {line.quantity} {line.unit}
+                {line.product_item_name} — {formatQuantity(line.quantity, line.unit)}
               </li>
             ))}
           </ul>

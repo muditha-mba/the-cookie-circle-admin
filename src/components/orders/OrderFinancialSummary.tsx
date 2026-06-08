@@ -5,7 +5,8 @@ import type {
   OrderFinancialSnapshot,
   OrderProductLine,
 } from "@/lib/api/orders";
-import { formatCurrency } from "@/lib/format";
+import { formatCurrency, formatPercent } from "@/lib/format";
+import { formatQuantityDisplay } from "@/lib/orders/financial-display";
 import { cn } from "@/lib/utils";
 
 type OrderFinancialSummaryProps = {
@@ -48,7 +49,9 @@ export function OrderFinancialSummary({
                 {productLines.map((line) => (
                   <tr key={line.id} className="border-b border-border/60 last:border-0">
                     <td className="py-2.5 text-text-primary">{line.product_name_snapshot}</td>
-                    <td className="py-2.5 text-text-secondary">{line.quantity}</td>
+                    <td className="py-2.5 text-text-secondary">
+                      {formatQuantityDisplay(line.quantity)}
+                    </td>
                     <td className="py-2.5 text-text-secondary">
                       {formatCurrency(line.product_selling_price_snapshot)}
                     </td>
@@ -86,7 +89,9 @@ export function OrderFinancialSummary({
                 {collectionLines.map((line) => (
                   <tr key={line.id} className="border-b border-border/60 last:border-0">
                     <td className="py-2.5 text-text-primary">{line.collection_name_snapshot}</td>
-                    <td className="py-2.5 text-text-secondary">{line.quantity}</td>
+                    <td className="py-2.5 text-text-secondary">
+                      {formatQuantityDisplay(line.quantity)}
+                    </td>
                     <td className="py-2.5 text-text-secondary">
                       {formatCurrency(line.collection_selling_price_snapshot)}
                     </td>
@@ -162,7 +167,7 @@ export function OrderFinancialSummary({
                   profitPositive ? "text-success" : "text-danger",
                 )}
               >
-                {snapshot.margin_percentage_snapshot}%
+                {formatPercent(snapshot.margin_percentage_snapshot)}
               </dd>
             </div>
           </dl>

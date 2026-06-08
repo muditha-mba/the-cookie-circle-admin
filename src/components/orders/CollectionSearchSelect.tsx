@@ -7,6 +7,7 @@ import { formInputClassName } from "@/components/forms/FormField";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionsApi } from "@/lib/api/collections";
+import { formatCount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export type CollectionSearchOption = Pick<
@@ -121,7 +122,7 @@ export function CollectionSearchSelect({
   const inputValue = open
     ? query
     : selected
-      ? `${selected.name} · ${selected.package_size} cookies`
+      ? `${selected.name} · ${formatCount(selected.package_size)} cookies`
       : "";
 
   return (
@@ -200,7 +201,8 @@ export function CollectionSearchSelect({
                     {collection.name}
                     <span className="font-normal text-text-muted">
                       {" "}
-                      · {collection.package_size} cookies · {collection.package_name}
+                      · {formatCount(collection.package_size)} cookies ·{" "}
+                      {collection.package_name}
                     </span>
                   </span>
                   <span className="mt-0.5 block font-mono text-xs text-text-muted">

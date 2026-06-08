@@ -67,6 +67,11 @@ export default function OrderDetailPage() {
     >
       <PageActions backHref={routes.orders.list} className="mb-6">
         <PrimaryLink href={routes.orders.edit(data.id)}>Edit</PrimaryLink>
+        {data.customer_review ? (
+          <PrimaryLink href={routes.reviews.detail(data.customer_review.id)}>
+            View review
+          </PrimaryLink>
+        ) : null}
         <SecondaryButton variant="danger" disabled={isDeleting} onClick={() => void handleDelete()}>
           {isDeleting ? "Deleting..." : "Delete"}
         </SecondaryButton>

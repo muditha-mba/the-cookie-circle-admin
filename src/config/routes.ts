@@ -46,6 +46,10 @@ export const routes = {
     detail: (id: string) => `/orders/${id}`,
     edit: (id: string) => `/orders/${id}/edit`,
   },
+  reviews: {
+    list: "/reviews",
+    detail: (id: string) => `/reviews/${id}`,
+  },
   production: "/production",
   suppliers: {
     list: "/suppliers",

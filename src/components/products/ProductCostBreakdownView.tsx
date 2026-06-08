@@ -1,7 +1,12 @@
 "use client";
 
 import type { ChargeBreakdownLine, ProductCostBreakdown } from "@/lib/api/products";
-import { formatChargeAmount, formatCurrency } from "@/lib/format";
+import {
+  formatChargeAmount,
+  formatCount,
+  formatCurrency,
+  formatQuantity,
+} from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 type ProductCostBreakdownViewProps = {
@@ -76,14 +81,6 @@ function buildChargeRows(breakdown: ProductCostBreakdown): ChargeRow[] {
   ];
 }
 
-function formatYieldQuantity(value: string | number): string {
-  const amount = typeof value === "string" ? Number(value) : value;
-  if (Number.isNaN(amount)) {
-    return "—";
-  }
-  return Number.isInteger(amount) ? amount.toString() : amount.toFixed(4).replace(/\.?0+$/, "");
-}
-
 export function ProductCostBreakdownView({
   breakdown,
   yieldQuantity,
@@ -113,7 +110,7 @@ export function ProductCostBreakdownView({
                     Yield quantity
                   </td>
                   <td className={cn(tableTdClass, "text-right font-medium text-text-primary")}>
-                    {formatYieldQuantity(yieldQuantity)}
+                    {formatCount(yieldQuantity)}
                   </td>
                 </tr>
                 <tr className={tableRowClass}>
@@ -160,7 +157,7 @@ export function ProductCostBreakdownView({
                       {line.product_item_name}
                     </td>
                     <td className={cn(tableTdClass, "text-text-secondary")}>
-                      {line.quantity} {line.unit}
+                      {formatQuantity(line.quantity, line.unit)}
                     </td>
                     <td className={cn(tableTdClass, "text-text-secondary")}>
                       <Money value={line.cost_per_unit} /> / {line.unit}

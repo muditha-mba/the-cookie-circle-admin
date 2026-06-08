@@ -11,6 +11,7 @@ import {
   Percent,
   Settings,
   ShoppingCart,
+  Star,
   Tags,
   Users,
   Wallet,
@@ -128,6 +129,13 @@ export const navigationSections: NavSectionConfig[] = [
         title: "Orders",
         href: routes.orders.list,
         icon: ShoppingCart,
+        enabled: true,
+      },
+      {
+        id: "reviews",
+        title: "Reviews",
+        href: routes.reviews.list,
+        icon: Star,
         enabled: true,
       },
       {

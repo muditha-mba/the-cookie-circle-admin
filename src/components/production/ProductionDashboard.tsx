@@ -19,6 +19,7 @@ import type {
   PurchasePlanningStatus,
 } from "@/lib/api/production";
 import { productionApi } from "@/lib/api/production";
+import { formatCount } from "@/lib/format";
 import {
   getStatusLabel,
   PRODUCTION_BATCH_STATUS_OPTIONS,
@@ -118,7 +119,10 @@ function SummaryTab({
       >
         <SimpleTable
           headers={["Product", "Quantity"]}
-          rows={summary.product_demand.map((line) => [line.product_name, line.quantity])}
+          rows={summary.product_demand.map((line) => [
+            line.product_name,
+            formatCount(line.quantity),
+          ])}
         />
       </SectionCard>
 

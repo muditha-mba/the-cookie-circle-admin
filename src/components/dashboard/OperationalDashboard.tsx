@@ -19,7 +19,7 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
 import { dashboardApi } from "@/lib/api/dashboard";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCount, formatCurrency, formatDate } from "@/lib/format";
 
 function SnapshotCard({
   label,
@@ -131,7 +131,7 @@ export function OperationalDashboard() {
             value={
               isLoading || !data
                 ? "—"
-                : Number(data.today_snapshot.production_units_scheduled_today).toFixed(0)
+                : formatCount(data.today_snapshot.production_units_scheduled_today)
             }
           />
         </div>
@@ -170,13 +170,13 @@ export function OperationalDashboard() {
                 <div className="rounded-lg border border-border/70 px-3 py-2">
                   <p className="text-xs uppercase tracking-wide text-text-muted">Collections</p>
                   <p className="mt-1 text-lg font-semibold text-text-primary">
-                    {Number(data.upcoming_production.collections).toFixed(0)}
+                    {formatCount(data.upcoming_production.collections)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border/70 px-3 py-2">
                   <p className="text-xs uppercase tracking-wide text-text-muted">Product Units</p>
                   <p className="mt-1 text-lg font-semibold text-text-primary">
-                    {Number(data.upcoming_production.product_units).toFixed(0)}
+                    {formatCount(data.upcoming_production.product_units)}
                   </p>
                 </div>
               </div>

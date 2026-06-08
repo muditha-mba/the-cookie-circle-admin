@@ -35,6 +35,22 @@ function formatAddress(order: OrderDetail) {
   return parts.join(", ");
 }
 
+function formatBillingAddress(order: OrderDetail) {
+  if (order.billing_same_as_shipping) {
+    return "Same as shipping address";
+  }
+  const parts = [
+    order.billing_address_line_1,
+    order.billing_address_line_2,
+    order.billing_city,
+    order.billing_postal_code,
+  ].filter(Boolean);
+  if (parts.length === 0) {
+    return "—";
+  }
+  return parts.join(", ");
+}
+
 export function OrderDetailView({ order }: OrderDetailViewProps) {
   const lifecycleEntries = [
     { label: "Confirmed", at: order.lifecycle.confirmed_at },
@@ -86,6 +102,8 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
                 {order.delivery_area.name}
                 {order.delivery_area.pickup_only ? " (pickup)" : ""}
               </Link>
+            ) : order.delivery_city?.trim() ? (
+              order.delivery_city.trim()
             ) : (
               "—"
             )
@@ -180,6 +198,24 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
             />
           </div>
         ) : null}
+      </section>
+
+      <section className="rounded-lg border border-border bg-surface p-5">
+        <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
+          Billing address (order snapshot)
+        </h3>
+        <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+          <div className="sm:col-span-2">
+            <dt className="text-text-secondary">Billing address</dt>
+            <dd className="text-text-primary">{formatBillingAddress(order)}</dd>
+          </div>
+          {!order.billing_same_as_shipping && order.billing_landmark ? (
+            <div className="sm:col-span-2">
+              <dt className="text-text-secondary">Landmark</dt>
+              <dd className="text-text-primary">{order.billing_landmark}</dd>
+            </div>
+          ) : null}
+        </dl>
       </section>
 
       <section className="rounded-lg border border-border bg-surface p-5">

@@ -127,6 +127,10 @@ export default function EditOrderPage() {
           collection_lines: data.collection_lines.map((line) => ({
             collection_id: line.collection_id,
             quantity: Number(line.quantity),
+            selections: line.selections?.map((selection) => ({
+              product_id: selection.product_id,
+              quantity: Number(selection.quantity),
+            })),
           })),
         }}
         submitLabel="Save changes"

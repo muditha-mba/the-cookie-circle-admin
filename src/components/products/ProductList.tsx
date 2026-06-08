@@ -15,7 +15,7 @@ import { routes } from "@/config/routes";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { ProductSummary } from "@/lib/api/products";
 import { productsApi } from "@/lib/api/products";
-import { formatCurrency } from "@/lib/format";
+import { formatCount, formatCurrency } from "@/lib/format";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -67,7 +67,7 @@ export function ProductList() {
         header: "Yield",
         accessorKey: "yield_quantity",
         cell: ({ row }) => (
-          <span className="tabular-nums">{Number(row.original.yield_quantity).toLocaleString("en-LK")}</span>
+          <span className="tabular-nums">{formatCount(row.original.yield_quantity)}</span>
         ),
       },
       {

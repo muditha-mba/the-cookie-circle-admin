@@ -1,5 +1,7 @@
 /** Display helpers for order financial breakdown tables. */
 
+import { formatCount } from "@/lib/format";
+
 export function marginToneClass(margin: number): string {
   if (margin > 60) {
     return "text-success";
@@ -19,9 +21,5 @@ export function parseAmount(value: string | number | null | undefined): number |
 }
 
 export function formatQuantityDisplay(value: string | number): string {
-  const amount = typeof value === "string" ? Number(value) : value;
-  if (Number.isNaN(amount)) {
-    return "—";
-  }
-  return Number.isInteger(amount) ? amount.toString() : amount.toFixed(2).replace(/\.?0+$/, "");
+  return formatCount(value);
 }
