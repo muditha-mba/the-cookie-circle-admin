@@ -1,0 +1,93 @@
+"use client";
+
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams, useRouter } from "next/navigation";
+import { useState } from "react";
+
+import { DetailField } from "@/components/data/DetailField";
+import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
+import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
+import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { routes } from "@/config/routes";
+import { deliveryAreasApi } from "@/lib/api/delivery-areas";
+import type { ApiError } from "@/lib/api/types";
+import { formatCurrency, formatDateTime } from "@/lib/format";
+import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+
+export default function DeliveryAreaDetailPage() {
+  const params = useParams<{ id: string }>();
+  const router = useRouter();
+  const queryClient = useQueryClient();
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ["delivery-areas", params.id],
+    queryFn: () => deliveryAreasApi.get(params.id),
+    enabled: Boolean(params.id),
+  });
+
+  const handleDelete = async () => {
+    if (!data || !window.confirm(`Delete ${data.name}?`)) {
+      return;
+    }
+    setDeleteError(null);
+    setIsDeleting(true);
+    try {
+      await deliveryAreasApi.delete(data.id);
+      cacheEntityRemove(queryClient, ["delivery-areas", data.id], ["delivery-areas"]);
+      router.push(routes.deliveryAreas.list);
+    } catch (err) {
+      const apiError = err as ApiError;
+      setDeleteError(apiError.message ?? "Unable to delete delivery area.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardPageShell title="Delivery Area" description="Loading...">
+        <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
+      </DashboardPageShell>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <DashboardPageShell title="Delivery Area" description="Not found">
+        <p className="text-sm text-danger">Delivery area not found.</p>
+        <PageActions backHref={routes.deliveryAreas.list} className="mt-6" />
+      </DashboardPageShell>
+    );
+  }
+
+  return (
+    <DashboardPageShell title={data.name} description="Delivery area configuration.">
+      <PageActions backHref={routes.deliveryAreas.list} className="mb-6">
+        <PrimaryLink href={routes.deliveryAreas.edit(data.id)}>Edit</PrimaryLink>
+        <SecondaryButton variant="danger" disabled={isDeleting} onClick={() => void handleDelete()}>
+          {isDeleting ? "Deleting..." : "Delete"}
+        </SecondaryButton>
+      </PageActions>
+
+      {deleteError ? <p className="mb-4 text-sm text-danger">{deleteError}</p> : null}
+
+      <DetailMetadataCard>
+        <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
+        <DetailField label="Pickup only" value={data.pickup_only ? "Yes" : "No"} />
+        <DetailField
+          label="Fee override"
+          value={
+            data.delivery_fee_override != null
+              ? formatCurrency(data.delivery_fee_override)
+              : "Uses business default"
+          }
+        />
+        <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
+        <DetailField label="Description" value={data.description || "—"} fullWidth />
+      </DetailMetadataCard>
+    </DashboardPageShell>
+  );
+}

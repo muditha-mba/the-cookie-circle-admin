@@ -1,0 +1,127 @@
+@import "tailwindcss";
+
+/* ── Semantic color tokens ─────────────────────────────────── */
+
+:root {
+  --background: #f8f8f8;
+  --surface: #ffffff;
+  --surface-elevated: #ffffff;
+  --surface-hover: #f0f0f0;
+  --border: #e4e4e7;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #a1a1aa;
+  --success: #16a34a;
+  --warning: #ca8a04;
+  --danger: #dc2626;
+  --info: #2563eb;
+  /* Analytics category accents (intentional, restrained) */
+  --analytics-revenue: #a16207;
+  --analytics-revenue-soft: rgb(161 98 7 / 0.1);
+  --analytics-profit: #047857;
+  --analytics-profit-soft: rgb(4 120 87 / 0.1);
+  --analytics-orders: #4338ca;
+  --analytics-orders-soft: rgb(67 56 202 / 0.1);
+  --analytics-average-order-value: #6d28d9;
+  --analytics-average-order-value-soft: rgb(109 40 217 / 0.09);
+  --analytics-margin: #b45309;
+  --analytics-margin-soft: rgb(180 83 9 / 0.1);
+  --analytics-repeat-customer-rate: #0f766e;
+  --analytics-repeat-customer-rate-soft: rgb(15 118 110 / 0.1);
+  --analytics-products: #6d28d9;
+  --analytics-products-soft: rgb(109 40 217 / 0.09);
+  --analytics-customers: #0f766e;
+  --analytics-customers-soft: rgb(15 118 110 / 0.1);
+  --analytics-production: #c2410c;
+  --analytics-production-soft: rgb(194 65 12 / 0.1);
+  --analytics-collections: #0e7490;
+  --analytics-collections-soft: rgb(14 116 144 / 0.1);
+  --analytics-packages: #7c3aed;
+  --analytics-packages-soft: rgb(124 58 237 / 0.1);
+  --analytics-operations: #334155;
+  --analytics-operations-soft: rgb(51 65 85 / 0.1);
+}
+
+.dark {
+  --background: #09090b;
+  --surface: #111113;
+  --surface-elevated: #18181b;
+  --surface-hover: #27272a;
+  --border: #27272a;
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --text-muted: #71717a;
+  --success: #22c55e;
+  --warning: #eab308;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  --analytics-revenue: #eab308;
+  --analytics-revenue-soft: rgb(234 179 8 / 0.12);
+  --analytics-profit: #34d399;
+  --analytics-profit-soft: rgb(52 211 153 / 0.12);
+  --analytics-orders: #818cf8;
+  --analytics-orders-soft: rgb(129 140 248 / 0.12);
+  --analytics-average-order-value: #a78bfa;
+  --analytics-average-order-value-soft: rgb(167 139 250 / 0.12);
+  --analytics-margin: #fbbf24;
+  --analytics-margin-soft: rgb(251 191 36 / 0.12);
+  --analytics-repeat-customer-rate: #2dd4bf;
+  --analytics-repeat-customer-rate-soft: rgb(45 212 191 / 0.12);
+  --analytics-products: #a78bfa;
+  --analytics-products-soft: rgb(167 139 250 / 0.12);
+  --analytics-customers: #2dd4bf;
+  --analytics-customers-soft: rgb(45 212 191 / 0.12);
+  --analytics-production: #fb923c;
+  --analytics-production-soft: rgb(251 146 60 / 0.12);
+  --analytics-collections: #22d3ee;
+  --analytics-collections-soft: rgb(34 211 238 / 0.12);
+  --analytics-packages: #c4b5fd;
+  --analytics-packages-soft: rgb(196 181 253 / 0.14);
+  --analytics-operations: #94a3b8;
+  --analytics-operations-soft: rgb(148 163 184 / 0.14);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+  --color-surface-hover: var(--surface-hover);
+  --color-border: var(--border);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-text-muted: var(--text-muted);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-info: var(--info);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+* {
+  border-color: var(--border);
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  background: var(--background);
+  color: var(--text-primary);
+  font-family: var(--font-geist-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+:focus-visible {
+  outline: 2px solid var(--info);
+  outline-offset: 2px;
+}
+
+/* Custom delivery pin from /public/map-location-pointer-icon.png */
+.leaflet-marker-icon.delivery-location-marker {
+  border: none;
+  background: transparent;
+}
