@@ -18,6 +18,7 @@ import type {
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { customersApi } from "@/lib/api/customers";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { formatMarketingSourceLabel } from "@/lib/marketing-sources";
 import { cn } from "@/lib/utils";
 
 type Tab = "overview" | "insights" | "notes" | "communications" | "orders";
@@ -46,7 +47,7 @@ function InsightsPanel({
       <DetailField label="Segment" value={<CustomerSegmentBadge segment={insights.segment} />} />
       <DetailField
         label="Marketing source"
-        value={insights.marketing_source ? formatLabel(insights.marketing_source) : "—"}
+        value={formatMarketingSourceLabel(insights.marketing_source)}
       />
       {canViewFinancials ? (
         <>
@@ -126,10 +127,39 @@ function OverviewPanel({
         <DetailField label="Record source" value={formatLabel(customer.source)} />
         <DetailField
           label="Marketing source"
-          value={
-            customer.marketing_source ? formatLabel(customer.marketing_source) : "—"
-          }
+          value={formatMarketingSourceLabel(customer.marketing_source)}
         />
+        {customer.marketing_attribution ? (
+          <DetailField
+            label="Attribution details"
+            value={
+              <div className="space-y-1 text-sm text-text-primary">
+                {customer.marketing_attribution.utm_campaign ? (
+                  <p>
+                    Campaign:{" "}
+                    <span className="font-medium">
+                      {customer.marketing_attribution.utm_campaign}
+                    </span>
+                  </p>
+                ) : null}
+                {customer.marketing_attribution.utm_medium ? (
+                  <p>Medium: {customer.marketing_attribution.utm_medium}</p>
+                ) : null}
+                {customer.marketing_attribution.landing_path ? (
+                  <p className="font-mono text-xs">
+                    Landing: {customer.marketing_attribution.landing_path}
+                  </p>
+                ) : null}
+                {customer.marketing_attribution.referrer ? (
+                  <p className="break-all font-mono text-xs">
+                    Referrer: {customer.marketing_attribution.referrer}
+                  </p>
+                ) : null}
+              </div>
+            }
+            fullWidth
+          />
+        ) : null}
         <DetailField label="Email" value={customer.email ?? "—"} />
         <DetailField label="Phone" value={customer.phone ?? "—"} />
         <DetailField

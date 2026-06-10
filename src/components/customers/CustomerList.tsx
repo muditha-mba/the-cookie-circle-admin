@@ -21,6 +21,7 @@ import type {
 } from "@/lib/api/customers";
 import { customersApi } from "@/lib/api/customers";
 import { formatCurrency } from "@/lib/format";
+import { MARKETING_SOURCE_OPTIONS } from "@/lib/marketing-sources";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "created_at", label: "Created" },
@@ -174,13 +175,11 @@ export function CustomerList() {
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
           >
             <option value="">All sources</option>
-            <option value="instagram">Instagram</option>
-            <option value="facebook">Facebook</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="referral">Referral</option>
-            <option value="google">Google</option>
-            <option value="walk_in">Walk In</option>
-            <option value="other">Other</option>
+            {MARKETING_SOURCE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
         <div>
