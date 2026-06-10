@@ -11,7 +11,7 @@ export function BusinessSettingsPageShell({ children }: BusinessSettingsPageShel
   return (
     <AppShell
       title="Business Settings"
-      description="Configure delivery operations, website contact details, social links, and FAQs."
+      description="Configure delivery operations, website contact details, social links, FAQs, and shared memories."
     >
       <div className="space-y-6">
         <BusinessSettingsTabs />

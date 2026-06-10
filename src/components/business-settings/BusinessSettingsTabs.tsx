@@ -11,6 +11,7 @@ const TAB_ITEMS = [
   { href: routes.businessSettings.contact, label: "Contact" },
   { href: routes.businessSettings.socialMedia, label: "Social Media" },
   { href: routes.businessSettings.faqs.list, label: "FAQs" },
+  { href: routes.businessSettings.sharedMemories.list, label: "Shared Memories" },
 ] as const;
 
 export function BusinessSettingsTabs() {

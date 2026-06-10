@@ -36,6 +36,11 @@ export const routes = {
       create: "/business-settings/faqs/new",
       edit: (id: string) => `/business-settings/faqs/${id}/edit`,
     },
+    sharedMemories: {
+      list: "/business-settings/shared-memories",
+      create: "/business-settings/shared-memories/new",
+      edit: (id: string) => `/business-settings/shared-memories/${id}/edit`,
+    },
     faqCategories: {
       create: "/business-settings/faq-categories/new",
       edit: (id: string) => `/business-settings/faq-categories/${id}/edit`,
