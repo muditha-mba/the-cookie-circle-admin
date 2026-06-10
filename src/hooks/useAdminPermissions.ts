@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 
 import {
+  canViewActivityLogs,
   canViewFinancials,
   isClerkAdmin,
   isSuperAdmin,
@@ -16,6 +17,7 @@ export function useAdminPermissions() {
       isSuperAdmin: isSuperAdmin(user),
       isClerkAdmin: isClerkAdmin(user),
       canViewFinancials: canViewFinancials(user),
+      canViewActivityLogs: canViewActivityLogs(user),
     }),
     [user],
   );

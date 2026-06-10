@@ -27,6 +27,10 @@ export const routes = {
     detail: (id: string) => `/collection-packages/${id}`,
     edit: (id: string) => `/collection-packages/${id}/edit`,
   },
+  activityLogs: {
+    list: "/activity-logs",
+    detail: (id: string) => `/activity-logs/${id}`,
+  },
   businessSettings: {
     operations: "/business-settings",
     contact: "/business-settings/contact",
@@ -147,6 +151,7 @@ const protectedPrefixes = [
   routes.production,
   routes.suppliers.list,
   routes.analytics.home,
+  routes.activityLogs.list,
   routes.productItemTypes.list,
   routes.productItems.list,
   routes.utilityCharges.list,

@@ -25,8 +25,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { user } = useAuth();
-  const { canViewFinancials } = useAdminPermissions();
-  const visibleSections = getVisibleNavigationSections(canViewFinancials);
+  const { isSuperAdmin } = useAdminPermissions();
+  const visibleSections = getVisibleNavigationSections(isSuperAdmin);
 
   return (
     <aside

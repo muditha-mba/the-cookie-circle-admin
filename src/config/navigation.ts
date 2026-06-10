@@ -9,6 +9,7 @@ import {
   Truck,
   Package,
   Percent,
+  ScrollText,
   Settings,
   ShoppingCart,
   Star,
@@ -36,6 +37,8 @@ export type NavItemConfig = {
   enabled: boolean;
   /** Hidden from clerk-admin users when true. */
   requiresFinancialAccess?: boolean;
+  /** Super-admin only modules (activity logs, etc.). */
+  requiresSuperAdmin?: boolean;
   badge?: NavBadge;
   children?: NavItemConfig[];
 };
@@ -213,6 +216,14 @@ export const navigationSections: NavSectionConfig[] = [
         enabled: true,
         requiresFinancialAccess: true,
       },
+      {
+        id: "activity-logs",
+        title: "Activity Log",
+        href: routes.activityLogs.list,
+        icon: ScrollText,
+        enabled: true,
+        requiresSuperAdmin: true,
+      },
     ],
   },
   /**
@@ -226,20 +237,24 @@ export const navigationSections: NavSectionConfig[] = [
   },
 ];
 
-function filterNavItems(items: NavItemConfig[], canViewFinancials: boolean): NavItemConfig[] {
-  return items.filter(
-    (item) => item.enabled && (canViewFinancials || !item.requiresFinancialAccess),
-  );
+function filterNavItems(items: NavItemConfig[], isSuperAdmin: boolean): NavItemConfig[] {
+  return items.filter((item) => {
+    if (!item.enabled) {
+      return false;
+    }
+    if (item.requiresSuperAdmin || item.requiresFinancialAccess) {
+      return isSuperAdmin;
+    }
+    return true;
+  });
 }
 
 /** Sections with at least one nav item (empty reserved sections are hidden). */
-export function getVisibleNavigationSections(
-  canViewFinancials = true,
-): NavSectionConfig[] {
+export function getVisibleNavigationSections(isSuperAdmin = true): NavSectionConfig[] {
   return navigationSections
     .map((section) => ({
       ...section,
-      items: filterNavItems(section.items, canViewFinancials),
+      items: filterNavItems(section.items, isSuperAdmin),
     }))
     .filter((section) => section.items.length > 0);
 }

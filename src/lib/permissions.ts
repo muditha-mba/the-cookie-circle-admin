@@ -13,6 +13,11 @@ export function canViewFinancials(user: User | null | undefined): boolean {
   return isSuperAdmin(user);
 }
 
+/** Super-admin activity log and audit modules. */
+export function canViewActivityLogs(user: User | null | undefined): boolean {
+  return isSuperAdmin(user);
+}
+
 export function formatAdminRole(adminRole: AdminRole | null | undefined): string {
   if (adminRole === "super_admin") {
     return "Super Admin";
