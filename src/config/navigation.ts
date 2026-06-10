@@ -34,6 +34,8 @@ export type NavItemConfig = {
   href: string;
   icon: LucideIcon;
   enabled: boolean;
+  /** Hidden from clerk-admin users when true. */
+  requiresFinancialAccess?: boolean;
   badge?: NavBadge;
   children?: NavItemConfig[];
 };
@@ -76,6 +78,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.productItems.list,
         icon: Boxes,
         enabled: true,
+        requiresFinancialAccess: true,
       },
       {
         id: "products",
@@ -164,6 +167,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.utilityCharges.list,
         icon: Wrench,
         enabled: true,
+        requiresFinancialAccess: true,
       },
       {
         id: "labour-charges",
@@ -171,6 +175,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.labourCharges.list,
         icon: Wallet,
         enabled: true,
+        requiresFinancialAccess: true,
       },
       {
         id: "tax-charges",
@@ -178,6 +183,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.taxCharges.list,
         icon: Percent,
         enabled: true,
+        requiresFinancialAccess: true,
       },
     ],
   },
@@ -191,6 +197,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.analytics.home,
         icon: BarChart3,
         enabled: true,
+        requiresFinancialAccess: true,
       },
     ],
   },
@@ -204,6 +211,7 @@ export const navigationSections: NavSectionConfig[] = [
         href: routes.businessSettings.operations,
         icon: Settings,
         enabled: true,
+        requiresFinancialAccess: true,
       },
     ],
   },
@@ -218,9 +226,22 @@ export const navigationSections: NavSectionConfig[] = [
   },
 ];
 
+function filterNavItems(items: NavItemConfig[], canViewFinancials: boolean): NavItemConfig[] {
+  return items.filter(
+    (item) => item.enabled && (canViewFinancials || !item.requiresFinancialAccess),
+  );
+}
+
 /** Sections with at least one nav item (empty reserved sections are hidden). */
-export function getVisibleNavigationSections(): NavSectionConfig[] {
-  return navigationSections.filter((section) => section.items.length > 0);
+export function getVisibleNavigationSections(
+  canViewFinancials = true,
+): NavSectionConfig[] {
+  return navigationSections
+    .map((section) => ({
+      ...section,
+      items: filterNavItems(section.items, canViewFinancials),
+    }))
+    .filter((section) => section.items.length > 0);
 }
 
 /** Flat list of all nav items — used by dashboard placeholders and legacy helpers. */

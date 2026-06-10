@@ -9,6 +9,7 @@ import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductCostBreakdownView } from "@/components/products/ProductCostBreakdownView";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
@@ -20,6 +21,7 @@ export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { canViewFinancials } = useAdminPermissions();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -71,7 +73,11 @@ export default function ProductDetailPage() {
   return (
     <DashboardPageShell
       title={data.name}
-      description="Full cost breakdown and profitability analysis."
+      description={
+        canViewFinancials
+          ? "Full cost breakdown and profitability analysis."
+          : "Product configuration and production details."
+      }
     >
       <PageActions backHref={routes.products.list} className="mb-6">
         <PrimaryLink href={routes.products.edit(data.id)}>Edit</PrimaryLink>
@@ -88,17 +94,23 @@ export default function ProductDetailPage() {
 
       <DetailMetadataCard>
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
-        <DetailField label="Selling price" value={formatCurrency(data.selling_price)} />
-        <DetailField label="Buffer" value={formatCurrency(data.buffer_amount)} />
+        {canViewFinancials ? (
+          <>
+            <DetailField label="Selling price" value={formatCurrency(data.selling_price)} />
+            <DetailField label="Buffer" value={formatCurrency(data.buffer_amount)} />
+          </>
+        ) : null}
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>
 
-      <ProductCostBreakdownView
-        breakdown={data.cost_breakdown}
-        yieldQuantity={data.yield_quantity}
-        productionNotes={data.production_notes}
-      />
+      {canViewFinancials && data.cost_breakdown ? (
+        <ProductCostBreakdownView
+          breakdown={data.cost_breakdown}
+          yieldQuantity={data.yield_quantity}
+          productionNotes={data.production_notes}
+        />
+      ) : null}
     </DashboardPageShell>
   );
 }

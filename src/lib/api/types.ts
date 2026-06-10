@@ -2,10 +2,13 @@
 
 export type UserRole = "ADMIN" | "CUSTOMER";
 
+export type AdminRole = "super_admin" | "clerk_admin";
+
 export type User = {
   id: string;
   email: string;
   role: UserRole;
+  admin_role: AdminRole | null;
   first_name: string | null;
   last_name: string | null;
   email_verified: boolean;

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { FormField, formInputClassName } from "@/components/forms/FormField";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { PrimaryButton } from "@/components/data/PageActions";
 import type { Charge } from "@/lib/api/charge-types";
 import type { CollectionPackage } from "@/lib/api/collection-packages";
@@ -90,6 +91,7 @@ export function CollectionForm({
   error,
   onSubmit,
 }: CollectionFormProps) {
+  const { canViewFinancials } = useAdminPermissions();
   const [packages, setPackages] = useState<CollectionPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [packagingItems, setPackagingItems] = useState<ProductItem[]>([]);
@@ -126,9 +128,15 @@ export function CollectionForm({
       collectionPackagesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       productCategoriesApi.list(),
       productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
-      utilityChargesApi.list({ page: 1, page_size: 100 }),
-      labourChargesApi.list({ page: 1, page_size: 100 }),
-      taxChargesApi.list({ page: 1, page_size: 100 }),
+      canViewFinancials
+        ? utilityChargesApi.list({ page: 1, page_size: 100 })
+        : Promise.resolve({ items: [] }),
+      canViewFinancials
+        ? labourChargesApi.list({ page: 1, page_size: 100 })
+        : Promise.resolve({ items: [] }),
+      canViewFinancials
+        ? taxChargesApi.list({ page: 1, page_size: 100 })
+        : Promise.resolve({ items: [] }),
     ]).then(([pkgRes, categoryRes, itemsRes, utilityRes, labourRes, taxRes]) => {
       setPackages(pkgRes.items);
       setCategories(categoryRes.map((row) => ({ id: row.id, name: row.name })));
@@ -139,7 +147,7 @@ export function CollectionForm({
       setLabourCharges(labourRes.items.filter(chargeAppliesToCollection));
       setTaxCharges(taxRes.items.filter(chargeAppliesToCollection));
     });
-  }, []);
+  }, [canViewFinancials]);
 
   return (
     <form
@@ -174,7 +182,7 @@ export function CollectionForm({
           </select>
         </FormField>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className={cn("grid gap-4", canViewFinancials ? "sm:grid-cols-2" : "sm:grid-cols-1")}>
           <FormField label="Package size" htmlFor="package_size" error={form.formState.errors.package_size?.message}>
             <input
               id="package_size"
@@ -184,16 +192,18 @@ export function CollectionForm({
               {...form.register("package_size", { valueAsNumber: true })}
             />
           </FormField>
-          <FormField label="Package fee (LKR)" htmlFor="package_fee" error={form.formState.errors.package_fee?.message}>
-            <input
-              id="package_fee"
-              type="number"
-              min={0}
-              step="0.01"
-              className={formInputClassName}
-              {...form.register("package_fee", { valueAsNumber: true })}
-            />
-          </FormField>
+          {canViewFinancials ? (
+            <FormField label="Package fee (LKR)" htmlFor="package_fee" error={form.formState.errors.package_fee?.message}>
+              <input
+                id="package_fee"
+                type="number"
+                min={0}
+                step="0.01"
+                className={formInputClassName}
+                {...form.register("package_fee", { valueAsNumber: true })}
+              />
+            </FormField>
+          ) : null}
         </div>
 
         <Controller
@@ -293,44 +303,46 @@ export function CollectionForm({
         ))}
       </section>
 
-      <section className="rounded-lg border border-border bg-surface p-6 grid gap-6 md:grid-cols-3">
-        <Controller
-          control={form.control}
-          name="utility_charge_ids"
-          render={({ field }) => (
-            <ChargeMultiSelect
-              label="Utility charges"
-              options={utilityCharges}
-              selected={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-        <Controller
-          control={form.control}
-          name="labour_charge_ids"
-          render={({ field }) => (
-            <ChargeMultiSelect
-              label="Labour charges"
-              options={labourCharges}
-              selected={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-        <Controller
-          control={form.control}
-          name="tax_charge_ids"
-          render={({ field }) => (
-            <ChargeMultiSelect
-              label="Tax charges"
-              options={taxCharges}
-              selected={field.value}
-              onChange={field.onChange}
-            />
-          )}
-        />
-      </section>
+      {canViewFinancials ? (
+        <section className="rounded-lg border border-border bg-surface p-6 grid gap-6 md:grid-cols-3">
+          <Controller
+            control={form.control}
+            name="utility_charge_ids"
+            render={({ field }) => (
+              <ChargeMultiSelect
+                label="Utility charges"
+                options={utilityCharges}
+                selected={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="labour_charge_ids"
+            render={({ field }) => (
+              <ChargeMultiSelect
+                label="Labour charges"
+                options={labourCharges}
+                selected={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+          <Controller
+            control={form.control}
+            name="tax_charge_ids"
+            render={({ field }) => (
+              <ChargeMultiSelect
+                label="Tax charges"
+                options={taxCharges}
+                selected={field.value}
+                onChange={field.onChange}
+              />
+            )}
+          />
+        </section>
+      ) : null}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

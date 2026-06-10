@@ -12,6 +12,7 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCount, formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
@@ -20,6 +21,7 @@ export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { canViewFinancials } = useAdminPermissions();
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -97,7 +99,9 @@ export default function CollectionDetailPage() {
           label="Package size"
           value={`${formatCount(data.package_size)} cookies`}
         />
-        <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+        {canViewFinancials ? (
+          <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+        ) : null}
         <DetailField
           label="Allowed categories"
           value={data.allowed_categories.map((row) => row.name).join(", ") || "—"}

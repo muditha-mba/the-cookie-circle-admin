@@ -13,6 +13,7 @@ import { PrimaryLink } from "@/components/data/PageActions";
 import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
@@ -28,6 +29,7 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function CollectionList() {
   const router = useRouter();
+  const { canViewFinancials } = useAdminPermissions();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -88,11 +90,16 @@ export function CollectionList() {
         accessorKey: "package_size",
         cell: ({ row }) => `${formatCount(row.original.package_size)} cookies`,
       },
-      {
-        header: "Fee",
-        accessorKey: "package_fee",
-        cell: ({ row }) => formatCurrency(row.original.package_fee),
-      },
+      ...(canViewFinancials
+        ? [
+            {
+              header: "Fee",
+              accessorKey: "package_fee",
+              cell: ({ row }: { row: { original: CollectionSummary } }) =>
+                formatCurrency(row.original.package_fee),
+            } satisfies ColumnDef<CollectionSummary>,
+          ]
+        : []),
       {
         header: "Status",
         accessorKey: "is_active",
@@ -104,7 +111,7 @@ export function CollectionList() {
         cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
       },
     ],
-    [packageMap],
+    [canViewFinancials, packageMap],
   );
 
   return (

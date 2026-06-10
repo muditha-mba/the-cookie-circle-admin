@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import type { OrderCollectionLine, OrderCollectionLineSelection } from "@/lib/api/orders";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { formatQuantityDisplay, marginToneClass, parseAmount } from "@/lib/orders/financial-display";
@@ -76,6 +77,7 @@ function SectionCard({
 }
 
 export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailProps) {
+  const { canViewFinancials } = useAdminPermissions();
   const [compositionOpen, setCompositionOpen] = useState(true);
   const selections = line.selections ?? [];
   const packQty = parseAmount(line.quantity) ?? 1;
@@ -176,7 +178,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
         ) : null}
       </div>
 
-      {financialReady ? (
+      {financialReady && canViewFinancials ? (
         <SectionCard title="Cookie financial breakdown (per pack)">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
@@ -269,32 +271,34 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <SectionCard title="Price construction (per pack snapshot)">
-          <dl className="space-y-2 text-sm">
-            <div className="flex justify-between gap-4">
-              <dt className="text-text-secondary">Selected cookie revenue</dt>
-              <dd className="tabular-nums text-text-primary">
-                {line.cookies_subtotal_snapshot != null
-                  ? formatCurrency(line.cookies_subtotal_snapshot)
-                  : "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-text-secondary">Package fee</dt>
-              <dd className="tabular-nums text-text-primary">
-                {line.package_fee_snapshot != null
-                  ? formatCurrency(line.package_fee_snapshot)
-                  : "—"}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4 border-t border-border/70 pt-2 font-medium">
-              <dt className="text-text-primary">Collection selling price snapshot</dt>
-              <dd className="tabular-nums text-text-primary">
-                {formatCurrency(line.collection_selling_price_snapshot)}
-              </dd>
-            </div>
-          </dl>
-        </SectionCard>
+        {canViewFinancials ? (
+          <SectionCard title="Price construction (per pack snapshot)">
+            <dl className="space-y-2 text-sm">
+              <div className="flex justify-between gap-4">
+                <dt className="text-text-secondary">Selected cookie revenue</dt>
+                <dd className="tabular-nums text-text-primary">
+                  {line.cookies_subtotal_snapshot != null
+                    ? formatCurrency(line.cookies_subtotal_snapshot)
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4">
+                <dt className="text-text-secondary">Package fee</dt>
+                <dd className="tabular-nums text-text-primary">
+                  {line.package_fee_snapshot != null
+                    ? formatCurrency(line.package_fee_snapshot)
+                    : "—"}
+                </dd>
+              </div>
+              <div className="flex justify-between gap-4 border-t border-border/70 pt-2 font-medium">
+                <dt className="text-text-primary">Collection selling price snapshot</dt>
+                <dd className="tabular-nums text-text-primary">
+                  {formatCurrency(line.collection_selling_price_snapshot)}
+                </dd>
+              </div>
+            </dl>
+          </SectionCard>
+        ) : null}
 
         <SectionCard title="Production requirements (per pack)">
           {selections.length === 0 ? (
@@ -315,7 +319,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
         </SectionCard>
       </div>
 
-      {insights.length > 0 ? (
+      {canViewFinancials && insights.length > 0 ? (
         <SectionCard title="Cookie insights (per pack snapshot)">
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {insights.map((insight) => (

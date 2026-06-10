@@ -15,6 +15,7 @@ import type {
   CustomerDetail,
   CustomerInsights,
 } from "@/lib/api/customers";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { customersApi } from "@/lib/api/customers";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -33,7 +34,13 @@ function formatLabel(value: string) {
   return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function InsightsPanel({ insights }: { insights: CustomerInsights }) {
+function InsightsPanel({
+  insights,
+  canViewFinancials,
+}: {
+  insights: CustomerInsights;
+  canViewFinancials: boolean;
+}) {
   return (
     <DetailMetadataCard>
       <DetailField label="Segment" value={<CustomerSegmentBadge segment={insights.segment} />} />
@@ -41,12 +48,16 @@ function InsightsPanel({ insights }: { insights: CustomerInsights }) {
         label="Marketing source"
         value={insights.marketing_source ? formatLabel(insights.marketing_source) : "—"}
       />
-      <DetailField label="Lifetime spend" value={formatCurrency(insights.lifetime_spend)} />
+      {canViewFinancials ? (
+        <>
+          <DetailField label="Lifetime spend" value={formatCurrency(insights.lifetime_spend)} />
+          <DetailField
+            label="Average order value"
+            value={formatCurrency(insights.average_order_value)}
+          />
+        </>
+      ) : null}
       <DetailField label="Total orders" value={insights.total_orders} />
-      <DetailField
-        label="Average order value"
-        value={formatCurrency(insights.average_order_value)}
-      />
       <DetailField
         label="Last order"
         value={
@@ -72,25 +83,33 @@ function InsightsPanel({ insights }: { insights: CustomerInsights }) {
 function OverviewPanel({
   customer,
   insights,
+  canViewFinancials,
 }: {
   customer: CustomerDetail;
   insights: CustomerInsights | undefined;
+  canViewFinancials: boolean;
 }) {
+  const summaryCards = insights
+    ? [
+        ...(canViewFinancials
+          ? [["Lifetime spend", formatCurrency(insights.lifetime_spend)] as const]
+          : []),
+        ["Orders", insights.total_orders] as const,
+        ["Segment", <CustomerSegmentBadge key="seg" segment={insights.segment} />] as const,
+        [
+          "Last order",
+          insights.last_order_date
+            ? new Date(insights.last_order_date).toLocaleDateString()
+            : "—",
+        ] as const,
+      ]
+    : [];
+
   return (
     <>
       {insights ? (
         <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {[
-            ["Lifetime spend", formatCurrency(insights.lifetime_spend)],
-            ["Orders", insights.total_orders],
-            ["Segment", <CustomerSegmentBadge key="seg" segment={insights.segment} />],
-            [
-              "Last order",
-              insights.last_order_date
-                ? new Date(insights.last_order_date).toLocaleDateString()
-                : "—",
-            ],
-          ].map(([label, value]) => (
+          {summaryCards.map(([label, value]) => (
             <div
               key={String(label)}
               className="rounded-lg border border-border bg-surface px-4 py-3"
@@ -353,7 +372,9 @@ function OrdersPanel({ customerId }: { customerId: string }) {
 }
 
 export function CustomerDetailView({ customer }: { customer: CustomerDetail }) {
+  const { canViewFinancials } = useAdminPermissions();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
+  const visibleTabs = TABS.filter((tab) => canViewFinancials || tab.id !== "insights");
 
   const insightsQuery = useQuery({
     queryKey: ["customer-insights", customer.id],
@@ -367,7 +388,7 @@ export function CustomerDetailView({ customer }: { customer: CustomerDetail }) {
       </PageActions>
 
       <nav className="mb-6 flex flex-wrap gap-1 rounded-lg border border-border bg-background p-1">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -385,13 +406,20 @@ export function CustomerDetailView({ customer }: { customer: CustomerDetail }) {
       </nav>
 
       {activeTab === "overview" ? (
-        <OverviewPanel customer={customer} insights={insightsQuery.data} />
+        <OverviewPanel
+          customer={customer}
+          insights={insightsQuery.data}
+          canViewFinancials={canViewFinancials}
+        />
       ) : null}
       {activeTab === "insights" ? (
         insightsQuery.isLoading ? (
           <p className="text-sm text-text-muted">Loading insights…</p>
         ) : insightsQuery.data ? (
-          <InsightsPanel insights={insightsQuery.data} />
+          <InsightsPanel
+            insights={insightsQuery.data}
+            canViewFinancials={canViewFinancials}
+          />
         ) : (
           <p className="text-sm text-danger">Unable to load insights.</p>
         )

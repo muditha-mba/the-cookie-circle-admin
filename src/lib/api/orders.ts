@@ -186,7 +186,9 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
   internal_notes: string | null;
   requested_delivery_date: string;
   scheduled_delivery_date: string;
-  financial_performance: OrderFinancialPerformance;
+  delivery_fee_snapshot: string;
+  total_revenue_snapshot: string;
+  financial_performance: OrderFinancialPerformance | null;
   product_lines: OrderProductLine[];
   collection_lines: OrderCollectionLine[];
   status_timeline: OrderStatusEvent[];

@@ -12,6 +12,7 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type {
   CustomerListItem,
@@ -35,6 +36,7 @@ function formatSource(source: string) {
 
 export function CustomerList() {
   const router = useRouter();
+  const { canViewFinancials } = useAdminPermissions();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -71,8 +73,16 @@ export function CustomerList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<CustomerListItem>[]>(
-    () => [
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || option.value !== "lifetime_spend",
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<CustomerListItem>[]>(() => {
+    const base: ColumnDef<CustomerListItem>[] = [
       {
         header: "Name",
         accessorKey: "first_name",
@@ -91,11 +101,6 @@ export function CustomerList() {
         header: "Orders",
         accessorKey: "total_orders",
         cell: ({ row }) => row.original.total_orders,
-      },
-      {
-        header: "Lifetime spend",
-        accessorKey: "lifetime_spend",
-        cell: ({ row }) => formatCurrency(row.original.lifetime_spend),
       },
       {
         header: "Last order",
@@ -123,9 +128,18 @@ export function CustomerList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canViewFinancials) {
+      base.splice(3, 0, {
+        header: "Lifetime spend",
+        accessorKey: "lifetime_spend",
+        cell: ({ row }) => formatCurrency(row.original.lifetime_spend),
+      });
+    }
+
+    return base;
+  }, [canViewFinancials]);
 
   return (
     <div className="space-y-4">
@@ -184,22 +198,24 @@ export function CustomerList() {
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
           />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-text-secondary">
-            Min lifetime spend
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={minLifetimeSpend}
-            onChange={(event) => {
-              setMinLifetimeSpend(event.target.value);
-              setPage(1);
-            }}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-          />
-        </div>
+        {canViewFinancials ? (
+          <div>
+            <label className="block text-xs font-medium text-text-secondary">
+              Min lifetime spend
+            </label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={minLifetimeSpend}
+              onChange={(event) => {
+                setMinLifetimeSpend(event.target.value);
+                setPage(1);
+              }}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </div>
+        ) : null}
       </div>
 
       <ListToolbar
@@ -209,7 +225,7 @@ export function CustomerList() {
           setPage(1);
         }}
         sortBy={sortBy}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         sortOrder={sortOrder}
         onSortByChange={setSortBy}
         onSortOrderChange={setSortOrder}

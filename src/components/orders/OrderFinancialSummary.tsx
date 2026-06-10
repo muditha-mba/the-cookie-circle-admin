@@ -1,5 +1,6 @@
 "use client";
 
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import type {
   OrderCollectionLine,
   OrderFinancialSnapshot,
@@ -23,6 +24,7 @@ export function OrderFinancialSummary({
   collectionLines,
   className,
 }: OrderFinancialSummaryProps) {
+  const { canViewFinancials } = useAdminPermissions();
   const profitPositive = snapshot
     ? Number(snapshot.total_profit_snapshot) >= 0
     : true;
@@ -41,7 +43,9 @@ export function OrderFinancialSummary({
                   <th className="pb-2 font-medium">Product</th>
                   <th className="pb-2 font-medium">Qty</th>
                   <th className="pb-2 font-medium">Unit price</th>
-                  <th className="pb-2 font-medium">Unit profit</th>
+                  {canViewFinancials ? (
+                    <th className="pb-2 font-medium">Unit profit</th>
+                  ) : null}
                   <th className="pb-2 text-right font-medium">Line revenue</th>
                 </tr>
               </thead>
@@ -55,9 +59,11 @@ export function OrderFinancialSummary({
                     <td className="py-2.5 text-text-secondary">
                       {formatCurrency(line.product_selling_price_snapshot)}
                     </td>
-                    <td className="py-2.5 text-text-secondary">
-                      {formatCurrency(line.product_profit_snapshot)}
-                    </td>
+                    {canViewFinancials ? (
+                      <td className="py-2.5 text-text-secondary">
+                        {formatCurrency(line.product_profit_snapshot)}
+                      </td>
+                    ) : null}
                     <td className="py-2.5 text-right tabular-nums">
                       {formatCurrency(line.line_revenue_snapshot)}
                     </td>
@@ -81,7 +87,9 @@ export function OrderFinancialSummary({
                   <th className="pb-2 font-medium">Collection</th>
                   <th className="pb-2 font-medium">Qty</th>
                   <th className="pb-2 font-medium">Unit price</th>
-                  <th className="pb-2 font-medium">Unit profit</th>
+                  {canViewFinancials ? (
+                    <th className="pb-2 font-medium">Unit profit</th>
+                  ) : null}
                   <th className="pb-2 text-right font-medium">Line revenue</th>
                 </tr>
               </thead>
@@ -95,9 +103,11 @@ export function OrderFinancialSummary({
                     <td className="py-2.5 text-text-secondary">
                       {formatCurrency(line.collection_selling_price_snapshot)}
                     </td>
-                    <td className="py-2.5 text-text-secondary">
-                      {formatCurrency(line.collection_profit_snapshot)}
-                    </td>
+                    {canViewFinancials ? (
+                      <td className="py-2.5 text-text-secondary">
+                        {formatCurrency(line.collection_profit_snapshot)}
+                      </td>
+                    ) : null}
                     <td className="py-2.5 text-right tabular-nums">
                       {formatCurrency(line.line_revenue_snapshot)}
                     </td>
@@ -137,39 +147,43 @@ export function OrderFinancialSummary({
               </dd>
             </div>
             <div className="flex justify-between gap-4 border-t border-border pt-2 font-medium">
-              <dt className="text-text-primary">Revenue</dt>
+              <dt className="text-text-primary">Customer total</dt>
               <dd className="tabular-nums text-text-primary">
                 {formatCurrency(snapshot.total_revenue_snapshot)}
               </dd>
             </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-text-secondary">Cost</dt>
-              <dd className="tabular-nums text-text-primary">
-                {formatCurrency(snapshot.total_cost_snapshot)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-text-secondary">Profit</dt>
-              <dd
-                className={cn(
-                  "tabular-nums font-medium",
-                  profitPositive ? "text-success" : "text-danger",
-                )}
-              >
-                {formatCurrency(snapshot.total_profit_snapshot)}
-              </dd>
-            </div>
-            <div className="flex justify-between gap-4">
-              <dt className="text-text-secondary">Margin</dt>
-              <dd
-                className={cn(
-                  "tabular-nums font-medium",
-                  profitPositive ? "text-success" : "text-danger",
-                )}
-              >
-                {formatPercent(snapshot.margin_percentage_snapshot)}
-              </dd>
-            </div>
+            {canViewFinancials ? (
+              <>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-text-secondary">Cost</dt>
+                  <dd className="tabular-nums text-text-primary">
+                    {formatCurrency(snapshot.total_cost_snapshot)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-text-secondary">Profit</dt>
+                  <dd
+                    className={cn(
+                      "tabular-nums font-medium",
+                      profitPositive ? "text-success" : "text-danger",
+                    )}
+                  >
+                    {formatCurrency(snapshot.total_profit_snapshot)}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4">
+                  <dt className="text-text-secondary">Margin</dt>
+                  <dd
+                    className={cn(
+                      "tabular-nums font-medium",
+                      profitPositive ? "text-success" : "text-danger",
+                    )}
+                  >
+                    {formatPercent(snapshot.margin_percentage_snapshot)}
+                  </dd>
+                </div>
+              </>
+            ) : null}
           </dl>
         </section>
       ) : null}

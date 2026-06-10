@@ -11,6 +11,7 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { OrderSummary } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
@@ -27,6 +28,7 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function OrderList() {
   const router = useRouter();
+  const { canViewFinancials } = useAdminPermissions();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -45,30 +47,54 @@ export function OrderList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<OrderSummary>[]>(
-    () => [
-      { header: "Order", accessorKey: "order_number", cell: ({ row }) => (
-        <span className="font-medium">{row.original.order_number}</span>
-      )},
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || (option.value !== "revenue" && option.value !== "profit"),
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<OrderSummary>[]>(() => {
+    const base: ColumnDef<OrderSummary>[] = [
+      {
+        header: "Order",
+        accessorKey: "order_number",
+        cell: ({ row }) => <span className="font-medium">{row.original.order_number}</span>,
+      },
       { header: "Customer", accessorKey: "customer_name" },
-      { header: "Scheduled", accessorKey: "scheduled_delivery_date", cell: ({ row }) =>
-        new Date(row.original.scheduled_delivery_date).toLocaleDateString()},
-      { header: "Requested", accessorKey: "requested_delivery_date", cell: ({ row }) =>
-        new Date(row.original.requested_delivery_date).toLocaleDateString()},
+      {
+        header: "Scheduled",
+        accessorKey: "scheduled_delivery_date",
+        cell: ({ row }) => new Date(row.original.scheduled_delivery_date).toLocaleDateString(),
+      },
+      {
+        header: "Requested",
+        accessorKey: "requested_delivery_date",
+        cell: ({ row }) => new Date(row.original.requested_delivery_date).toLocaleDateString(),
+      },
       {
         header: "Status",
         accessorKey: "status",
-        cell: ({ row }) => (
-          <EnumStatusBadge kind="order" value={row.original.status} />
-        ),
+        cell: ({ row }) => <EnumStatusBadge kind="order" value={row.original.status} />,
       },
-      { header: "Revenue", accessorKey: "total_revenue_snapshot", cell: ({ row }) =>
-        formatCurrency(row.original.total_revenue_snapshot)},
-      { header: "Profit", accessorKey: "total_profit_snapshot", cell: ({ row }) =>
-        formatCurrency(row.original.total_profit_snapshot)},
-    ],
-    [],
-  );
+      {
+        header: "Total",
+        accessorKey: "total_revenue_snapshot",
+        cell: ({ row }) => formatCurrency(row.original.total_revenue_snapshot),
+      },
+    ];
+
+    if (canViewFinancials) {
+      base.push({
+        header: "Profit",
+        accessorKey: "total_profit_snapshot",
+        cell: ({ row }) => formatCurrency(row.original.total_profit_snapshot),
+      });
+    }
+
+    return base;
+  }, [canViewFinancials]);
 
   return (
     <div className="space-y-4">
@@ -76,7 +102,7 @@ export function OrderList() {
         search={search}
         onSearchChange={(value) => { setSearch(value); setPage(1); }}
         sortBy={sortBy}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         sortOrder={sortOrder}
         onSortByChange={setSortBy}
         onSortOrderChange={setSortOrder}

@@ -12,6 +12,7 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { ProductSummary } from "@/lib/api/products";
 import { productsApi } from "@/lib/api/products";
@@ -26,6 +27,7 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function ProductList() {
   const router = useRouter();
+  const { canViewFinancials } = useAdminPermissions();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -44,24 +46,20 @@ export function ProductList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<ProductSummary>[]>(
-    () => [
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || option.value !== "selling_price",
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<ProductSummary>[]>(() => {
+    const base: ColumnDef<ProductSummary>[] = [
       {
         header: "Name",
         accessorKey: "name",
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
-      },
-      {
-        header: "Selling price",
-        accessorKey: "selling_price",
-        cell: ({ row }) => formatCurrency(row.original.selling_price),
-      },
-      {
-        header: "Buffer",
-        accessorKey: "buffer_amount",
-        cell: ({ row }) => formatCurrency(row.original.buffer_amount),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
       {
         header: "Yield",
@@ -75,9 +73,23 @@ export function ProductList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canViewFinancials) {
+      base.splice(1, 0, {
+        header: "Selling price",
+        accessorKey: "selling_price",
+        cell: ({ row }) => formatCurrency(row.original.selling_price),
+      });
+      base.splice(2, 0, {
+        header: "Buffer",
+        accessorKey: "buffer_amount",
+        cell: ({ row }) => formatCurrency(row.original.buffer_amount),
+      });
+    }
+
+    return base;
+  }, [canViewFinancials]);
 
   return (
     <div className="space-y-6">
@@ -90,7 +102,7 @@ export function ProductList() {
         searchPlaceholder="Search products..."
         sortBy={sortBy}
         sortOrder={sortOrder}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         onSortByChange={(value) => {
           setSortBy(value);
           setPage(1);

@@ -16,7 +16,8 @@ import {
 } from "@/config/navigation";
 import { SidebarNavSection } from "@/components/layout/SidebarNavSection";
 import { routes } from "@/config/routes";
-import { formatUserRole } from "@/lib/user-display";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { formatSignedInRole } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
 
@@ -24,6 +25,8 @@ export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { user } = useAuth();
+  const { canViewFinancials } = useAdminPermissions();
+  const visibleSections = getVisibleNavigationSections(canViewFinancials);
 
   return (
     <aside
@@ -98,7 +101,7 @@ export function Sidebar() {
             isActive={isNavItemActive(dashboardNavItem, pathname)}
           />
         </div>
-        {getVisibleNavigationSections().map((section, index) => (
+        {visibleSections.map((section, index) => (
           <SidebarNavSection
             key={section.id}
             title={section.title}
@@ -136,7 +139,7 @@ export function Sidebar() {
                       Signed in as
                     </p>
                     <p className="truncate text-sm font-medium text-text-primary">
-                      {formatUserRole(user.role)}
+                      {formatSignedInRole(user)}
                     </p>
                   </div>
                 </div>
@@ -164,8 +167,8 @@ export function Sidebar() {
             {user ? (
               <span
                 className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-surface-hover text-info"
-                title={formatUserRole(user.role)}
-                aria-label={`Role: ${formatUserRole(user.role)}`}
+                title={formatSignedInRole(user)}
+                aria-label={`Role: ${formatSignedInRole(user)}`}
               >
                 <Shield className="h-4 w-4" />
               </span>

@@ -8,6 +8,7 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { ProductCostBreakdownView } from "@/components/products/ProductCostBreakdownView";
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Charge } from "@/lib/api/charge-types";
 import { labourChargesApi } from "@/lib/api/labour-charges";
@@ -91,6 +92,7 @@ export function ProductForm({
   error,
   onSubmit,
 }: ProductFormProps) {
+  const { canViewFinancials } = useAdminPermissions();
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
   const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
@@ -152,9 +154,15 @@ export function ProductForm({
       const [items, categoryRows, utilities, labour, tax] = await Promise.all([
         productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         productCategoriesApi.list(),
-        utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
-        labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
-        taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
+        canViewFinancials
+          ? utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
+          : Promise.resolve({ items: [] }),
+        canViewFinancials
+          ? labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
+          : Promise.resolve({ items: [] }),
+        canViewFinancials
+          ? taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
+          : Promise.resolve({ items: [] }),
       ]);
       setProductItems(items.items);
       setCategories(categoryRows.map((row) => ({ id: row.id, name: row.name })));
@@ -162,7 +170,7 @@ export function ProductForm({
       setLabourCharges(labour.items.filter(chargeAppliesToProduct));
       setTaxCharges(tax.items.filter(chargeAppliesToProduct));
     })();
-  }, []);
+  }, [canViewFinancials]);
 
   const recipeItemIds = useMemo(
     () =>
@@ -185,6 +193,13 @@ export function ProductForm({
   const productItemsReady = productItems.length > 0;
 
   useEffect(() => {
+    if (!canViewFinancials) {
+      setPreview(null);
+      setPreviewError(null);
+      setIsPreviewLoading(false);
+      return;
+    }
+
     const input = JSON.parse(debouncedPreviewKey) as Pick<
       ProductFormValues,
       | "selling_price"
@@ -237,7 +252,7 @@ export function ProductForm({
         }
       }
     })();
-  }, [debouncedPreviewKey]);
+  }, [canViewFinancials, debouncedPreviewKey]);
 
   return (
     <div className="grid gap-8 xl:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
@@ -274,37 +289,39 @@ export function ProductForm({
           </select>
         </FormField>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FormField
-            label="Selling price (LKR)"
-            htmlFor="selling_price"
-            error={errors.selling_price?.message}
-          >
-            <input
-              id="selling_price"
-              type="number"
-              min={0}
-              step="0.01"
-              className={formInputClassName}
-              {...register("selling_price", { valueAsNumber: true })}
-            />
-          </FormField>
-          <FormField
-            label="Buffer amount (LKR)"
-            htmlFor="buffer_amount"
-            error={errors.buffer_amount?.message}
-            hint="Optional extra cost for unforeseen production expenses"
-          >
-            <input
-              id="buffer_amount"
-              type="number"
-              min={0}
-              step="0.01"
-              className={formInputClassName}
-              {...register("buffer_amount", { valueAsNumber: true })}
-            />
-          </FormField>
-        </div>
+        {canViewFinancials ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <FormField
+              label="Selling price (LKR)"
+              htmlFor="selling_price"
+              error={errors.selling_price?.message}
+            >
+              <input
+                id="selling_price"
+                type="number"
+                min={0}
+                step="0.01"
+                className={formInputClassName}
+                {...register("selling_price", { valueAsNumber: true })}
+              />
+            </FormField>
+            <FormField
+              label="Buffer amount (LKR)"
+              htmlFor="buffer_amount"
+              error={errors.buffer_amount?.message}
+              hint="Optional extra cost for unforeseen production expenses"
+            >
+              <input
+                id="buffer_amount"
+                type="number"
+                min={0}
+                step="0.01"
+                className={formInputClassName}
+                {...register("buffer_amount", { valueAsNumber: true })}
+              />
+            </FormField>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-6">
           <FormField label="Status" htmlFor="is_active">
@@ -446,32 +463,34 @@ export function ProductForm({
           )}
         </div>
 
-        <div className="space-y-4 border-t border-border pt-6">
-          <div>
-            <h3 className="text-sm font-semibold text-text-primary">Attached charges</h3>
-            <p className="text-xs text-text-muted">
-              References global charges — amounts are not duplicated
-            </p>
+        {canViewFinancials ? (
+          <div className="space-y-4 border-t border-border pt-6">
+            <div>
+              <h3 className="text-sm font-semibold text-text-primary">Attached charges</h3>
+              <p className="text-xs text-text-muted">
+                References global charges — amounts are not duplicated
+              </p>
+            </div>
+            <ChargeMultiSelect
+              label="Utility charges"
+              options={utilityCharges}
+              selected={utilityChargeIds}
+              onChange={(ids) => form.setValue("utility_charge_ids", ids)}
+            />
+            <ChargeMultiSelect
+              label="Labour charges"
+              options={labourCharges}
+              selected={labourChargeIds}
+              onChange={(ids) => form.setValue("labour_charge_ids", ids)}
+            />
+            <ChargeMultiSelect
+              label="Tax charges"
+              options={taxCharges}
+              selected={taxChargeIds}
+              onChange={(ids) => form.setValue("tax_charge_ids", ids)}
+            />
           </div>
-          <ChargeMultiSelect
-            label="Utility charges"
-            options={utilityCharges}
-            selected={utilityChargeIds}
-            onChange={(ids) => form.setValue("utility_charge_ids", ids)}
-          />
-          <ChargeMultiSelect
-            label="Labour charges"
-            options={labourCharges}
-            selected={labourChargeIds}
-            onChange={(ids) => form.setValue("labour_charge_ids", ids)}
-          />
-          <ChargeMultiSelect
-            label="Tax charges"
-            options={taxCharges}
-            selected={taxChargeIds}
-            onChange={(ids) => form.setValue("tax_charge_ids", ids)}
-          />
-        </div>
+        ) : null}
 
         {error ? <p className="text-sm text-danger">{error}</p> : null}
 
@@ -480,29 +499,31 @@ export function ProductForm({
         </PrimaryButton>
       </form>
 
-      <aside className="space-y-3 xl:sticky xl:top-6 xl:self-start">
-        <div className="rounded-lg border border-border bg-surface p-4">
-          <h3 className="text-sm font-semibold text-text-primary">Live cost preview</h3>
-          <p className="mt-1 text-xs text-text-muted">
-            Updates as you edit recipe, charges, and pricing
-          </p>
-        </div>
-        {isPreviewLoading ? (
-          <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
-        ) : previewError ? (
-          <p className="text-sm text-danger">{previewError}</p>
-        ) : preview ? (
-          <ProductCostBreakdownView
-            breakdown={preview}
-            yieldQuantity={yieldQuantity}
-            productionNotes={productionNotes}
-          />
-        ) : (
-          <p className={cn("text-sm text-text-muted")}>
-            Add recipe lines or pricing to see a cost preview.
-          </p>
-        )}
-      </aside>
+      {canViewFinancials ? (
+        <aside className="space-y-3 xl:sticky xl:top-6 xl:self-start">
+          <div className="rounded-lg border border-border bg-surface p-4">
+            <h3 className="text-sm font-semibold text-text-primary">Live cost preview</h3>
+            <p className="mt-1 text-xs text-text-muted">
+              Updates as you edit recipe, charges, and pricing
+            </p>
+          </div>
+          {isPreviewLoading ? (
+            <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
+          ) : previewError ? (
+            <p className="text-sm text-danger">{previewError}</p>
+          ) : preview ? (
+            <ProductCostBreakdownView
+              breakdown={preview}
+              yieldQuantity={yieldQuantity}
+              productionNotes={productionNotes}
+            />
+          ) : (
+            <p className={cn("text-sm text-text-muted")}>
+              Add recipe lines or pricing to see a cost preview.
+            </p>
+          )}
+        </aside>
+      ) : null}
     </div>
   );
 }
