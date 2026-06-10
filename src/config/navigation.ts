@@ -201,7 +201,7 @@ export const navigationSections: NavSectionConfig[] = [
       {
         id: "business-settings",
         title: "Business Settings",
-        href: routes.businessSettings,
+        href: routes.businessSettings.operations,
         icon: Settings,
         enabled: true,
       },

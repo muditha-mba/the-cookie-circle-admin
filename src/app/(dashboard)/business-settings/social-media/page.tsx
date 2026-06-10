@@ -3,31 +3,37 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { BusinessSettingsForm } from "@/components/business-settings/BusinessSettingsForm";
 import { BusinessSettingsPageShell } from "@/components/business-settings/BusinessSettingsPageShell";
+import { SocialMediaForm } from "@/components/business-settings/SocialMediaForm";
 import type { ApiError } from "@/lib/api/types";
-import { businessSettingsApi } from "@/lib/api/business-settings";
-import type { BusinessSettingsFormValues } from "@/lib/validation/business-settings";
+import { socialMediaApi } from "@/lib/api/social-media";
+import type { SocialMediaSettingsFormValues } from "@/lib/validation/social-media";
 
-export default function BusinessSettingsPage() {
+export default function SocialMediaSettingsPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["business-settings"],
-    queryFn: () => businessSettingsApi.get(),
+    queryKey: ["social-media-settings"],
+    queryFn: () => socialMediaApi.get(),
   });
 
-  const handleSubmit = async (values: BusinessSettingsFormValues) => {
+  const handleSubmit = async (values: SocialMediaSettingsFormValues) => {
     setError(null);
     setIsSubmitting(true);
     try {
-      const updated = await businessSettingsApi.update(values);
-      queryClient.setQueryData(["business-settings"], updated);
+      const updated = await socialMediaApi.update(
+        values.links.map((link) => ({
+          platform: link.platform,
+          url: link.url,
+          is_enabled: link.is_enabled,
+        })),
+      );
+      queryClient.setQueryData(["social-media-settings"], updated);
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update settings.");
+      setError(apiError.message ?? "Unable to update social media settings.");
     } finally {
       setIsSubmitting(false);
     }
@@ -44,16 +50,16 @@ export default function BusinessSettingsPage() {
   if (isError || !data) {
     return (
       <BusinessSettingsPageShell>
-        <p className="text-sm text-danger">Settings could not be loaded.</p>
+        <p className="text-sm text-danger">Social media settings could not be loaded.</p>
       </BusinessSettingsPageShell>
     );
   }
 
   return (
     <BusinessSettingsPageShell>
-      <BusinessSettingsForm
-        defaultValues={data}
-        submitLabel="Save settings"
+      <SocialMediaForm
+        defaultValues={data.links}
+        submitLabel="Save social links"
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}

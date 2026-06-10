@@ -27,7 +27,20 @@ export const routes = {
     detail: (id: string) => `/collection-packages/${id}`,
     edit: (id: string) => `/collection-packages/${id}/edit`,
   },
-  businessSettings: "/business-settings",
+  businessSettings: {
+    operations: "/business-settings",
+    contact: "/business-settings/contact",
+    socialMedia: "/business-settings/social-media",
+    faqs: {
+      list: "/business-settings/faqs",
+      create: "/business-settings/faqs/new",
+      edit: (id: string) => `/business-settings/faqs/${id}/edit`,
+    },
+    faqCategories: {
+      create: "/business-settings/faq-categories/new",
+      edit: (id: string) => `/business-settings/faq-categories/${id}/edit`,
+    },
+  },
   customers: {
     list: "/customers",
     create: "/customers/new",
@@ -109,6 +122,7 @@ export type RouteKey = keyof Omit<
   | "deliveryAreas"
   | "orders"
   | "businessSettings"
+  // businessSettings is nested — excluded from RouteKey
   | "productItemTypes"
   | "productItems"
   | "utilityCharges"
@@ -121,7 +135,7 @@ const protectedPrefixes = [
   routes.products.list,
   routes.collections.list,
   routes.collectionPackages.list,
-  routes.businessSettings,
+  routes.businessSettings.operations,
   routes.customers.list,
   routes.deliveryAreas.list,
   routes.orders.list,

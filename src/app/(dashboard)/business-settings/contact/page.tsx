@@ -3,13 +3,13 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { BusinessSettingsForm } from "@/components/business-settings/BusinessSettingsForm";
 import { BusinessSettingsPageShell } from "@/components/business-settings/BusinessSettingsPageShell";
+import { ContactSettingsForm } from "@/components/business-settings/ContactSettingsForm";
 import type { ApiError } from "@/lib/api/types";
 import { businessSettingsApi } from "@/lib/api/business-settings";
-import type { BusinessSettingsFormValues } from "@/lib/validation/business-settings";
+import type { ContactSettingsFormValues } from "@/lib/validation/contact-settings";
 
-export default function BusinessSettingsPage() {
+export default function ContactSettingsPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -19,7 +19,7 @@ export default function BusinessSettingsPage() {
     queryFn: () => businessSettingsApi.get(),
   });
 
-  const handleSubmit = async (values: BusinessSettingsFormValues) => {
+  const handleSubmit = async (values: ContactSettingsFormValues) => {
     setError(null);
     setIsSubmitting(true);
     try {
@@ -27,7 +27,7 @@ export default function BusinessSettingsPage() {
       queryClient.setQueryData(["business-settings"], updated);
     } catch (err) {
       const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update settings.");
+      setError(apiError.message ?? "Unable to update contact settings.");
     } finally {
       setIsSubmitting(false);
     }
@@ -44,16 +44,16 @@ export default function BusinessSettingsPage() {
   if (isError || !data) {
     return (
       <BusinessSettingsPageShell>
-        <p className="text-sm text-danger">Settings could not be loaded.</p>
+        <p className="text-sm text-danger">Contact settings could not be loaded.</p>
       </BusinessSettingsPageShell>
     );
   }
 
   return (
     <BusinessSettingsPageShell>
-      <BusinessSettingsForm
+      <ContactSettingsForm
         defaultValues={data}
-        submitLabel="Save settings"
+        submitLabel="Save contact details"
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}
