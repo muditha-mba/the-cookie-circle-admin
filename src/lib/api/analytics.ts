@@ -407,6 +407,7 @@ export type OrderAnalyticsKpis = {
   completion_rate: AnalyticsKpiMetric;
   average_order_value: AnalyticsKpiMetric;
   revenue_from_orders: AnalyticsKpiMetric;
+  package_fee_revenue: AnalyticsKpiMetric;
   average_profit_per_order: AnalyticsKpiMetric;
   average_margin_percentage: AnalyticsKpiMetric;
 };
@@ -503,6 +504,7 @@ export type OrderAnalyticsPerformanceRow = {
   package_type: string;
   collections_value_snapshot: string;
   products_value_snapshot: string;
+  package_fee_revenue_snapshot: string;
   total_revenue_snapshot: string;
   total_cost_snapshot: string;
   total_profit_snapshot: string;

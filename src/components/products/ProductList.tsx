@@ -25,6 +25,15 @@ const SORT_OPTIONS: SortOption[] = [
   { value: "created_at", label: "Created" },
 ];
 
+function unitSellingPrice(sellingPrice: string, yieldQuantity: string): number | null {
+  const selling = Number(sellingPrice);
+  const yieldQty = Number(yieldQuantity);
+  if (Number.isNaN(selling) || Number.isNaN(yieldQty) || yieldQty <= 0) {
+    return null;
+  }
+  return selling / yieldQty;
+}
+
 export function ProductList() {
   const router = useRouter();
   const { canViewFinancials } = useAdminPermissions();
@@ -82,6 +91,17 @@ export function ProductList() {
         cell: ({ row }) => formatCurrency(row.original.selling_price),
       });
       base.splice(2, 0, {
+        header: "Price per item",
+        id: "price_per_item",
+        cell: ({ row }) => {
+          const unitPrice = unitSellingPrice(
+            row.original.selling_price,
+            row.original.yield_quantity,
+          );
+          return unitPrice == null ? "—" : formatCurrency(unitPrice);
+        },
+      });
+      base.splice(3, 0, {
         header: "Buffer",
         accessorKey: "buffer_amount",
         cell: ({ row }) => formatCurrency(row.original.buffer_amount),
