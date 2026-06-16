@@ -194,6 +194,20 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
     ),
   },
   {
+    accessorKey: "delivery_cost_snapshot",
+    header: "Delivery cost",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.delivery_cost_snapshot)}</span>
+    ),
+  },
+  {
+    accessorKey: "packaging_cost_snapshot",
+    header: "Packaging cost",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.packaging_cost_snapshot)}</span>
+    ),
+  },
+  {
     accessorKey: "payment_method",
     header: "Payment method",
     cell: ({ row }) => (

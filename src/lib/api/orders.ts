@@ -88,6 +88,11 @@ export type OrderFinancialSnapshot = {
   products_subtotal_snapshot: string;
   collections_subtotal_snapshot: string;
   delivery_fee_snapshot: string;
+  delivery_cost_snapshot: string;
+  package_fee_revenue_snapshot: string;
+  packaging_cost_snapshot: string;
+  products_cost_snapshot: string;
+  collections_cost_snapshot: string;
   total_revenue_snapshot: string;
   total_cost_snapshot: string;
   total_profit_snapshot: string;
@@ -160,12 +165,14 @@ export type OrderSummary = {
   order_number: string;
   customer_id: string;
   customer_name: string;
+  order_type: "weekly_delivery" | "catering";
   source: OrderSource;
   payment_method: PaymentMethod;
   payment_status: PaymentStatus;
   status: OrderStatus;
   requested_delivery_date: string;
   scheduled_delivery_date: string;
+  delivery_area: OrderDeliveryArea | null;
   total_revenue_snapshot: string;
   total_profit_snapshot: string;
   created_at: string;
@@ -187,6 +194,11 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
   requested_delivery_date: string;
   scheduled_delivery_date: string;
   delivery_fee_snapshot: string;
+  delivery_cost_snapshot: string;
+  package_fee_revenue_snapshot: string;
+  packaging_cost_snapshot: string;
+  products_cost_snapshot: string;
+  collections_cost_snapshot: string;
   total_revenue_snapshot: string;
   financial_performance: OrderFinancialPerformance | null;
   product_lines: OrderProductLine[];

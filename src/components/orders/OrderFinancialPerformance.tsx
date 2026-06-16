@@ -1,16 +1,20 @@
 "use client";
 
 import type { OrderFinancialPerformance as OrderFinancialPerformanceType } from "@/lib/api/orders";
+import { OrderRevenueBreakdown } from "@/components/orders/OrderRevenueBreakdown";
 import { formatCurrency } from "@/lib/format";
+import type { OrderFinancialBreakdownType } from "@/lib/orders/financial-display";
 import { cn } from "@/lib/utils";
 
 type OrderFinancialPerformanceProps = {
   performance: OrderFinancialPerformanceType;
+  orderType?: OrderFinancialBreakdownType;
   className?: string;
 };
 
 export function OrderFinancialPerformance({
   performance,
+  orderType,
   className,
 }: OrderFinancialPerformanceProps) {
   const { snapshot, is_historical_snapshot } = performance;
@@ -29,8 +33,10 @@ export function OrderFinancialPerformance({
             Financial performance
           </h3>
           <p className="mt-1 text-xs text-text-muted">
-            Values captured when this order was saved. They do not change if catalog costs or
-            prices are updated later.
+            Whole order — customer total including delivery and packaging fees, minus
+            collections or products production cost, packaging materials, and estimated
+            delivery cost. Margin is profit as a percentage of total order revenue. Values
+            are frozen when the order is saved.
           </p>
         </div>
         {is_historical_snapshot ? (
@@ -78,24 +84,7 @@ export function OrderFinancialPerformance({
       </dl>
 
       <dl className="mt-6 space-y-2 border-t border-border pt-4 text-sm">
-        <div className="flex justify-between gap-4">
-          <dt className="text-text-secondary">Products revenue</dt>
-          <dd className="tabular-nums text-text-primary">
-            {formatCurrency(snapshot.products_subtotal_snapshot)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-text-secondary">Collections revenue</dt>
-          <dd className="tabular-nums text-text-primary">
-            {formatCurrency(snapshot.collections_subtotal_snapshot)}
-          </dd>
-        </div>
-        <div className="flex justify-between gap-4">
-          <dt className="text-text-secondary">Delivery fee</dt>
-          <dd className="tabular-nums text-text-primary">
-            {formatCurrency(snapshot.delivery_fee_snapshot)}
-          </dd>
-        </div>
+        <OrderRevenueBreakdown snapshot={snapshot} orderType={orderType} />
       </dl>
     </section>
   );

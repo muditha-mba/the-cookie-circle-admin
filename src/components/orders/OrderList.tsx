@@ -16,8 +16,23 @@ import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { OrderSummary } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
-import { formatCurrency } from "@/lib/format";
 import { createTableActionsColumn } from "@/lib/table-actions-column";
+
+function formatEnumLabel(value: string): string {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDeliveryAreaLabel(
+  area: OrderSummary["delivery_area"],
+): string {
+  if (!area) {
+    return "—";
+  }
+  if (area.pickup_only) {
+    return "Pickup";
+  }
+  return area.name;
+}
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "order_number", label: "Order number" },
@@ -90,19 +105,31 @@ export function OrderList() {
         cell: ({ row }) => <EnumStatusBadge kind="order" value={row.original.status} />,
       },
       {
-        header: "Total",
-        accessorKey: "total_revenue_snapshot",
-        cell: ({ row }) => formatCurrency(row.original.total_revenue_snapshot),
+        header: "Order type",
+        accessorKey: "order_type",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">{formatEnumLabel(row.original.order_type)}</span>
+        ),
+      },
+      {
+        header: "Payment method",
+        accessorKey: "payment_method",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">
+            {formatEnumLabel(row.original.payment_method)}
+          </span>
+        ),
+      },
+      {
+        header: "Delivery area",
+        id: "delivery_area",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">
+            {formatDeliveryAreaLabel(row.original.delivery_area)}
+          </span>
+        ),
       },
     ];
-
-    if (canViewFinancials) {
-      base.push({
-        header: "Profit",
-        accessorKey: "total_profit_snapshot",
-        cell: ({ row }) => formatCurrency(row.original.total_profit_snapshot),
-      });
-    }
 
     if (canManageRecords) {
       base.push(
@@ -119,7 +146,7 @@ export function OrderList() {
     }
 
     return base;
-  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
+  }, [canManageRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">

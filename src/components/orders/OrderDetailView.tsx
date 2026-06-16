@@ -260,7 +260,10 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
       ) : null}
 
       {canViewFinancials && order.financial_performance ? (
-        <OrderFinancialPerformance performance={order.financial_performance} />
+        <OrderFinancialPerformance
+          performance={order.financial_performance}
+          orderType={order.order_type}
+        />
       ) : null}
 
       {canViewFinancials ? (

@@ -510,6 +510,8 @@ export type OrderAnalyticsPerformanceRow = {
   total_profit_snapshot: string;
   margin_percentage_snapshot: string;
   delivery_fee_snapshot: string;
+  delivery_cost_snapshot: string;
+  packaging_cost_snapshot: string;
   payment_method: string;
   payment_status: string;
   status: string;

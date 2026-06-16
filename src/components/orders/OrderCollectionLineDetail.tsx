@@ -180,6 +180,10 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
 
       {financialReady && canViewFinancials ? (
         <SectionCard title="Cookie financial breakdown (per pack)">
+          <p className="mb-3 text-xs text-text-muted">
+            Per collection pack — cookie pricing and production cost only. Delivery is not included
+            here; see Financial performance above for the full order.
+          </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
               <thead>
@@ -262,6 +266,9 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
               </dd>
             </div>
           </dl>
+          <p className="mt-2 text-xs text-text-muted">
+            Pack totals reflect one collection pack, not the full order.
+          </p>
         </SectionCard>
       ) : (
         <p className="text-sm text-text-muted">
