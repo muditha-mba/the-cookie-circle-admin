@@ -10,6 +10,7 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { suppliersApi } from "@/lib/api/suppliers";
 import type { ApiError } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
@@ -19,8 +20,8 @@ export default function SupplierDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["suppliers", params.id],
@@ -28,22 +29,25 @@ export default function SupplierDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
-    if (!data || !window.confirm(`Delete ${data.supplier_name}?`)) {
+  const handleDelete = () => {
+    if (!data) {
       return;
     }
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await suppliersApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["suppliers", data.id], ["suppliers"]);
-      router.push(routes.suppliers.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete supplier.");
-    } finally {
-      setIsDeleting(false);
-    }
+
+    confirmDelete({
+      message: `Are you sure you want to delete ${data.supplier_name}? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await suppliersApi.delete(data.id);
+          cacheEntityRemove(queryClient, ["suppliers", data.id], ["suppliers"]);
+          router.push(routes.suppliers.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete supplier.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -65,10 +69,11 @@ export default function SupplierDetailPage() {
 
   return (
     <DashboardPageShell title={data.supplier_name} description="Supplier details.">
+      {deleteDialog}
       <PageActions backHref={routes.suppliers.list} className="mb-6">
         <PrimaryLink href={routes.suppliers.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton variant="danger" disabled={isDeleting} onClick={() => void handleDelete()}>
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

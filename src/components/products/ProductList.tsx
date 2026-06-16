@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,10 +13,12 @@ import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { ProductSummary } from "@/lib/api/products";
 import { productsApi } from "@/lib/api/products";
 import { formatCount, formatCurrency } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -36,7 +38,9 @@ function unitSellingPrice(sellingPrice: string, yieldQuantity: string): number |
 
 export function ProductList() {
   const router = useRouter();
-  const { canViewFinancials } = useAdminPermissions();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -53,6 +57,13 @@ export function ProductList() {
         sort_by: sortBy,
         sort_order: sortOrder,
       }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => productsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
   });
 
   const sortOptions = useMemo(
@@ -108,11 +119,26 @@ export function ProductList() {
       });
     }
 
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<ProductSummary>({
+          getViewHref: (row) => routes.products.detail(row.id),
+          getEditHref: (row) => routes.products.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete "${row.name}"? This action cannot be undone.`,
+        }),
+      );
+    }
+
     return base;
-  }, [canViewFinancials]);
+  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-6">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

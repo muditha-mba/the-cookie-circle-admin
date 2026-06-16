@@ -10,6 +10,7 @@ import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductCostBreakdownView } from "@/components/products/ProductCostBreakdownView";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
@@ -22,8 +23,8 @@ export default function ProductDetailPage() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { canViewFinancials } = useAdminPermissions();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["products", params.id],
@@ -31,26 +32,25 @@ export default function ProductDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!data) {
       return;
     }
-    if (!window.confirm(`Delete "${data.name}"? This cannot be undone.`)) {
-      return;
-    }
 
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await productsApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["products", data.id], ["products"]);
-      router.push(routes.products.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete product.");
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmDelete({
+      message: `Are you sure you want to delete "${data.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await productsApi.delete(data.id);
+          cacheEntityRemove(queryClient, ["products", data.id], ["products"]);
+          router.push(routes.products.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete product.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -79,14 +79,15 @@ export default function ProductDetailPage() {
           : "Product configuration and production details."
       }
     >
+      {deleteDialog}
       <PageActions backHref={routes.products.list} className="mb-6">
         <PrimaryLink href={routes.products.edit(data.id)}>Edit</PrimaryLink>
         <SecondaryButton
           variant="danger"
-          disabled={isDeleting}
-          onClick={() => void handleDelete()}
+          disabled={isConfirming}
+          onClick={handleDelete}
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

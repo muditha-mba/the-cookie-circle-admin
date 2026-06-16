@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { DataTable } from "@/components/data/DataTable";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type {
   ActivityAction,
@@ -22,6 +23,7 @@ import {
   formatClientSummary,
 } from "@/lib/activity-log-display";
 import { formatDateTime } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 import { cn } from "@/lib/utils";
 
 const SORT_OPTIONS: SortOption[] = [
@@ -104,6 +106,7 @@ function ActivityLogDetailPanel({ detail }: { detail: ActivityLogDetail }) {
 }
 
 export function ActivityLogList() {
+  const { canViewActivityLogs } = useAdminPermissions();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -144,8 +147,8 @@ export function ActivityLogList() {
     enabled: Boolean(selectedId),
   });
 
-  const columns = useMemo<ColumnDef<ActivityLogSummary>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<ActivityLogSummary>[]>(() => {
+    const base: ColumnDef<ActivityLogSummary>[] = [
       {
         header: "Time",
         accessorKey: "created_at",
@@ -222,9 +225,20 @@ export function ActivityLogList() {
           </span>
         ),
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canViewActivityLogs) {
+      base.push(
+        createTableActionsColumn<ActivityLogSummary>({
+          showEdit: false,
+          showDelete: false,
+          onView: (row) => setSelectedId(row.id),
+        }),
+      );
+    }
+
+    return base;
+  }, [canViewActivityLogs]);
 
   return (
     <div className="space-y-4">

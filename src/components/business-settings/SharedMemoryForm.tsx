@@ -116,7 +116,7 @@ export function SharedMemoryForm({
         lastFetchedPostUrl.current = trimmedUrl;
         setPreviewStatus("success");
         setPreviewMessage(
-          "Preview loaded. You can still edit the image URL or caption manually.",
+          "Preview loaded. Save to cache a stable thumbnail; you can still edit the image URL manually.",
         );
       } catch (fetchError) {
         setPreviewStatus("error");
@@ -188,7 +188,7 @@ export function SharedMemoryForm({
         label="Preview image URL"
         htmlFor="preview_image_url"
         error={errors.preview_image_url?.message}
-        hint="Auto-filled from the post link, or paste a direct image URL manually."
+        hint="Auto-filled from the post link. On save, the image is uploaded to S3 and served via a stable API URL (not stored on disk)."
       >
         <input
           id="preview_image_url"

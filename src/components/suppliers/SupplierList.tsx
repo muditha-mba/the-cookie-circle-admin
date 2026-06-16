@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,9 +11,12 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Supplier } from "@/lib/api/suppliers";
 import { suppliersApi } from "@/lib/api/suppliers";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "supplier_name", label: "Name" },
@@ -23,6 +26,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function SupplierList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("supplier_name");
@@ -41,8 +47,15 @@ export function SupplierList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<Supplier>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => suppliersApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+    },
+  });
+
+  const columns = useMemo<ColumnDef<Supplier>[]>(() => {
+    const base: ColumnDef<Supplier>[] = [
       {
         header: "Supplier",
         accessorKey: "supplier_name",
@@ -58,12 +71,28 @@ export function SupplierList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<Supplier>({
+          getViewHref: (row) => routes.suppliers.detail(row.id),
+          getEditHref: (row) => routes.suppliers.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete ${row.supplier_name}? This action cannot be undone.`,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

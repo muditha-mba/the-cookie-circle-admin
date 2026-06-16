@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -12,10 +12,12 @@ import { PrimaryLink } from "@/components/data/PageActions";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { OrderSummary } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
 import { formatCurrency } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "order_number", label: "Order number" },
@@ -28,7 +30,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function OrderList() {
   const router = useRouter();
-  const { canViewFinancials } = useAdminPermissions();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -45,6 +49,13 @@ export function OrderList() {
         sort_by: sortBy,
         sort_order: sortOrder,
       }),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => ordersApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
   });
 
   const sortOptions = useMemo(
@@ -93,11 +104,26 @@ export function OrderList() {
       });
     }
 
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<OrderSummary>({
+          getViewHref: (row) => routes.orders.detail(row.id),
+          getEditHref: (row) => routes.orders.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete order ${row.order_number}? This action cannot be undone.`,
+        }),
+      );
+    }
+
     return base;
-  }, [canViewFinancials]);
+  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => { setSearch(value); setPage(1); }}

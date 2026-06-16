@@ -9,13 +9,19 @@ import { DataTable } from "@/components/data/DataTable";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import type { ApiError } from "@/lib/api/types";
 import type { SharedMemory } from "@/lib/api/shared-memories";
 import { sharedMemoriesApi } from "@/lib/api/shared-memories";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
+import { TableRowActionButton } from "@/components/data/TableRowActions";
 
 export function SharedMemoryList() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { canManageFinancialRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
@@ -46,8 +52,8 @@ export function SharedMemoryList() {
     },
   });
 
-  const columns = useMemo<ColumnDef<SharedMemory>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<SharedMemory>[]>(() => {
+    const base: ColumnDef<SharedMemory>[] = [
       {
         header: "Preview",
         id: "preview",
@@ -89,56 +95,42 @@ export function SharedMemoryList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-      {
-        header: "Actions",
-        id: "actions",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="text-sm text-accent hover:underline"
+    ];
+
+    if (canManageFinancialRecords) {
+      base.push(
+        createTableActionsColumn<SharedMemory>({
+          showView: false,
+          getEditHref: (row) => routes.businessSettings.sharedMemories.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending || toggleMutation.isPending,
+          getDeleteMessage: () =>
+            "Are you sure you want to delete this shared memory? This action cannot be undone.",
+          extraActions: (row) => (
+            <TableRowActionButton
+              variant="edit"
               disabled={toggleMutation.isPending}
-              onClick={(event) => {
-                event.stopPropagation();
+              onClick={() =>
                 toggleMutation.mutate({
-                  id: row.original.id,
-                  is_active: !row.original.is_active,
-                });
-              }}
+                  id: row.id,
+                  is_active: !row.is_active,
+                })
+              }
             >
-              {row.original.is_active ? "Hide" : "Show"}
-            </button>
-            <button
-              type="button"
-              className="text-sm text-accent hover:underline"
-              onClick={(event) => {
-                event.stopPropagation();
-                router.push(routes.businessSettings.sharedMemories.edit(row.original.id));
-              }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className="text-sm text-danger hover:underline"
-              onClick={(event) => {
-                event.stopPropagation();
-                if (window.confirm("Delete this shared memory?")) {
-                  deleteMutation.mutate(row.original.id);
-                }
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        ),
-      },
-    ],
-    [deleteMutation, router, toggleMutation],
-  );
+              {row.is_active ? "Hide" : "Show"}
+            </TableRowActionButton>
+          ),
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageFinancialRecords, confirmDelete, deleteMutation, toggleMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <div className="flex justify-end">
         <PrimaryLink href={routes.businessSettings.sharedMemories.create}>
           New post

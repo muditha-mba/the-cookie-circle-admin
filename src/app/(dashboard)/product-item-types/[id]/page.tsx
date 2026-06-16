@@ -11,6 +11,7 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
@@ -20,8 +21,8 @@ export default function ProductItemTypeDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["product-item-type", params.id],
@@ -29,35 +30,30 @@ export default function ProductItemTypeDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!data) {
       return;
     }
-    if (
-      !window.confirm(
-        `Delete "${data.name}"? This cannot be undone if no product items are linked.`,
-      )
-    ) {
-      return;
-    }
 
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await productItemTypesApi.delete(data.id);
-      cacheEntityRemove(
-        queryClient,
-        ["product-item-type", data.id],
-        ["product-item-types"],
-        { alsoInvalidate: [["product-item-types", "all"], ["product-items"]] },
-      );
-      router.push(routes.productItemTypes.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete product item type.");
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmDelete({
+      message: `Are you sure you want to delete "${data.name}"? This cannot be undone if product items are linked.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await productItemTypesApi.delete(data.id);
+          cacheEntityRemove(
+            queryClient,
+            ["product-item-type", data.id],
+            ["product-item-types"],
+            { alsoInvalidate: [["product-item-types", "all"], ["product-items"]] },
+          );
+          router.push(routes.productItemTypes.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete product item type.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -79,14 +75,11 @@ export default function ProductItemTypeDetailPage() {
 
   return (
     <DashboardPageShell title={data.name} description="Product item type details.">
+      {deleteDialog}
       <PageActions backHref={routes.productItemTypes.list} className="mb-6">
         <PrimaryLink href={routes.productItemTypes.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton
-          variant="danger"
-          disabled={isDeleting}
-          onClick={() => void handleDelete()}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

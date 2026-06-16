@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,10 +11,13 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { DeliveryArea } from "@/lib/api/delivery-areas";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
 import { formatCurrency } from "@/lib/format";
+import { buildCrudActionsColumn } from "@/lib/list-table-actions";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -24,6 +27,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function DeliveryAreaList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("name");
@@ -42,8 +48,15 @@ export function DeliveryAreaList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<DeliveryArea>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deliveryAreasApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["delivery-areas"] });
+    },
+  });
+
+  const columns = useMemo<ColumnDef<DeliveryArea>[]>(() => {
+    const base: ColumnDef<DeliveryArea>[] = [
       { header: "Name", accessorKey: "name", cell: ({ row }) => (
         <span className="font-medium">{row.original.name}</span>
       )},
@@ -65,12 +78,25 @@ export function DeliveryAreaList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        buildCrudActionsColumn<DeliveryArea>({
+          routes: routes.deliveryAreas,
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

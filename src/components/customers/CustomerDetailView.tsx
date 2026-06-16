@@ -16,6 +16,7 @@ import type {
   CustomerInsights,
 } from "@/lib/api/customers";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { customersApi } from "@/lib/api/customers";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { formatMarketingSourceLabel } from "@/lib/marketing-sources";
@@ -183,6 +184,7 @@ function OverviewPanel({
 
 function NotesPanel({ customerId }: { customerId: string }) {
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [note, setNote] = useState("");
 
   const notesQuery = useQuery({
@@ -207,6 +209,7 @@ function NotesPanel({ customerId }: { customerId: string }) {
 
   return (
     <div className="space-y-6">
+      {deleteDialog}
       <form
         className="rounded-lg border border-border bg-surface p-4"
         onSubmit={(event) => {
@@ -247,11 +250,13 @@ function NotesPanel({ customerId }: { customerId: string }) {
                 <button
                   type="button"
                   className="text-danger hover:underline"
-                  onClick={() => {
-                    if (window.confirm("Delete this note?")) {
-                      deleteMutation.mutate(entry.id);
-                    }
-                  }}
+                  onClick={() =>
+                    confirmDelete({
+                      message:
+                        "Are you sure you want to delete this note? This action cannot be undone.",
+                      onConfirm: () => deleteMutation.mutate(entry.id),
+                    })
+                  }
                 >
                   Delete
                 </button>

@@ -6,8 +6,10 @@ import { useMemo } from "react";
 
 import { DataTable } from "@/components/data/DataTable";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import type { OrderReview } from "@/lib/api/reviews";
 import { formatDateTime } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 type ReviewListProps = {
   reviews: OrderReview[];
@@ -24,8 +26,10 @@ function Stars({ rating }: { rating: number }) {
 }
 
 export function ReviewList({ reviews, isLoading }: ReviewListProps) {
-  const columns = useMemo<ColumnDef<OrderReview>[]>(
-    () => [
+  const { canManageRecords } = useAdminPermissions();
+
+  const columns = useMemo<ColumnDef<OrderReview>[]>(() => {
+    const base: ColumnDef<OrderReview>[] = [
       {
         header: "Rating",
         id: "rating",
@@ -84,9 +88,20 @@ export function ReviewList({ reviews, isLoading }: ReviewListProps) {
         id: "created",
         cell: ({ row }) => formatDateTime(row.original.created_at),
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<OrderReview>({
+          showEdit: false,
+          showDelete: false,
+          getViewHref: (row) => routes.reviews.detail(row.id),
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords]);
 
   return (
     <DataTable

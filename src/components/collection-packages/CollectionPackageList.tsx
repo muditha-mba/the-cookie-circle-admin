@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,9 +13,12 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionPackage } from "@/lib/api/collection-packages";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
+import { buildCrudActionsColumn } from "@/lib/list-table-actions";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -26,6 +29,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function CollectionPackageList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -44,8 +50,15 @@ export function CollectionPackageList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<CollectionPackage>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => collectionPackagesApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collection-packages"] });
+    },
+  });
+
+  const columns = useMemo<ColumnDef<CollectionPackage>[]>(() => {
+    const base: ColumnDef<CollectionPackage>[] = [
       {
         header: "Name",
         accessorKey: "name",
@@ -70,12 +83,25 @@ export function CollectionPackageList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        buildCrudActionsColumn<CollectionPackage>({
+          routes: routes.collectionPackages,
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-6">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

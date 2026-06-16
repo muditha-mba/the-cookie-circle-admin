@@ -9,13 +9,18 @@ import { DataTable } from "@/components/data/DataTable";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import type { ApiError } from "@/lib/api/types";
 import type { Faq } from "@/lib/api/faqs";
 import { faqsApi } from "@/lib/api/faqs";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 export function FaqList() {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { canManageFinancialRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
@@ -34,8 +39,8 @@ export function FaqList() {
     },
   });
 
-  const columns = useMemo<ColumnDef<Faq>[]>(
-    () => [
+  const columns = useMemo<ColumnDef<Faq>[]>(() => {
+    const base: ColumnDef<Faq>[] = [
       {
         header: "Category",
         accessorKey: "category.name",
@@ -60,42 +65,28 @@ export function FaqList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-      {
-        header: "Actions",
-        id: "actions",
-        cell: ({ row }) => (
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              className="text-sm text-accent hover:underline"
-              onClick={(event) => {
-                event.stopPropagation();
-                router.push(routes.businessSettings.faqs.edit(row.original.id));
-              }}
-            >
-              Edit
-            </button>
-            <button
-              type="button"
-              className="text-sm text-danger hover:underline"
-              onClick={(event) => {
-                event.stopPropagation();
-                if (window.confirm("Delete this FAQ?")) {
-                  deleteMutation.mutate(row.original.id);
-                }
-              }}
-            >
-              Delete
-            </button>
-          </div>
-        ),
-      },
-    ],
-    [deleteMutation, router],
-  );
+    ];
+
+    if (canManageFinancialRecords) {
+      base.push(
+        createTableActionsColumn<Faq>({
+          showView: false,
+          getEditHref: (row) => routes.businessSettings.faqs.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: () =>
+            "Are you sure you want to delete this FAQ? This action cannot be undone.",
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageFinancialRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <div className="flex justify-end">
         <PrimaryLink href={routes.businessSettings.faqs.create}>New FAQ</PrimaryLink>
       </div>

@@ -26,6 +26,11 @@ export type FaqCreate = {
 export type FaqUpdate = Partial<FaqCreate>;
 
 const BASE = "/api/v1/faqs";
+const SETTINGS_BASE = "/api/v1/business-settings/faqs";
+
+export type FaqsSectionSettings = {
+  section_enabled: boolean;
+};
 
 export const faqsApi = {
   list: () => apiClient.get<Faq[]>(BASE),
@@ -38,4 +43,10 @@ export const faqsApi = {
     apiClient.patch<Faq>(`${BASE}/${id}`, payload),
 
   delete: (id: string) => apiClient.delete<void>(`${BASE}/${id}`),
+
+  getSectionSettings: () =>
+    apiClient.get<FaqsSectionSettings>(SETTINGS_BASE),
+
+  updateSectionSettings: (section_enabled: boolean) =>
+    apiClient.patch<FaqsSectionSettings>(SETTINGS_BASE, { section_enabled }),
 };

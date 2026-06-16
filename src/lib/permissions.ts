@@ -18,6 +18,16 @@ export function canViewActivityLogs(user: User | null | undefined): boolean {
   return isSuperAdmin(user);
 }
 
+/** Standard CRUD modules available to authenticated admin users. */
+export function canManageRecords(user: User | null | undefined): boolean {
+  return isSuperAdmin(user) || isClerkAdmin(user);
+}
+
+/** Financial and costing modules (product items, charges, etc.). */
+export function canManageFinancialRecords(user: User | null | undefined): boolean {
+  return canViewFinancials(user);
+}
+
 export function formatAdminRole(adminRole: AdminRole | null | undefined): string {
   if (adminRole === "super_admin") {
     return "Super Admin";

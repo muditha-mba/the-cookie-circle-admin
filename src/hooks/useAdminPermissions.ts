@@ -1,6 +1,8 @@
 import { useMemo } from "react";
 
 import {
+  canManageFinancialRecords,
+  canManageRecords,
   canViewActivityLogs,
   canViewFinancials,
   isClerkAdmin,
@@ -18,6 +20,8 @@ export function useAdminPermissions() {
       isClerkAdmin: isClerkAdmin(user),
       canViewFinancials: canViewFinancials(user),
       canViewActivityLogs: canViewActivityLogs(user),
+      canManageRecords: canManageRecords(user),
+      canManageFinancialRecords: canManageFinancialRecords(user),
     }),
     [user],
   );
