@@ -119,6 +119,17 @@ export const routes = {
     detail: (id: string) => `/tax-charges/${id}`,
     edit: (id: string) => `/tax-charges/${id}/edit`,
   },
+  inventory: {
+    overview: "/inventory",
+    lots: "/inventory/lots",
+    movements: "/inventory/movements",
+    receipts: {
+      list: "/inventory/receipts",
+      create: "/inventory/receipts/new",
+      detail: (id: string) => `/inventory/receipts/${id}`,
+      edit: (id: string) => `/inventory/receipts/${id}/edit`,
+    },
+  },
 } as const;
 
 export type RouteKey = keyof Omit<
@@ -137,6 +148,7 @@ export type RouteKey = keyof Omit<
   | "utilityCharges"
   | "labourCharges"
   | "taxCharges"
+  | "inventory"
   | "analytics"
 >;
 
@@ -157,6 +169,7 @@ const protectedPrefixes = [
   routes.utilityCharges.list,
   routes.labourCharges.list,
   routes.taxCharges.list,
+  routes.inventory.overview,
 ] as const;
 
 export const protectedRoutes = [routes.dashboard, ...protectedPrefixes] as const;

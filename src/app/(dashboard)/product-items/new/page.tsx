@@ -45,6 +45,9 @@ export default function NewProductItemPage() {
         purchase_unit: values.purchase_unit,
         primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
+        track_inventory: values.track_inventory,
+        reorder_level: values.reorder_level ?? null,
+        reorder_unit: values.reorder_unit || null,
       });
       cacheEntitySave(
         queryClient,

@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Boxes,
+  ClipboardList,
   Layers,
   LayoutDashboard,
   Factory,
@@ -227,13 +228,45 @@ export const navigationSections: NavSectionConfig[] = [
     ],
   },
   /**
-   * Reserved for Phase 8+ inventory modules. Add items here when stock
-   * management ships — no sidebar structure changes required.
+   * Inventory & stock management (Phase 1).
    */
   {
     id: "inventory",
     title: "Inventory",
-    items: [],
+    items: [
+      {
+        id: "inventory-overview",
+        title: "Stock Overview",
+        href: routes.inventory.overview,
+        icon: Boxes,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "inventory-lots",
+        title: "Lots",
+        href: routes.inventory.lots,
+        icon: Layers,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "inventory-movements",
+        title: "Movements",
+        href: routes.inventory.movements,
+        icon: ClipboardList,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "purchase-receipts",
+        title: "Purchase Receipts",
+        href: routes.inventory.receipts.list,
+        icon: Wallet,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+    ],
   },
 ];
 

@@ -35,6 +35,9 @@ export type ProductItem = {
   primary_supplier_id: string | null;
   cost_per_unit: string;
   is_active: boolean;
+  track_inventory: boolean;
+  reorder_level: string | null;
+  reorder_unit: string | null;
   item_type: ProductItemTypeSummary;
   primary_supplier: SupplierSummary | null;
   created_at: string;
@@ -50,6 +53,9 @@ export type ProductItemCreate = {
   purchase_unit: string;
   primary_supplier_id?: string | null;
   is_active?: boolean;
+  track_inventory?: boolean;
+  reorder_level?: number | null;
+  reorder_unit?: string | null;
 };
 
 export type ProductItemUpdate = {
@@ -61,6 +67,9 @@ export type ProductItemUpdate = {
   purchase_unit?: string;
   primary_supplier_id?: string | null;
   is_active?: boolean;
+  track_inventory?: boolean;
+  reorder_level?: number | null;
+  reorder_unit?: string | null;
 };
 
 const BASE = "/api/v1/product-items";

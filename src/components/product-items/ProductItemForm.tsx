@@ -47,6 +47,9 @@ export function ProductItemForm({
       purchase_unit: "grams",
       primary_supplier_id: "",
       is_active: true,
+      track_inventory: false,
+      reorder_level: null,
+      reorder_unit: "",
       ...defaultValues,
     },
   });
@@ -178,6 +181,47 @@ export function ProductItemForm({
           Active
         </label>
       </FormField>
+
+      <div className="space-y-4 rounded-lg border border-border p-4">
+        <h3 className="text-sm font-medium text-text-primary">Inventory tracking</h3>
+        <FormField label="Track inventory" htmlFor="track_inventory">
+          <label className="flex items-center gap-2 text-sm text-text-primary">
+            <input
+              id="track_inventory"
+              type="checkbox"
+              className="h-4 w-4 rounded border-border"
+              {...register("track_inventory")}
+            />
+            Include in stock balances and purchase receipts
+          </label>
+        </FormField>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            label="Reorder level"
+            htmlFor="reorder_level"
+            error={errors.reorder_level?.message}
+            hint="Optional low-stock threshold."
+          >
+            <input
+              id="reorder_level"
+              type="number"
+              min={0}
+              step="0.0001"
+              className={formInputClassName}
+              {...register("reorder_level", {
+                setValueAs: (value) => (value === "" || value === null ? null : Number(value)),
+              })}
+            />
+          </FormField>
+          <FormField
+            label="Reorder unit"
+            htmlFor="reorder_unit"
+            error={errors.reorder_unit?.message}
+          >
+            <input id="reorder_unit" className={formInputClassName} {...register("reorder_unit")} />
+          </FormField>
+        </div>
+      </div>
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 

@@ -52,6 +52,9 @@ export default function EditProductItemPage() {
         purchase_unit: values.purchase_unit,
         primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
+        track_inventory: values.track_inventory,
+        reorder_level: values.reorder_level ?? null,
+        reorder_unit: values.reorder_unit || null,
       });
       cacheEntitySave(
         queryClient,
@@ -104,6 +107,9 @@ export default function EditProductItemPage() {
           purchase_unit: data.purchase_unit,
           primary_supplier_id: data.primary_supplier_id ?? "",
           is_active: data.is_active,
+          track_inventory: data.track_inventory,
+          reorder_level: data.reorder_level ? Number(data.reorder_level) : null,
+          reorder_unit: data.reorder_unit ?? "",
         }}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}

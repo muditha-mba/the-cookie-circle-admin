@@ -27,6 +27,9 @@ export const productItemSchema = z.object({
   purchase_unit: z.string().trim().min(1, "Purchase unit is required").max(50),
   primary_supplier_id: z.string().uuid().optional().or(z.literal("")),
   is_active: z.boolean(),
+  track_inventory: z.boolean(),
+  reorder_level: z.number().min(0).optional().nullable(),
+  reorder_unit: z.string().trim().max(50).optional().or(z.literal("")),
 });
 
 export type ProductItemFormValues = z.infer<typeof productItemSchema>;
