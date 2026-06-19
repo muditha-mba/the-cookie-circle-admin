@@ -46,6 +46,7 @@ export type InventoryMovement = {
 export type InventoryAlerts = {
   low_stock_count: number;
   expiring_soon_count: number;
+  pending_consumption_count: number;
 };
 
 export type InventoryAdjustmentCreate = {

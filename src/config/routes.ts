@@ -129,6 +129,10 @@ export const routes = {
       detail: (id: string) => `/inventory/receipts/${id}`,
       edit: (id: string) => `/inventory/receipts/${id}/edit`,
     },
+    consumption: {
+      list: "/inventory/consumption",
+      detail: (id: string) => `/inventory/consumption/${id}`,
+    },
   },
 } as const;
 
@@ -170,6 +174,7 @@ const protectedPrefixes = [
   routes.labourCharges.list,
   routes.taxCharges.list,
   routes.inventory.overview,
+  routes.inventory.consumption.list,
 ] as const;
 
 export const protectedRoutes = [routes.dashboard, ...protectedPrefixes] as const;

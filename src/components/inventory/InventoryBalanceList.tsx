@@ -109,8 +109,10 @@ export function InventoryBalanceList() {
 
   return (
     <div className="space-y-6">
-      {(alerts?.low_stock_count ?? 0) > 0 || (alerts?.expiring_soon_count ?? 0) > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2">
+      {(alerts?.low_stock_count ?? 0) > 0 ||
+      (alerts?.expiring_soon_count ?? 0) > 0 ||
+      (alerts?.pending_consumption_count ?? 0) > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm text-text-secondary">Low stock items</p>
             <p className="mt-1 text-2xl font-semibold">{alerts?.low_stock_count ?? 0}</p>
@@ -118,6 +120,10 @@ export function InventoryBalanceList() {
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm text-text-secondary">Lots expiring within 7 days</p>
             <p className="mt-1 text-2xl font-semibold">{alerts?.expiring_soon_count ?? 0}</p>
+          </div>
+          <div className="rounded-lg border border-border bg-surface p-4">
+            <p className="text-sm text-text-secondary">Pending stock reviews</p>
+            <p className="mt-1 text-2xl font-semibold">{alerts?.pending_consumption_count ?? 0}</p>
           </div>
         </div>
       ) : null}

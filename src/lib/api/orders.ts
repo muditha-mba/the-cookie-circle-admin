@@ -209,6 +209,11 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
     id: string;
     rating: number;
   } | null;
+  inventory_consumption?: {
+    consumed_at: string | null;
+    applied_proposal_id: string | null;
+    pending_proposal_id: string | null;
+  };
   created_at: string;
   updated_at: string;
 };

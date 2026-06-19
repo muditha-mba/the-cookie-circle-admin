@@ -19,6 +19,7 @@ import type {
   PurchasePlanningStatus,
 } from "@/lib/api/production";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { consumptionProposalsApi } from "@/lib/api/consumption-proposals";
 import { productionApi } from "@/lib/api/production";
 import { formatCount } from "@/lib/format";
 import {
@@ -155,7 +156,7 @@ function SummaryTab({
 }
 
 export function ProductionDashboard() {
-  const { canViewFinancials } = useAdminPermissions();
+  const { canViewFinancials, canManageFinancialRecords } = useAdminPermissions();
   const queryClient = useQueryClient();
   const [deliveryDate, setDeliveryDate] = useState("");
   const [showDeliveryDayBatchesOnly, setShowDeliveryDayBatchesOnly] = useState(true);
@@ -177,6 +178,12 @@ export function ProductionDashboard() {
     queryKey: ["purchase-plan", deliveryDate],
     queryFn: () => productionApi.getPurchasePlan(deliveryDate),
     enabled: Boolean(deliveryDate) && activeTab === "purchase",
+  });
+
+  const pendingConsumptionQuery = useQuery({
+    queryKey: ["consumption-proposals", "by-date", deliveryDate],
+    queryFn: () => consumptionProposalsApi.getPendingForDate(deliveryDate),
+    enabled: Boolean(deliveryDate) && canManageFinancialRecords,
   });
 
   const exportMutation = useMutation({
@@ -306,6 +313,23 @@ export function ProductionDashboard() {
             Planning for{" "}
             <span className="font-medium text-text-primary">{selectedBatchLabel}</span>
           </p>
+        ) : null}
+
+        {canManageFinancialRecords &&
+        deliveryDate &&
+        pendingConsumptionQuery.data?.status === "pending_review" ? (
+          <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <p className="text-sm font-medium text-warning">Stock review pending for this date</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              Delivered orders have proposed inventory deductions awaiting approval.
+            </p>
+            <Link
+              href={routes.inventory.consumption.detail(pendingConsumptionQuery.data.id)}
+              className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Review stock consumption
+            </Link>
+          </div>
         ) : null}
       </SectionCard>
 

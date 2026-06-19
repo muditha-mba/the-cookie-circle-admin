@@ -3,7 +3,8 @@
 import { ChevronLeft, ChevronRight, Shield } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import { Logo } from "@/components/brand/Logo";
 import { SidebarNavItem } from "@/components/layout/SidebarNavItem";
@@ -13,20 +14,57 @@ import {
   dashboardNavItem,
   getVisibleNavigationSections,
   isNavItemActive,
+  type NavItemConfig,
 } from "@/config/navigation";
 import { SidebarNavSection } from "@/components/layout/SidebarNavSection";
 import { routes } from "@/config/routes";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { consumptionProposalsApi } from "@/lib/api/consumption-proposals";
 import { formatSignedInRole } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
+
+function withConsumptionBadge(
+  items: NavItemConfig[],
+  pendingCount: number | undefined,
+): NavItemConfig[] {
+  if (!pendingCount || pendingCount <= 0) {
+    return items;
+  }
+  return items.map((item) =>
+    item.id === "consumption-proposals"
+      ? {
+          ...item,
+          badge: {
+            label: String(pendingCount),
+            variant: "warning" as const,
+          },
+        }
+      : item,
+  );
+}
 
 export function Sidebar() {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const { user } = useAuth();
-  const { isSuperAdmin } = useAdminPermissions();
-  const visibleSections = getVisibleNavigationSections(isSuperAdmin);
+  const { isSuperAdmin, canManageFinancialRecords } = useAdminPermissions();
+
+  const { data: pendingConsumption } = useQuery({
+    queryKey: ["consumption-proposals", "pending-count"],
+    queryFn: () => consumptionProposalsApi.getPendingCount(),
+    enabled: canManageFinancialRecords,
+    refetchInterval: 60_000,
+  });
+
+  const visibleSections = useMemo(
+    () =>
+      getVisibleNavigationSections(isSuperAdmin).map((section) => ({
+        ...section,
+        items: withConsumptionBadge(section.items, pendingConsumption?.pending_count),
+      })),
+    [isSuperAdmin, pendingConsumption?.pending_count],
+  );
 
   return (
     <aside
