@@ -79,12 +79,13 @@ export function SimpleTable({
   );
 }
 
-export type ProductionTab = "summary" | "ingredients" | "packaging" | "purchase";
+export type ProductionTab = "summary" | "ingredients" | "packaging" | "readiness" | "purchase";
 
 const TABS: { id: ProductionTab; label: string }[] = [
   { id: "summary", label: "Summary" },
   { id: "ingredients", label: "Ingredients" },
   { id: "packaging", label: "Packaging" },
+  { id: "readiness", label: "Stock Readiness" },
   { id: "purchase", label: "Purchase Planning" },
 ];
 

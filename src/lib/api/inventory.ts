@@ -47,6 +47,48 @@ export type InventoryAlerts = {
   low_stock_count: number;
   expiring_soon_count: number;
   pending_consumption_count: number;
+  upcoming_shortfall_count: number;
+  upcoming_shortfall_delivery_date: string | null;
+};
+
+export type InventoryReadinessLine = {
+  product_item_id: string;
+  product_item_name: string;
+  quantity_needed: string;
+  unit: string;
+  quantity_on_hand: string;
+  quantity_gap: string;
+  track_inventory: boolean;
+  is_short: boolean;
+};
+
+export type InventoryReadiness = {
+  delivery_date: string;
+  lines: InventoryReadinessLine[];
+  shortfall_count: number;
+  tracked_item_count: number;
+};
+
+export type InventoryExpenseSupplierRow = {
+  supplier_id: string;
+  supplier_name: string;
+  receipt_count: number;
+  total_amount: string;
+};
+
+export type InventoryExpenseItemTypeRow = {
+  item_type_id: string;
+  item_type_name: string;
+  total_amount: string;
+};
+
+export type InventoryExpenseSummary = {
+  from_date: string;
+  to_date: string;
+  total_amount: string;
+  receipt_count: number;
+  by_supplier: InventoryExpenseSupplierRow[];
+  by_item_type: InventoryExpenseItemTypeRow[];
 };
 
 export type InventoryAdjustmentCreate = {
@@ -73,6 +115,11 @@ export const inventoryApi = {
   getAlerts: (expiring_within_days = 7) =>
     apiClient.get<InventoryAlerts>(`${BASE}/alerts`, {
       params: { expiring_within_days },
+    }),
+
+  getExpenseSummary: (fromDate: string, toDate: string) =>
+    apiClient.get<InventoryExpenseSummary>(`${BASE}/expense-summary`, {
+      params: { from_date: fromDate, to_date: toDate },
     }),
 
   listLots: (

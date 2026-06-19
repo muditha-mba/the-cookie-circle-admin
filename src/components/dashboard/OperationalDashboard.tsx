@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
+import { InventoryMonitoringSection } from "@/components/inventory/InventoryMonitoringSection";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
@@ -83,7 +84,7 @@ function ActionButton({
 }
 
 export function OperationalDashboard() {
-  const { canViewFinancials } = useAdminPermissions();
+  const { canViewFinancials, canManageFinancialRecords } = useAdminPermissions();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard", "overview"],
     queryFn: dashboardApi.getOverview,
@@ -417,12 +418,13 @@ export function OperationalDashboard() {
           </SectionCard>
 
           <SectionCard title="Inventory Monitoring">
-            <div className="rounded-lg border border-dashed border-border px-4 py-6 text-center">
-              <p className="text-sm font-medium text-text-primary">Coming in Phase 8 Inventory</p>
-              <p className="mt-1 text-xs text-text-muted">
-                Stock visibility and monitoring will be added in the next phase.
+            {canManageFinancialRecords ? (
+              <InventoryMonitoringSection />
+            ) : (
+              <p className="text-sm text-text-muted">
+                Inventory monitoring is available to super-admin users.
               </p>
-            </div>
+            )}
           </SectionCard>
         </div>
       </div>

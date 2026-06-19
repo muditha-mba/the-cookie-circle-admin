@@ -20,6 +20,7 @@ import { SidebarNavSection } from "@/components/layout/SidebarNavSection";
 import { routes } from "@/config/routes";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { consumptionProposalsApi } from "@/lib/api/consumption-proposals";
+import { inventoryApi } from "@/lib/api/inventory";
 import { formatSignedInRole } from "@/lib/user-display";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/providers/AuthProvider";
@@ -27,21 +28,29 @@ import { useAuth } from "@/providers/AuthProvider";
 function withConsumptionBadge(
   items: NavItemConfig[],
   pendingCount: number | undefined,
+  lowStockCount: number | undefined,
 ): NavItemConfig[] {
-  if (!pendingCount || pendingCount <= 0) {
-    return items;
-  }
-  return items.map((item) =>
-    item.id === "consumption-proposals"
-      ? {
-          ...item,
-          badge: {
-            label: String(pendingCount),
-            variant: "warning" as const,
-          },
-        }
-      : item,
-  );
+  return items.map((item) => {
+    if (item.id === "consumption-proposals" && pendingCount && pendingCount > 0) {
+      return {
+        ...item,
+        badge: {
+          label: String(pendingCount),
+          variant: "warning" as const,
+        },
+      };
+    }
+    if (item.id === "inventory-overview" && lowStockCount && lowStockCount > 0) {
+      return {
+        ...item,
+        badge: {
+          label: String(lowStockCount),
+          variant: "warning" as const,
+        },
+      };
+    }
+    return item;
+  });
 }
 
 export function Sidebar() {
@@ -57,13 +66,24 @@ export function Sidebar() {
     refetchInterval: 60_000,
   });
 
+  const { data: inventoryAlerts } = useQuery({
+    queryKey: ["inventory-alerts"],
+    queryFn: () => inventoryApi.getAlerts(),
+    enabled: canManageFinancialRecords,
+    refetchInterval: 60_000,
+  });
+
   const visibleSections = useMemo(
     () =>
       getVisibleNavigationSections(isSuperAdmin).map((section) => ({
         ...section,
-        items: withConsumptionBadge(section.items, pendingConsumption?.pending_count),
+        items: withConsumptionBadge(
+          section.items,
+          pendingConsumption?.pending_count,
+          inventoryAlerts?.low_stock_count,
+        ),
       })),
-    [isSuperAdmin, pendingConsumption?.pending_count],
+    [isSuperAdmin, pendingConsumption?.pending_count, inventoryAlerts?.low_stock_count],
   );
 
   return (

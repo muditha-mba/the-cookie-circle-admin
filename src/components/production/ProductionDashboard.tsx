@@ -186,6 +186,12 @@ export function ProductionDashboard() {
     enabled: Boolean(deliveryDate) && canManageFinancialRecords,
   });
 
+  const readinessQuery = useQuery({
+    queryKey: ["inventory-readiness", deliveryDate],
+    queryFn: () => productionApi.getInventoryReadiness(deliveryDate),
+    enabled: Boolean(deliveryDate) && activeTab === "readiness" && canManageFinancialRecords,
+  });
+
   const exportMutation = useMutation({
     mutationFn: () => productionApi.exportCsv(deliveryDate),
   });
@@ -406,6 +412,69 @@ export function ProductionDashboard() {
                 )}
               />
             </SectionCard>
+          ) : null}
+
+          {activeTab === "readiness" ? (
+            canManageFinancialRecords ? (
+              readinessQuery.isLoading ? (
+                <p className="text-sm text-text-muted">Loading stock readiness…</p>
+              ) : readinessQuery.isError ? (
+                <p className="text-sm text-danger">Unable to load stock readiness.</p>
+              ) : readinessQuery.data ? (
+                <div className="space-y-6">
+                  {readinessQuery.data.shortfall_count > 0 ? (
+                    <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+                      <p className="text-sm font-medium text-warning">
+                        {readinessQuery.data.shortfall_count} tracked item
+                        {readinessQuery.data.shortfall_count === 1 ? "" : "s"} short for this date
+                      </p>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        Review the purchase plan or receive stock before production.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("purchase")}
+                        className="mt-2 text-sm font-medium text-primary hover:underline"
+                      >
+                        Open purchase planning
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <SectionCard
+                    title="Stock readiness"
+                    description="Production demand compared with current on-hand balances for tracked items."
+                  >
+                    <SimpleTable
+                      headers={["Item", "Needed", "On hand", "Gap", "Status"]}
+                      rows={readinessQuery.data.lines.map((line) => [
+                        line.product_item_name,
+                        formatQuantity(line.quantity_needed, line.unit),
+                        line.track_inventory
+                          ? formatQuantity(line.quantity_on_hand, line.unit)
+                          : "—",
+                        line.track_inventory ? (
+                          <span className={line.is_short ? "text-warning" : undefined}>
+                            {formatQuantity(line.quantity_gap, line.unit)}
+                          </span>
+                        ) : (
+                          "—"
+                        ),
+                        !line.track_inventory ? (
+                          <span className="text-text-muted">Not tracked</span>
+                        ) : line.is_short ? (
+                          <span className="text-warning">Short</span>
+                        ) : (
+                          <span className="text-success">OK</span>
+                        ),
+                      ])}
+                    />
+                  </SectionCard>
+                </div>
+              ) : null
+            ) : (
+              <EmptyState message="Stock readiness is available to super-admin users." />
+            )
           ) : null}
 
           {activeTab === "purchase" ? (

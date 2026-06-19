@@ -2,8 +2,8 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 
 import { DataTable } from "@/components/data/DataTable";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
@@ -25,6 +25,7 @@ function formatQty(value: string, unit: string) {
 
 export function InventoryBalanceList() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("name");
@@ -32,9 +33,33 @@ export function InventoryBalanceList() {
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const debouncedSearch = useDebouncedValue(search);
 
+  useEffect(() => {
+    if (searchParams.get("low_stock") === "1") {
+      setLowStockOnly(true);
+    }
+  }, [searchParams]);
+
   const { data: alerts } = useQuery({
     queryKey: ["inventory-alerts"],
     queryFn: () => inventoryApi.getAlerts(),
+  });
+
+  const expiringBefore = useMemo(() => {
+    const date = new Date();
+    date.setDate(date.getDate() + 7);
+    return date.toISOString().slice(0, 10);
+  }, []);
+
+  const { data: expiringLots } = useQuery({
+    queryKey: ["inventory-lots", "expiring", expiringBefore],
+    queryFn: () =>
+      inventoryApi.listLots({
+        page: 1,
+        page_size: 5,
+        sort_by: "expires_at",
+        sort_order: "asc",
+        expiring_before: expiringBefore,
+      }),
   });
 
   const { data, isLoading, isError } = useQuery({
@@ -111,8 +136,9 @@ export function InventoryBalanceList() {
     <div className="space-y-6">
       {(alerts?.low_stock_count ?? 0) > 0 ||
       (alerts?.expiring_soon_count ?? 0) > 0 ||
-      (alerts?.pending_consumption_count ?? 0) > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      (alerts?.pending_consumption_count ?? 0) > 0 ||
+      (alerts?.upcoming_shortfall_count ?? 0) > 0 ? (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-lg border border-border bg-surface p-4">
             <p className="text-sm text-text-secondary">Low stock items</p>
             <p className="mt-1 text-2xl font-semibold">{alerts?.low_stock_count ?? 0}</p>
@@ -125,7 +151,37 @@ export function InventoryBalanceList() {
             <p className="text-sm text-text-secondary">Pending stock reviews</p>
             <p className="mt-1 text-2xl font-semibold">{alerts?.pending_consumption_count ?? 0}</p>
           </div>
+          <div className="rounded-lg border border-border bg-surface p-4">
+            <p className="text-sm text-text-secondary">Upcoming shortfalls</p>
+            <p className="mt-1 text-2xl font-semibold">{alerts?.upcoming_shortfall_count ?? 0}</p>
+          </div>
         </div>
+      ) : null}
+
+      {(expiringLots?.items.length ?? 0) > 0 ? (
+        <section className="rounded-lg border border-warning/30 bg-warning/5 p-4">
+          <div className="flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-text-primary">Expiring soon</h3>
+            <button
+              type="button"
+              onClick={() => router.push(routes.inventory.lots)}
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              View all lots
+            </button>
+          </div>
+          <ul className="mt-3 space-y-2 text-sm">
+            {expiringLots?.items.map((lot) => (
+              <li key={lot.id} className="flex justify-between gap-3 text-text-secondary">
+                <span>{lot.lot_code}</span>
+                <span className="tabular-nums">
+                  {Number(lot.quantity_on_hand).toLocaleString()} {lot.unit}
+                  {lot.expires_at ? ` · ${formatDate(lot.expires_at)}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
