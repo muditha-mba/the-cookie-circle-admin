@@ -13,7 +13,9 @@ type ConfirmDeleteDialogProps = {
   title?: string;
   message?: string;
   confirmLabel?: string;
+  confirmingLabel?: string;
   cancelLabel?: string;
+  confirmVariant?: "default" | "danger";
   isConfirming?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
@@ -24,7 +26,9 @@ export function ConfirmDeleteDialog({
   title = "Confirm deletion",
   message = DEFAULT_DELETE_CONFIRM_MESSAGE,
   confirmLabel = "Delete",
+  confirmingLabel = "Deleting...",
   cancelLabel = "Cancel",
+  confirmVariant = "danger",
   isConfirming = false,
   onConfirm,
   onCancel,
@@ -76,7 +80,10 @@ export function ConfirmDeleteDialog({
         <h2 id={titleId} className="text-base font-semibold text-text-primary">
           {title}
         </h2>
-        <p id={descriptionId} className="mt-2 text-sm leading-relaxed text-text-secondary">
+        <p
+          id={descriptionId}
+          className="mt-2 whitespace-pre-line text-sm leading-relaxed text-text-secondary"
+        >
           {message}
         </p>
 
@@ -86,11 +93,11 @@ export function ConfirmDeleteDialog({
           </SecondaryButton>
           <SecondaryButton
             type="button"
-            variant="danger"
+            variant={confirmVariant}
             disabled={isConfirming}
             onClick={onConfirm}
           >
-            {isConfirming ? "Deleting..." : confirmLabel}
+            {isConfirming ? confirmingLabel : confirmLabel}
           </SecondaryButton>
         </div>
       </div>

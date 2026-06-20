@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PurchaseReceiptAttachments } from "@/components/inventory/PurchaseReceiptAttachments";
 import { PurchaseReceiptForm } from "@/components/inventory/PurchaseReceiptForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
@@ -24,7 +25,7 @@ function toPayload(values: PurchaseReceiptFormValues) {
       product_item_id: line.product_item_id,
       quantity: line.quantity,
       unit: line.unit,
-      unit_cost: line.unit_cost,
+      line_total: line.line_total,
       expires_at: line.expires_at || null,
     })),
   };
@@ -48,10 +49,14 @@ export default function EditPurchaseReceiptPage() {
     queryFn: () => suppliersApi.listActive(),
   });
 
-  const { data: itemsData, isLoading: itemsLoading } = useQuery({
-    queryKey: ["product-items", "all"],
+  const {
+    data: itemsData,
+    isLoading: itemsLoading,
+    isError: itemsError,
+  } = useQuery({
+    queryKey: ["product-items", "receipt-form"],
     queryFn: () =>
-      productItemsApi.list({ page: 1, page_size: 200, sort_by: "name", sort_order: "asc" }),
+      productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
   });
 
   const handleSubmit = async (values: PurchaseReceiptFormValues) => {
@@ -73,6 +78,17 @@ export default function EditPurchaseReceiptPage() {
     return (
       <DashboardPageShell title="Edit Purchase Receipt" description="Loading...">
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
+      </DashboardPageShell>
+    );
+  }
+
+  if (itemsError) {
+    return (
+      <DashboardPageShell title="Edit Purchase Receipt" description="Unable to load product items">
+        <p className="text-sm text-danger">
+          Unable to load product items. Refresh the page and try again.
+        </p>
+        <PageActions backHref={routes.inventory.receipts.detail(params.id)} className="mt-6" />
       </DashboardPageShell>
     );
   }
@@ -101,7 +117,7 @@ export default function EditPurchaseReceiptPage() {
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),
             unit: line.unit,
-            unit_cost: Number(line.unit_cost),
+            line_total: Number(line.line_total),
             expires_at: line.expires_at ?? "",
           })),
         }}
@@ -109,6 +125,13 @@ export default function EditPurchaseReceiptPage() {
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}
+        attachmentsSlot={
+          <PurchaseReceiptAttachments
+            receiptId={params.id}
+            attachments={data.attachments}
+            isDraft
+          />
+        }
       />
     </DashboardPageShell>
   );

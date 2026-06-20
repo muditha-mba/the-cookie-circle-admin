@@ -307,12 +307,25 @@ export const navigation: NavItemConfig[] = [
   ...navigationSections.flatMap((section) => section.items),
 ];
 
-export function isNavItemActive(item: NavItemConfig, pathname: string): boolean {
+function navItemMatchesPath(item: NavItemConfig, pathname: string): boolean {
   if (item.href === routes.dashboard) {
     return pathname === routes.dashboard;
   }
 
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export function isNavItemActive(item: NavItemConfig, pathname: string): boolean {
+  const matches = navigation.filter((nav) => navItemMatchesPath(nav, pathname));
+  if (matches.length === 0) {
+    return false;
+  }
+
+  const bestMatch = matches.reduce((best, current) =>
+    current.href.length > best.href.length ? current : best,
+  );
+
+  return bestMatch.id === item.id;
 }
 
 /** Modules not yet enabled — used for dashboard placeholders. */

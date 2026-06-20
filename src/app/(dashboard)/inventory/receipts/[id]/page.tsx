@@ -7,10 +7,10 @@ import { useState } from "react";
 import { DetailField } from "@/components/data/DetailField";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
+import { PurchaseReceiptAttachments } from "@/components/inventory/PurchaseReceiptAttachments";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import { getAccessToken } from "@/lib/auth/token-storage";
 import type { ApiError } from "@/lib/api/types";
 import { purchaseReceiptsApi } from "@/lib/api/purchase-receipts";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
@@ -21,7 +21,6 @@ export default function PurchaseReceiptDetailPage() {
   const queryClient = useQueryClient();
   const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [actionError, setActionError] = useState<string | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["purchase-receipts", params.id],
@@ -53,44 +52,34 @@ export default function PurchaseReceiptDetailPage() {
     });
   };
 
-  const handleConfirm = async () => {
-    setActionError(null);
-    try {
-      await confirmMutation.mutateAsync();
-    } catch (err) {
-      const apiError = err as ApiError;
-      setActionError(apiError.message ?? "Unable to confirm receipt.");
-    }
-  };
-
-  const handleBillUpload = async (file: File) => {
+  const handleConfirm = () => {
     if (!data || data.status !== "draft") {
       return;
     }
-    setActionError(null);
-    setIsUploading(true);
-    try {
-      const upload = await purchaseReceiptsApi.createBillUploadUrl(data.id, file.type);
-      const response = await fetch(upload.upload_url, {
-        method: "PUT",
-        headers: { "Content-Type": file.type },
-        body: file,
-      });
-      if (!response.ok) {
-        throw new Error("Bill upload failed.");
-      }
-      await purchaseReceiptsApi.update(data.id, {
-        bill_asset_id: upload.asset_id,
-        bill_content_type: file.type,
-        bill_extension: upload.extension,
-      });
-      await queryClient.invalidateQueries({ queryKey: ["purchase-receipts", data.id] });
-    } catch (err) {
-      const apiError = err as ApiError;
-      setActionError(apiError.message ?? "Unable to upload bill.");
-    } finally {
-      setIsUploading(false);
-    }
+
+    const lineSummary = data.lines
+      .map(
+        (line) =>
+          `• ${line.product_item_name}: ${Number(line.quantity).toLocaleString()} ${line.unit} — ${formatCurrency(line.line_total)}`,
+      )
+      .join("\n");
+
+    confirmDelete({
+      title: "Confirm & receive stock?",
+      message: `This will add stock to inventory. Check quantities and amounts paid before continuing — line items cannot be changed after this.\n\n${lineSummary}\n\nTotal: ${formatCurrency(data.total_amount)}`,
+      confirmLabel: "Confirm & receive stock",
+      confirmingLabel: "Confirming...",
+      confirmVariant: "default",
+      onConfirm: async () => {
+        setActionError(null);
+        try {
+          await confirmMutation.mutateAsync();
+        } catch (err) {
+          const apiError = err as ApiError;
+          setActionError(apiError.message ?? "Unable to confirm receipt.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -134,6 +123,13 @@ export default function PurchaseReceiptDetailPage() {
 
       {actionError ? <p className="mb-4 text-sm text-danger">{actionError}</p> : null}
 
+      {!isDraft ? (
+        <p className="mb-4 text-sm text-text-secondary">
+          Stock has been received for this receipt. Line items cannot be changed, but you can still
+          attach supplier invoice photos below.
+        </p>
+      ) : null}
+
       <DetailMetadataCard>
         <DetailField label="Status" value={data.status === "confirmed" ? "Confirmed" : "Draft"} />
         <DetailField label="Supplier" value={data.supplier.supplier_name} />
@@ -153,8 +149,8 @@ export default function PurchaseReceiptDetailPage() {
               <tr>
                 <th className="px-4 py-3 text-left font-medium">Item</th>
                 <th className="px-4 py-3 text-left font-medium">Qty</th>
-                <th className="px-4 py-3 text-left font-medium">Unit cost</th>
-                <th className="px-4 py-3 text-left font-medium">Line total</th>
+                <th className="px-4 py-3 text-left font-medium">Amount paid</th>
+                <th className="px-4 py-3 text-left font-medium">Per unit</th>
                 <th className="px-4 py-3 text-left font-medium">Expires</th>
               </tr>
             </thead>
@@ -165,8 +161,8 @@ export default function PurchaseReceiptDetailPage() {
                   <td className="px-4 py-3">
                     {Number(line.quantity).toLocaleString()} {line.unit}
                   </td>
-                  <td className="px-4 py-3">{formatCurrency(line.unit_cost)}</td>
                   <td className="px-4 py-3">{formatCurrency(line.line_total)}</td>
+                  <td className="px-4 py-3">{formatCurrency(line.unit_cost)}</td>
                   <td className="px-4 py-3">
                     {line.expires_at ? formatDate(line.expires_at) : "—"}
                   </td>
@@ -177,53 +173,13 @@ export default function PurchaseReceiptDetailPage() {
         </div>
       </section>
 
-      <section className="mt-8 space-y-3">
-        <h2 className="text-lg font-medium text-text-primary">Supplier bill</h2>
-        {data.has_bill ? (
-          <a
-            href={purchaseReceiptsApi.billUrl(data.id)}
-            className="text-sm text-primary hover:underline"
-            target="_blank"
-            rel="noreferrer"
-            onClick={(event) => {
-              event.preventDefault();
-              const token = getAccessToken();
-              if (!token) {
-                return;
-              }
-              void fetch(purchaseReceiptsApi.billUrl(data.id), {
-                headers: { Authorization: `Bearer ${token}` },
-              })
-                .then((response) => response.blob())
-                .then((blob) => {
-                  const url = URL.createObjectURL(blob);
-                  window.open(url, "_blank");
-                });
-            }}
-          >
-            View bill
-          </a>
-        ) : isDraft ? (
-          <div>
-            <input
-              type="file"
-              accept="application/pdf,image/jpeg,image/png,image/webp"
-              disabled={isUploading}
-              onChange={(event) => {
-                const file = event.target.files?.[0];
-                if (file) {
-                  void handleBillUpload(file);
-                }
-              }}
-            />
-            <p className="mt-2 text-sm text-text-secondary">
-              Upload a PDF or image of the supplier invoice (max 10 MB).
-            </p>
-          </div>
-        ) : (
-          <p className="text-sm text-text-secondary">No bill attached.</p>
-        )}
-      </section>
+      <div className="mt-8">
+        <PurchaseReceiptAttachments
+          receiptId={data.id}
+          attachments={data.attachments}
+          isDraft={isDraft}
+        />
+      </div>
     </DashboardPageShell>
   );
 }

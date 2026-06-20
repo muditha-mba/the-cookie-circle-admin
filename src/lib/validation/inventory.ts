@@ -1,10 +1,12 @@
 import { z } from "zod";
 
+import { requiredUnitSchema } from "@/lib/validation/units";
+
 export const purchaseReceiptLineSchema = z.object({
   product_item_id: z.string().uuid("Select a product item"),
   quantity: z.number().positive("Quantity must be greater than zero"),
-  unit: z.string().trim().min(1, "Unit is required").max(50),
-  unit_cost: z.number().min(0, "Unit cost must be zero or greater"),
+  unit: requiredUnitSchema,
+  line_total: z.number().min(0, "Amount paid must be zero or greater"),
   expires_at: z.string().optional().or(z.literal("")),
 });
 

@@ -22,7 +22,7 @@ export type PurchaseReceiptLineInput = {
   product_item_id: string;
   quantity: number;
   unit: string;
-  unit_cost: number;
+  line_total: number;
   expires_at?: string | null;
 };
 
@@ -43,10 +43,29 @@ export type PurchaseReceipt = PurchaseReceiptSummary & {
   bill_asset_id: string | null;
   bill_content_type: string | null;
   bill_extension: string | null;
+  attachments: PurchaseReceiptAttachment[];
   lines: PurchaseReceiptLine[];
   confirmed_at: string | null;
   created_by_user_id: string | null;
   confirmed_by_user_id: string | null;
+};
+
+export type PurchaseReceiptAttachment = {
+  id: string;
+  asset_id: string;
+  content_type: string;
+  extension: string;
+  file_name: string | null;
+  sort_order: number;
+  is_image: boolean;
+  created_at: string;
+};
+
+export type PurchaseReceiptAttachmentRegister = {
+  asset_id: string;
+  content_type: string;
+  extension: string;
+  file_name?: string | null;
 };
 
 export type PurchaseReceiptCreate = {
@@ -96,6 +115,20 @@ export const purchaseReceiptsApi = {
     apiClient.post<BillUploadUrlResponse>(`${BASE}/${id}/bill-upload-url`, {
       content_type,
     }),
+
+  createAttachmentUploadUrl: (id: string, content_type: string) =>
+    apiClient.post<BillUploadUrlResponse>(`${BASE}/${id}/attachments/upload-url`, {
+      content_type,
+    }),
+
+  registerAttachment: (id: string, payload: PurchaseReceiptAttachmentRegister) =>
+    apiClient.post<PurchaseReceiptAttachment>(`${BASE}/${id}/attachments`, payload),
+
+  deleteAttachment: (receiptId: string, attachmentId: string) =>
+    apiClient.delete<void>(`${BASE}/${receiptId}/attachments/${attachmentId}`),
+
+  attachmentUrl: (receiptId: string, attachmentId: string) =>
+    `${env.apiUrl}${BASE}/${receiptId}/attachments/${attachmentId}`,
 
   billUrl: (id: string) => `${env.apiUrl}${BASE}/${id}/bill`,
 };

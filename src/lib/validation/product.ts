@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { optionalUnitSchema, requiredUnitSchema } from "@/lib/validation/units";
+
 export const productItemTypeSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),
   description: z
@@ -24,12 +26,12 @@ export const productItemSchema = z.object({
     .or(z.literal("")),
   purchase_price: z.number().min(0, "Purchase price must be zero or greater"),
   purchase_quantity: z.number().positive("Purchase quantity must be greater than zero"),
-  purchase_unit: z.string().trim().min(1, "Purchase unit is required").max(50),
+  purchase_unit: requiredUnitSchema,
   primary_supplier_id: z.string().uuid().optional().or(z.literal("")),
   is_active: z.boolean(),
   track_inventory: z.boolean(),
   reorder_level: z.number().min(0).optional().nullable(),
-  reorder_unit: z.string().trim().max(50).optional().or(z.literal("")),
+  reorder_unit: optionalUnitSchema,
 });
 
 export type ProductItemFormValues = z.infer<typeof productItemSchema>;

@@ -19,6 +19,7 @@ export type CreateTableActionsColumnOptions<T> = {
   showEdit?: boolean;
   showDelete?: boolean;
   deleteDisabled?: boolean;
+  canDelete?: (row: T) => boolean;
   extraActions?: (row: T) => ReactNode;
 };
 
@@ -38,6 +39,7 @@ export function createTableActionsColumn<T>(
     showEdit = true,
     showDelete = true,
     deleteDisabled = false,
+    canDelete,
     extraActions,
   } = options;
 
@@ -54,7 +56,7 @@ export function createTableActionsColumn<T>(
           onView={showView ? (onView ? () => onView(record) : undefined) : undefined}
           onEdit={showEdit ? (onEdit ? () => onEdit(record) : undefined) : undefined}
           onDelete={
-            showDelete && onDelete && confirmDelete
+            showDelete && onDelete && confirmDelete && (canDelete?.(record) ?? true)
               ? () =>
                   confirmDelete({
                     title: getDeleteTitle?.(record),

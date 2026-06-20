@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import { PurchaseReceiptAttachments } from "@/components/inventory/PurchaseReceiptAttachments";
 import { PurchaseReceiptForm } from "@/components/inventory/PurchaseReceiptForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
@@ -12,6 +13,7 @@ import type { ApiError } from "@/lib/api/types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { purchaseReceiptsApi } from "@/lib/api/purchase-receipts";
 import { suppliersApi } from "@/lib/api/suppliers";
+import { uploadPurchaseReceiptAttachments } from "@/lib/purchase-receipt-attachments";
 import type { PurchaseReceiptFormValues } from "@/lib/validation/inventory";
 
 function toPayload(values: PurchaseReceiptFormValues) {
@@ -24,7 +26,7 @@ function toPayload(values: PurchaseReceiptFormValues) {
       product_item_id: line.product_item_id,
       quantity: line.quantity,
       unit: line.unit,
-      unit_cost: line.unit_cost,
+      line_total: line.line_total,
       expires_at: line.expires_at || null,
     })),
   };
@@ -35,16 +37,21 @@ export default function NewPurchaseReceiptPage() {
   const queryClient = useQueryClient();
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
 
   const { data: suppliers = [], isLoading: suppliersLoading } = useQuery({
     queryKey: ["suppliers", "active"],
     queryFn: () => suppliersApi.listActive(),
   });
 
-  const { data: itemsData, isLoading: itemsLoading } = useQuery({
-    queryKey: ["product-items", "all"],
+  const {
+    data: itemsData,
+    isLoading: itemsLoading,
+    isError: itemsError,
+  } = useQuery({
+    queryKey: ["product-items", "receipt-form"],
     queryFn: () =>
-      productItemsApi.list({ page: 1, page_size: 200, sort_by: "name", sort_order: "asc" }),
+      productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
   });
 
   const handleSubmit = async (values: PurchaseReceiptFormValues) => {
@@ -52,6 +59,9 @@ export default function NewPurchaseReceiptPage() {
     setIsSubmitting(true);
     try {
       const created = await purchaseReceiptsApi.create(toPayload(values));
+      if (pendingFiles.length > 0) {
+        await uploadPurchaseReceiptAttachments(created.id, pendingFiles);
+      }
       await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
       router.push(routes.inventory.receipts.detail(created.id));
     } catch (err) {
@@ -70,6 +80,10 @@ export default function NewPurchaseReceiptPage() {
       <PageActions backHref={routes.inventory.receipts.list} className="mb-6" />
       {suppliersLoading || itemsLoading ? (
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
+      ) : itemsError ? (
+        <p className="text-sm text-danger">
+          Unable to load product items. Refresh the page and try again.
+        </p>
       ) : (
         <PurchaseReceiptForm
           suppliers={suppliers}
@@ -78,6 +92,12 @@ export default function NewPurchaseReceiptPage() {
           isSubmitting={isSubmitting}
           error={error}
           onSubmit={handleSubmit}
+          attachmentsSlot={
+            <PurchaseReceiptAttachments
+              pendingFiles={pendingFiles}
+              onPendingFilesChange={setPendingFiles}
+            />
+          }
         />
       )}
     </DashboardPageShell>

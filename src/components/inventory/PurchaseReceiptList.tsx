@@ -96,10 +96,9 @@ export function PurchaseReceiptList() {
           getEditHref: (row) =>
             row.status === "draft" ? routes.inventory.receipts.edit(row.id) : undefined,
           onDelete: (row) => {
-            if (row.status === "draft") {
-              void deleteMutation.mutateAsync(row.id);
-            }
+            void deleteMutation.mutateAsync(row.id);
           },
+          canDelete: (row) => row.status === "draft",
           confirmDelete,
           getDeleteMessage: () => "Delete this draft purchase receipt?",
         }),
