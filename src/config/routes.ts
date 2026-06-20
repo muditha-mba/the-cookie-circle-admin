@@ -88,6 +88,7 @@ export const routes = {
     collections: "/analytics/collections",
     orders: "/analytics/orders",
     operations: "/analytics/operations",
+    overhead: "/analytics/overhead",
   },
   productItemTypes: {
     list: "/product-item-types",

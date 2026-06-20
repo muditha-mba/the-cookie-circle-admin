@@ -8,17 +8,12 @@ import { Controller, useFieldArray, useForm } from "react-hook-form";
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { PrimaryButton } from "@/components/data/PageActions";
-import type { Charge } from "@/lib/api/charge-types";
 import type { CollectionPackage } from "@/lib/api/collection-packages";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { productCategoriesApi } from "@/lib/api/product-categories";
-import { chargeAppliesToCollection } from "@/lib/charge-applicability";
-import { labourChargesApi } from "@/lib/api/labour-charges";
 import type { ProductItem } from "@/lib/api/product-items";
 import { productItemsApi } from "@/lib/api/product-items";
 import { isPackagingItemType } from "@/lib/packaging";
-import { taxChargesApi } from "@/lib/api/tax-charges";
-import { utilityChargesApi } from "@/lib/api/utility-charges";
 import {
   collectionSchema,
   type CollectionFormValues,
@@ -33,57 +28,6 @@ type CollectionFormProps = {
   onSubmit: (values: CollectionFormValues) => Promise<void>;
 };
 
-function ChargeMultiSelect({
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  label: string;
-  options: Charge[];
-  selected: string[];
-  onChange: (ids: string[]) => void;
-}) {
-  const toggle = (id: string) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter((value) => value !== id));
-    } else {
-      onChange([...selected, id]);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-text-primary">{label}</p>
-      {options.length === 0 ? (
-        <p className="text-xs text-text-muted">No charges available for collections.</p>
-      ) : (
-        <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border border-border bg-background p-3">
-          {options.map((charge) => (
-            <label
-              key={charge.id}
-              className="flex cursor-pointer items-start gap-2 text-sm text-text-primary"
-            >
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-border"
-                checked={selected.includes(charge.id)}
-                onChange={() => toggle(charge.id)}
-              />
-              <span>
-                {charge.name}{" "}
-                <span className="text-text-muted">
-                  ({charge.charge_type === "fixed" ? "fixed" : `${charge.amount}%`})
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function CollectionForm({
   defaultValues,
   submitLabel,
@@ -95,9 +39,6 @@ export function CollectionForm({
   const [packages, setPackages] = useState<CollectionPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [packagingItems, setPackagingItems] = useState<ProductItem[]>([]);
-  const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
-  const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
-  const [taxCharges, setTaxCharges] = useState<Charge[]>([]);
 
   const form = useForm<CollectionFormValues>({
     resolver: zodResolver(collectionSchema),
@@ -111,9 +52,6 @@ export function CollectionForm({
       is_public: true,
       allowed_category_ids: [],
       item_lines: [],
-      utility_charge_ids: [],
-      labour_charge_ids: [],
-      tax_charge_ids: [],
       ...defaultValues,
     },
   });
@@ -128,26 +66,14 @@ export function CollectionForm({
       collectionPackagesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
       productCategoriesApi.list(),
       productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
-      canViewFinancials
-        ? utilityChargesApi.list({ page: 1, page_size: 100 })
-        : Promise.resolve({ items: [] }),
-      canViewFinancials
-        ? labourChargesApi.list({ page: 1, page_size: 100 })
-        : Promise.resolve({ items: [] }),
-      canViewFinancials
-        ? taxChargesApi.list({ page: 1, page_size: 100 })
-        : Promise.resolve({ items: [] }),
-    ]).then(([pkgRes, categoryRes, itemsRes, utilityRes, labourRes, taxRes]) => {
+    ]).then(([pkgRes, categoryRes, itemsRes]) => {
       setPackages(pkgRes.items);
       setCategories(categoryRes.map((row) => ({ id: row.id, name: row.name })));
       setPackagingItems(
         itemsRes.items.filter((item) => isPackagingItemType(item.item_type.name)),
       );
-      setUtilityCharges(utilityRes.items.filter(chargeAppliesToCollection));
-      setLabourCharges(labourRes.items.filter(chargeAppliesToCollection));
-      setTaxCharges(taxRes.items.filter(chargeAppliesToCollection));
     });
-  }, [canViewFinancials]);
+  }, []);
 
   return (
     <form
@@ -302,47 +228,6 @@ export function CollectionForm({
           </div>
         ))}
       </section>
-
-      {canViewFinancials ? (
-        <section className="rounded-lg border border-border bg-surface p-6 grid gap-6 md:grid-cols-3">
-          <Controller
-            control={form.control}
-            name="utility_charge_ids"
-            render={({ field }) => (
-              <ChargeMultiSelect
-                label="Utility charges"
-                options={utilityCharges}
-                selected={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="labour_charge_ids"
-            render={({ field }) => (
-              <ChargeMultiSelect
-                label="Labour charges"
-                options={labourCharges}
-                selected={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-          <Controller
-            control={form.control}
-            name="tax_charge_ids"
-            render={({ field }) => (
-              <ChargeMultiSelect
-                label="Tax charges"
-                options={taxCharges}
-                selected={field.value}
-                onChange={field.onChange}
-              />
-            )}
-          />
-        </section>
-      ) : null}
 
       {error && <p className="text-sm text-red-600">{error}</p>}
 

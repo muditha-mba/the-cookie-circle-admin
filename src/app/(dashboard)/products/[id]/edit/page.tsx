@@ -41,9 +41,6 @@ export default function EditProductPage() {
         is_active: values.is_active,
         is_public: values.is_public,
         recipe_lines: values.recipe_lines,
-        utility_charge_ids: values.utility_charge_ids,
-        labour_charge_ids: values.labour_charge_ids,
-        tax_charge_ids: values.tax_charge_ids,
       });
       cacheEntitySave(queryClient, ["products", params.id], ["products"], updated, {
         alsoInvalidate: [["collections"]],
@@ -77,7 +74,7 @@ export default function EditProductPage() {
   return (
     <DashboardPageShell
       title={`Edit ${data.name}`}
-      description="Update recipe, charges, and pricing."
+      description="Update recipe and pricing."
     >
       <PageActions backHref={routes.products.detail(params.id)} className="mb-6" />
       <ProductForm
@@ -95,9 +92,6 @@ export default function EditProductPage() {
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),
           })),
-          utility_charge_ids: data.utility_charges.map((c) => c.id),
-          labour_charge_ids: data.labour_charges.map((c) => c.id),
-          tax_charge_ids: data.tax_charges.map((c) => c.id),
         }}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}

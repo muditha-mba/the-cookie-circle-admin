@@ -649,6 +649,39 @@ export type ExecutiveOperationsSnapshot = {
   orders_awaiting_delivery: number;
 };
 
+// ─── Overhead Analytics ──────────────────────────────────────────────────────
+
+export type OverheadKpis = {
+  year: number;
+  total_utility: string;
+  total_labour: string;
+  total_overhead: string;
+  monthly_average: string;
+  months_recorded: number;
+  utility_entry_count: number;
+  labour_entry_count: number;
+  prior_year: number;
+  prior_year_overhead: string;
+  yoy_change: string;
+};
+
+export type OverheadMonthlyRow = {
+  month: number;
+  year: number;
+  utility_total: string;
+  labour_total: string;
+  overhead_total: string;
+  gross_profit: string;
+  operating_profit: string;
+};
+
+export type OverheadCategoryRow = {
+  name: string;
+  category: "utility" | "labour";
+  total: string;
+  entry_count: number;
+};
+
 const BASE = "/api/v1/analytics";
 
 export const analyticsApi = {
@@ -895,6 +928,15 @@ export const analyticsApi = {
 
   getExecutiveOperationsSnapshot: () =>
     apiClient.get<ExecutiveOperationsSnapshot>(`${BASE}/executive/operations-snapshot`),
+
+  getOverheadKpis: (year: number) =>
+    apiClient.get<OverheadKpis>(`${BASE}/overhead/kpis`, { params: { year } }),
+
+  getOverheadMonthlyBreakdown: (year: number) =>
+    apiClient.get<OverheadMonthlyRow[]>(`${BASE}/overhead/monthly-breakdown`, { params: { year } }),
+
+  getOverheadCategoryBreakdown: (year: number) =>
+    apiClient.get<OverheadCategoryRow[]>(`${BASE}/overhead/category-breakdown`, { params: { year } }),
 };
 
 export const ANALYTICS_DATE_PRESETS: {

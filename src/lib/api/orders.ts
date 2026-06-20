@@ -84,6 +84,14 @@ export type OrderCollectionLine = {
   selections?: OrderCollectionLineSelection[];
 };
 
+export type TaxLineSnapshot = {
+  tax_id: string;
+  name: string;
+  charge_type: "fixed" | "percentage";
+  configured_amount: string;
+  applied_amount: string;
+};
+
 export type OrderFinancialSnapshot = {
   products_subtotal_snapshot: string;
   collections_subtotal_snapshot: string;
@@ -93,6 +101,8 @@ export type OrderFinancialSnapshot = {
   packaging_cost_snapshot: string;
   products_cost_snapshot: string;
   collections_cost_snapshot: string;
+  total_tax_snapshot: string;
+  tax_lines_snapshot: TaxLineSnapshot[];
   total_revenue_snapshot: string;
   total_cost_snapshot: string;
   total_profit_snapshot: string;
@@ -199,6 +209,8 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
   packaging_cost_snapshot: string;
   products_cost_snapshot: string;
   collections_cost_snapshot: string;
+  total_tax_snapshot: string;
+  tax_lines_snapshot: TaxLineSnapshot[];
   total_revenue_snapshot: string;
   financial_performance: OrderFinancialPerformance | null;
   product_lines: OrderProductLine[];

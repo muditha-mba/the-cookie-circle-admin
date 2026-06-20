@@ -199,6 +199,7 @@ export function ExecutiveOverviewDashboard() {
           <Link href={routes.analytics.orders} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Orders</Link>
           <Link href={routes.analytics.production} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Production</Link>
           <Link href={routes.analytics.operations} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Operations</Link>
+          <Link href={routes.analytics.overhead} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Overhead</Link>
         </div>
       </div>
 

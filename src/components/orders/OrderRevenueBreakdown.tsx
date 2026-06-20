@@ -88,6 +88,15 @@ export function OrderRevenueBreakdown({
           amount={snapshot.delivery_cost_snapshot}
         />
       ) : null}
+      {snapshot.tax_lines_snapshot && snapshot.tax_lines_snapshot.length > 0 ? (
+        snapshot.tax_lines_snapshot.map((tax) => (
+          <BreakdownRow
+            key={tax.tax_id}
+            label={`${tax.name} (${tax.charge_type === "percentage" ? `${tax.configured_amount}%` : "flat"})`}
+            amount={tax.applied_amount}
+          />
+        ))
+      ) : null}
     </>
   );
 }

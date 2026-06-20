@@ -1,3 +1,3 @@
-import { createChargeApi } from "@/lib/api/charge-types";
+import { createOverheadChargeApi } from "@/lib/api/charge-types";
 
-export const labourChargesApi = createChargeApi("/api/v1/labour-charges");
+export const labourChargesApi = createOverheadChargeApi("/api/v1/labour-charges");

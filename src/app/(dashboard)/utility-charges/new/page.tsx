@@ -1,5 +1,9 @@
-import { ChargeNewPage } from "@/components/charges/ChargeNewPage";
+"use client";
+
+import { OverheadChargeNewPage } from "@/components/charges/OverheadChargeNewPage";
+import { utilityChargeModule } from "@/config/charge-modules";
+import { utilityChargesApi } from "@/lib/api/utility-charges";
 
 export default function NewUtilityChargePage() {
-  return <ChargeNewPage moduleId="utility-charges" />;
+  return <OverheadChargeNewPage module={utilityChargeModule} api={utilityChargesApi} />;
 }

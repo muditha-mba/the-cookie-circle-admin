@@ -1,8 +1,7 @@
 "use client";
 
-import type { ChargeBreakdownLine, ProductCostBreakdown } from "@/lib/api/products";
+import type { ProductCostBreakdown } from "@/lib/api/products";
 import {
-  formatChargeAmount,
   formatCount,
   formatCurrency,
   formatQuantity,
@@ -60,27 +59,6 @@ const tableThClass = "pb-2 font-medium";
 const tableRowClass = "border-b border-border/60 last:border-0";
 const tableTdClass = "py-2.5";
 
-type ChargeRow = ChargeBreakdownLine & {
-  category: "Utility" | "Labour" | "Tax & fees";
-};
-
-function buildChargeRows(breakdown: ProductCostBreakdown): ChargeRow[] {
-  return [
-    ...breakdown.additional_charges.utility_charges.map((line) => ({
-      ...line,
-      category: "Utility" as const,
-    })),
-    ...breakdown.additional_charges.labour_charges.map((line) => ({
-      ...line,
-      category: "Labour" as const,
-    })),
-    ...breakdown.additional_charges.tax_charges.map((line) => ({
-      ...line,
-      category: "Tax & fees" as const,
-    })),
-  ];
-}
-
 export function ProductCostBreakdownView({
   breakdown,
   yieldQuantity,
@@ -89,7 +67,6 @@ export function ProductCostBreakdownView({
 }: ProductCostBreakdownViewProps) {
   const profitPositive = Number(breakdown.profit_amount) >= 0;
   const profitClass = profitPositive ? "text-success" : "text-danger";
-  const chargeRows = buildChargeRows(breakdown);
   const showProduction = yieldQuantity !== undefined;
 
   return (
@@ -164,49 +141,6 @@ export function ProductCostBreakdownView({
                     </td>
                     <td className={cn(tableTdClass, "text-right")}>
                       <Money value={line.line_cost} />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </SectionCard>
-
-      <SectionCard
-        title="Additional charges"
-        subtotal={breakdown.additional_charges.subtotal}
-      >
-        {chargeRows.length === 0 ? (
-          <p className="mt-3 text-sm text-text-muted">No additional charges attached.</p>
-        ) : (
-          <div className="mt-4 overflow-x-auto">
-            <table className="w-full min-w-[520px] text-left text-sm">
-              <thead>
-                <tr className={tableHeadClass}>
-                  <th className={tableThClass}>Category</th>
-                  <th className={tableThClass}>Charge</th>
-                  <th className={tableThClass}>Rate</th>
-                  <th className={cn(tableThClass, "text-right")}>Applied cost</th>
-                </tr>
-              </thead>
-              <tbody>
-                {chargeRows.map((line) => (
-                  <tr key={`${line.category}-${line.id}`} className={tableRowClass}>
-                    <td className={cn(tableTdClass, "text-text-secondary")}>
-                      {line.category}
-                    </td>
-                    <td className={cn(tableTdClass, "text-text-primary")}>
-                      {line.name}
-                    </td>
-                    <td className={cn(tableTdClass, "text-text-secondary")}>
-                      {formatChargeAmount(
-                        line.configured_amount,
-                        line.charge_type as "fixed" | "percentage",
-                      )}
-                    </td>
-                    <td className={cn(tableTdClass, "text-right")}>
-                      <Money value={line.applied_cost} />
                     </td>
                   </tr>
                 ))}

@@ -1,5 +1,5 @@
-import { ChargeEditPage } from "@/components/charges/ChargeEditPage";
+import { TaxChargeEditPage } from "@/components/charges/TaxChargeEditPage";
 
 export default function EditTaxChargePage() {
-  return <ChargeEditPage moduleId="tax-charges" />;
+  return <TaxChargeEditPage />;
 }

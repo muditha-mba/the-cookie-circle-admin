@@ -34,9 +34,6 @@ export default function NewProductPage() {
         is_active: values.is_active,
         is_public: values.is_public,
         recipe_lines: values.recipe_lines,
-        utility_charge_ids: values.utility_charge_ids,
-        labour_charge_ids: values.labour_charge_ids,
-        tax_charge_ids: values.tax_charge_ids,
       });
       cacheEntitySave(queryClient, ["products", created.id], ["products"], created, {
         alsoInvalidate: [["collections"]],

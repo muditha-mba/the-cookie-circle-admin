@@ -40,9 +40,6 @@ export default function EditCollectionPage() {
         is_public: values.is_public,
         allowed_category_ids: values.allowed_category_ids,
         item_lines: values.item_lines,
-        utility_charge_ids: values.utility_charge_ids,
-        labour_charge_ids: values.labour_charge_ids,
-        tax_charge_ids: values.tax_charge_ids,
       });
       cacheEntitySave(queryClient, ["collections", params.id], ["collections"], updated);
       router.push(routes.collections.detail(params.id));
@@ -91,9 +88,6 @@ export default function EditCollectionPage() {
             product_item_id: line.product_item_id,
             quantity: Number(line.quantity),
           })),
-          utility_charge_ids: data.utility_charges.map((c) => c.id),
-          labour_charge_ids: data.labour_charges.map((c) => c.id),
-          tax_charge_ids: data.tax_charges.map((c) => c.id),
         }}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}

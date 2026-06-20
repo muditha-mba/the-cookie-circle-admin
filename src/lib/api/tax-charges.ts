@@ -1,3 +1,3 @@
-import { createChargeApi } from "@/lib/api/charge-types";
+import { createTaxChargeApi } from "@/lib/api/charge-types";
 
-export const taxChargesApi = createChargeApi("/api/v1/tax-charges");
+export const taxChargesApi = createTaxChargeApi("/api/v1/tax-charges");

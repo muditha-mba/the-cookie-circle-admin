@@ -22,9 +22,6 @@ export const collectionSchema = z.object({
     .array(z.string().uuid())
     .min(1, "Select at least one allowed category"),
   item_lines: z.array(collectionItemLineSchema),
-  utility_charge_ids: z.array(z.string().uuid()),
-  labour_charge_ids: z.array(z.string().uuid()),
-  tax_charge_ids: z.array(z.string().uuid()),
 });
 
 export type CollectionFormValues = z.infer<typeof collectionSchema>;

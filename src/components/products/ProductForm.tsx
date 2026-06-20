@@ -10,16 +10,11 @@ import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
-import type { Charge } from "@/lib/api/charge-types";
-import { labourChargesApi } from "@/lib/api/labour-charges";
 import { productItemsApi } from "@/lib/api/product-items";
 import type { ProductItem } from "@/lib/api/product-items";
 import type { ProductCostBreakdown } from "@/lib/api/products";
 import { productCategoriesApi } from "@/lib/api/product-categories";
 import { productsApi } from "@/lib/api/products";
-import { chargeAppliesToProduct } from "@/lib/charge-applicability";
-import { taxChargesApi } from "@/lib/api/tax-charges";
-import { utilityChargesApi } from "@/lib/api/utility-charges";
 import {
   productSchema,
   type ProductFormValues,
@@ -34,57 +29,6 @@ type ProductFormProps = {
   onSubmit: (values: ProductFormValues) => Promise<void>;
 };
 
-function ChargeMultiSelect({
-  label,
-  options,
-  selected,
-  onChange,
-}: {
-  label: string;
-  options: Charge[];
-  selected: string[];
-  onChange: (ids: string[]) => void;
-}) {
-  const toggle = (id: string) => {
-    if (selected.includes(id)) {
-      onChange(selected.filter((value) => value !== id));
-    } else {
-      onChange([...selected, id]);
-    }
-  };
-
-  return (
-    <div className="space-y-2">
-      <p className="text-sm font-medium text-text-primary">{label}</p>
-      {options.length === 0 ? (
-        <p className="text-xs text-text-muted">No charges available.</p>
-      ) : (
-        <div className="max-h-40 space-y-2 overflow-y-auto rounded-md border border-border bg-background p-3">
-          {options.map((charge) => (
-            <label
-              key={charge.id}
-              className="flex cursor-pointer items-start gap-2 text-sm text-text-primary"
-            >
-              <input
-                type="checkbox"
-                className="mt-0.5 h-4 w-4 rounded border-border"
-                checked={selected.includes(charge.id)}
-                onChange={() => toggle(charge.id)}
-              />
-              <span>
-                {charge.name}{" "}
-                <span className="text-text-muted">
-                  ({charge.charge_type === "fixed" ? "fixed" : `${charge.amount}%`})
-                </span>
-              </span>
-            </label>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function ProductForm({
   defaultValues,
   submitLabel,
@@ -94,9 +38,6 @@ export function ProductForm({
 }: ProductFormProps) {
   const { canViewFinancials } = useAdminPermissions();
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
-  const [utilityCharges, setUtilityCharges] = useState<Charge[]>([]);
-  const [labourCharges, setLabourCharges] = useState<Charge[]>([]);
-  const [taxCharges, setTaxCharges] = useState<Charge[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [preview, setPreview] = useState<ProductCostBreakdown | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
@@ -115,9 +56,6 @@ export function ProductForm({
       is_active: true,
       is_public: true,
       recipe_lines: [],
-      utility_charge_ids: [],
-      labour_charge_ids: [],
-      tax_charge_ids: [],
       ...defaultValues,
     },
   });
@@ -133,44 +71,26 @@ export function ProductForm({
   const yieldQuantity = watch("yield_quantity");
   const productionNotes = watch("production_notes");
   const recipeLines = watch("recipe_lines");
-  const utilityChargeIds = watch("utility_charge_ids");
-  const labourChargeIds = watch("labour_charge_ids");
-  const taxChargeIds = watch("tax_charge_ids");
 
   const previewPayloadKey = JSON.stringify({
     selling_price: sellingPrice,
     buffer_amount: bufferAmount,
     yield_quantity: yieldQuantity,
     recipe_lines: recipeLines,
-    utility_charge_ids: utilityChargeIds,
-    labour_charge_ids: labourChargeIds,
-    tax_charge_ids: taxChargeIds,
   });
   const debouncedPreviewKey = useDebouncedValue(previewPayloadKey, 400);
   const previewRequestId = useRef(0);
 
   useEffect(() => {
     void (async () => {
-      const [items, categoryRows, utilities, labour, tax] = await Promise.all([
+      const [items, categoryRows] = await Promise.all([
         productItemsApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
         productCategoriesApi.list(),
-        canViewFinancials
-          ? utilityChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
-          : Promise.resolve({ items: [] }),
-        canViewFinancials
-          ? labourChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
-          : Promise.resolve({ items: [] }),
-        canViewFinancials
-          ? taxChargesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" })
-          : Promise.resolve({ items: [] }),
       ]);
       setProductItems(items.items);
       setCategories(categoryRows.map((row) => ({ id: row.id, name: row.name })));
-      setUtilityCharges(utilities.items.filter(chargeAppliesToProduct));
-      setLabourCharges(labour.items.filter(chargeAppliesToProduct));
-      setTaxCharges(tax.items.filter(chargeAppliesToProduct));
     })();
-  }, [canViewFinancials]);
+  }, []);
 
   const recipeItemIds = useMemo(
     () =>
@@ -206,9 +126,6 @@ export function ProductForm({
       | "buffer_amount"
       | "yield_quantity"
       | "recipe_lines"
-      | "utility_charge_ids"
-      | "labour_charge_ids"
-      | "tax_charge_ids"
     >;
 
     const hasRecipe = input.recipe_lines.some(
@@ -232,9 +149,6 @@ export function ProductForm({
           buffer_amount: input.buffer_amount,
           yield_quantity: input.yield_quantity,
           recipe_lines: input.recipe_lines.filter((line) => line.product_item_id),
-          utility_charge_ids: input.utility_charge_ids,
-          labour_charge_ids: input.labour_charge_ids,
-          tax_charge_ids: input.tax_charge_ids,
         });
         if (requestId !== previewRequestId.current) {
           return;
@@ -463,35 +377,6 @@ export function ProductForm({
           )}
         </div>
 
-        {canViewFinancials ? (
-          <div className="space-y-4 border-t border-border pt-6">
-            <div>
-              <h3 className="text-sm font-semibold text-text-primary">Attached charges</h3>
-              <p className="text-xs text-text-muted">
-                References global charges — amounts are not duplicated
-              </p>
-            </div>
-            <ChargeMultiSelect
-              label="Utility charges"
-              options={utilityCharges}
-              selected={utilityChargeIds}
-              onChange={(ids) => form.setValue("utility_charge_ids", ids)}
-            />
-            <ChargeMultiSelect
-              label="Labour charges"
-              options={labourCharges}
-              selected={labourChargeIds}
-              onChange={(ids) => form.setValue("labour_charge_ids", ids)}
-            />
-            <ChargeMultiSelect
-              label="Tax charges"
-              options={taxCharges}
-              selected={taxChargeIds}
-              onChange={(ids) => form.setValue("tax_charge_ids", ids)}
-            />
-          </div>
-        ) : null}
-
         {error ? <p className="text-sm text-danger">{error}</p> : null}
 
         <PrimaryButton type="submit" disabled={isSubmitting}>
@@ -504,7 +389,7 @@ export function ProductForm({
           <div className="rounded-lg border border-border bg-surface p-4">
             <h3 className="text-sm font-semibold text-text-primary">Live cost preview</h3>
             <p className="mt-1 text-xs text-text-muted">
-              Updates as you edit recipe, charges, and pricing
+              Updates as you edit recipe and pricing
             </p>
           </div>
           {isPreviewLoading ? (

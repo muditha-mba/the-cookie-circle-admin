@@ -1,5 +1,5 @@
-import { ChargeListPage } from "@/components/charges/ChargeListPage";
+import { TaxChargeListPage } from "@/components/charges/TaxChargeListPage";
 
 export default function TaxChargesPage() {
-  return <ChargeListPage moduleId="tax-charges" />;
+  return <TaxChargeListPage />;
 }

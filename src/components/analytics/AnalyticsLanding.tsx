@@ -10,6 +10,7 @@ import {
   ShoppingCart,
   TrendingUp,
   Users,
+  Wrench,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
@@ -26,6 +27,7 @@ const CATEGORY_HREFS: Partial<Record<string, string>> = {
   collections: routes.analytics.collections,
   orders: routes.analytics.orders,
   operations: routes.analytics.operations,
+  overhead: routes.analytics.overhead,
 };
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -36,6 +38,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   customers: Users,
   production: Factory,
   operations: Gauge,
+  overhead: Wrench,
 };
 
 function formatPresetLabel(preset: string | null) {

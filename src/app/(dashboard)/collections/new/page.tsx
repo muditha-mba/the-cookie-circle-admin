@@ -33,9 +33,6 @@ export default function NewCollectionPage() {
         is_public: values.is_public,
         allowed_category_ids: values.allowed_category_ids,
         item_lines: values.item_lines,
-        utility_charge_ids: values.utility_charge_ids,
-        labour_charge_ids: values.labour_charge_ids,
-        tax_charge_ids: values.tax_charge_ids,
       });
       cacheEntitySave(queryClient, ["collections", created.id], ["collections"], created);
       router.push(routes.collections.detail(created.id));

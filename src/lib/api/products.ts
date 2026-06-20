@@ -31,23 +31,9 @@ export type RecipeLine = {
   line_cost: string;
 };
 
-export type ChargeBreakdownLine = {
-  id: string;
-  name: string;
-  charge_type: string;
-  configured_amount: string;
-  applied_cost: string;
-};
-
 export type ProductCostBreakdown = {
   ingredients: {
     lines: RecipeLine[];
-    subtotal: string;
-  };
-  additional_charges: {
-    utility_charges: ChargeBreakdownLine[];
-    labour_charges: ChargeBreakdownLine[];
-    tax_charges: ChargeBreakdownLine[];
     subtotal: string;
   };
   buffer_amount: string;
@@ -59,19 +45,8 @@ export type ProductCostBreakdown = {
   profit_per_unit: string;
 };
 
-export type AttachedCharge = {
-  id: string;
-  name: string;
-  charge_type: string;
-  amount: string;
-  is_active: boolean;
-};
-
 export type ProductDetail = ProductSummary & {
   recipe_lines: RecipeLine[];
-  utility_charges: AttachedCharge[];
-  labour_charges: AttachedCharge[];
-  tax_charges: AttachedCharge[];
   cost_breakdown: ProductCostBreakdown;
 };
 
@@ -86,9 +61,6 @@ export type ProductCreate = {
   is_active?: boolean;
   is_public?: boolean;
   recipe_lines?: RecipeLineInput[];
-  utility_charge_ids?: string[];
-  labour_charge_ids?: string[];
-  tax_charge_ids?: string[];
 };
 
 export type ProductUpdate = Partial<ProductCreate>;
@@ -98,9 +70,6 @@ export type ProductCostPreviewRequest = {
   buffer_amount?: number;
   yield_quantity: number;
   recipe_lines?: RecipeLineInput[];
-  utility_charge_ids?: string[];
-  labour_charge_ids?: string[];
-  tax_charge_ids?: string[];
 };
 
 const BASE = "/api/v1/products";
