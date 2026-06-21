@@ -9,6 +9,14 @@ export type Weekday =
   | "saturday"
   | "sunday";
 
+export type BankTransferDetails = {
+  bank_name: string;
+  account_name: string;
+  account_number: string;
+  branch: string;
+  instructions: string;
+};
+
 export type BusinessSettings = {
   delivery_fee: string;
   use_fixed_delivery_fee: boolean;
@@ -16,10 +24,12 @@ export type BusinessSettings = {
   delivery_day: Weekday;
   business_phone: string;
   business_email: string;
-  stripe_enabled: boolean;
+  online_card_enabled: boolean;
+  online_bank_debit_enabled: boolean;
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
   discounts_enabled: boolean;
+  bank_transfer_details: BankTransferDetails;
 };
 
 export type BusinessSettingsUpdate = Partial<{
@@ -29,10 +39,16 @@ export type BusinessSettingsUpdate = Partial<{
   delivery_day: Weekday;
   business_phone: string;
   business_email: string;
-  stripe_enabled: boolean;
+  online_card_enabled: boolean;
+  online_bank_debit_enabled: boolean;
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
   discounts_enabled: boolean;
+  bank_name: string;
+  bank_account_name: string;
+  bank_account_number: string;
+  bank_branch: string;
+  bank_transfer_instructions: string;
 }>;
 
 export type SuggestedDeliveryDate = {

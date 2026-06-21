@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 
 import { DeliveryLocationPickerLazy } from "@/components/orders/DeliveryLocationPickerLazy";
+import { OrderBankTransferInstructions } from "@/components/orders/OrderBankTransferInstructions";
 import { OrderInventoryConsumptionBanner } from "@/components/orders/OrderInventoryConsumptionBanner";
 import { OrderCollectionLineDetail } from "@/components/orders/OrderCollectionLineDetail";
 import { OrderFinancialPerformance } from "@/components/orders/OrderFinancialPerformance";
@@ -133,6 +134,8 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
         <DetailField label="Customer notes" value={order.customer_notes || "—"} fullWidth />
         <DetailField label="Internal notes" value={order.internal_notes || "—"} fullWidth />
       </DetailMetadataCard>
+
+      <OrderBankTransferInstructions order={order} />
 
       <section className="rounded-lg border border-border bg-surface p-5">
         <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">

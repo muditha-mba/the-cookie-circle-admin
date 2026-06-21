@@ -47,7 +47,13 @@ export const orderSchema = deliveryFieldsSchema
   .extend({
     customer_id: z.string().uuid("Select a customer"),
     source: orderSourceSchema,
-    payment_method: z.enum(["cash_on_delivery", "bank_transfer", "stripe", "manual"]),
+    payment_method: z.enum([
+      "cash_on_delivery",
+      "bank_transfer",
+      "online_card",
+      "online_bank_debit",
+      "manual",
+    ]),
     payment_status: z.enum(["pending", "paid", "failed", "refunded"]),
     status: z.enum([
       "draft",

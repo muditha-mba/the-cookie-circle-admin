@@ -43,10 +43,16 @@ export function BusinessSettingsForm({
       use_fixed_delivery_fee: defaultValues.use_fixed_delivery_fee,
       order_cutoff_day: defaultValues.order_cutoff_day,
       delivery_day: defaultValues.delivery_day,
-      stripe_enabled: defaultValues.stripe_enabled,
+      online_card_enabled: defaultValues.online_card_enabled,
+      online_bank_debit_enabled: defaultValues.online_bank_debit_enabled,
       bank_transfer_enabled: defaultValues.bank_transfer_enabled,
       cod_enabled: defaultValues.cod_enabled,
       discounts_enabled: defaultValues.discounts_enabled,
+      bank_name: defaultValues.bank_transfer_details.bank_name,
+      bank_account_name: defaultValues.bank_transfer_details.account_name,
+      bank_account_number: defaultValues.bank_transfer_details.account_number,
+      bank_branch: defaultValues.bank_transfer_details.branch,
+      bank_transfer_instructions: defaultValues.bank_transfer_details.instructions,
     },
   });
 
@@ -129,7 +135,7 @@ export function BusinessSettingsForm({
       <div className="border-t border-border pt-6">
         <h3 className="text-sm font-semibold text-text-primary">Payment options</h3>
         <p className="mt-1 text-xs text-text-muted">
-          Flags for future checkout — no gateway integration in this phase
+          Online methods stay disabled until WebXPay integration is live
         </p>
       </div>
 
@@ -144,17 +150,76 @@ export function BusinessSettingsForm({
             className="h-4 w-4 rounded border-border"
             {...register("bank_transfer_enabled")}
           />
-          Bank transfer enabled
+          Manual bank transfer enabled
         </label>
         <label className="flex items-center gap-2 text-sm text-text-primary">
           <input
             type="checkbox"
             className="h-4 w-4 rounded border-border"
-            {...register("stripe_enabled")}
+            {...register("online_card_enabled")}
           />
-          Stripe enabled
+          Online card payments enabled (WebXPay)
+        </label>
+        <label className="flex items-center gap-2 text-sm text-text-primary">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-border"
+            {...register("online_bank_debit_enabled")}
+          />
+          Online bank debit enabled (JustPay / WebXPay)
         </label>
       </div>
+
+      <div className="border-t border-border pt-6">
+        <h3 className="text-sm font-semibold text-text-primary">Bank transfer details</h3>
+        <p className="mt-1 text-xs text-text-muted">
+          Shown to customers who pay by manual bank transfer
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <FormField label="Bank name" htmlFor="bank_name" error={errors.bank_name?.message}>
+          <input id="bank_name" className={formInputClassName} {...register("bank_name")} />
+        </FormField>
+        <FormField
+          label="Account name"
+          htmlFor="bank_account_name"
+          error={errors.bank_account_name?.message}
+        >
+          <input
+            id="bank_account_name"
+            className={formInputClassName}
+            {...register("bank_account_name")}
+          />
+        </FormField>
+        <FormField
+          label="Account number"
+          htmlFor="bank_account_number"
+          error={errors.bank_account_number?.message}
+        >
+          <input
+            id="bank_account_number"
+            className={formInputClassName}
+            {...register("bank_account_number")}
+          />
+        </FormField>
+        <FormField label="Branch" htmlFor="bank_branch" error={errors.bank_branch?.message}>
+          <input id="bank_branch" className={formInputClassName} {...register("bank_branch")} />
+        </FormField>
+      </div>
+
+      <FormField
+        label="Transfer instructions"
+        htmlFor="bank_transfer_instructions"
+        error={errors.bank_transfer_instructions?.message}
+      >
+        <textarea
+          id="bank_transfer_instructions"
+          rows={3}
+          className={formInputClassName}
+          {...register("bank_transfer_instructions")}
+        />
+      </FormField>
 
       <div className="border-t border-border pt-6">
         <h3 className="text-sm font-semibold text-text-primary">Discounts</h3>
@@ -181,10 +246,10 @@ export function BusinessSettingsForm({
         </span>
       </label>
 
-      {error ? <p className="text-sm text-danger">{error}</p> : null}
+      {error && <p className="text-sm text-danger">{error}</p>}
 
-      <PrimaryButton type="submit" disabled={isSubmitting}>
-        {isSubmitting ? "Saving..." : submitLabel}
+      <PrimaryButton type="submit" loading={isSubmitting}>
+        {submitLabel}
       </PrimaryButton>
     </form>
   );

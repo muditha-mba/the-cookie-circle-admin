@@ -266,7 +266,8 @@ export function OrderForm({
             <select id="payment_method" className={formInputClassName} {...register("payment_method")}>
               <option value="cash_on_delivery">Cash on delivery</option>
               <option value="bank_transfer">Bank transfer</option>
-              <option value="stripe">Stripe</option>
+              <option value="online_card">Online card</option>
+              <option value="online_bank_debit">Online bank debit</option>
               <option value="manual">Manual</option>
             </select>
           </FormField>

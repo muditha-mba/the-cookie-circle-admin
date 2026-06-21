@@ -9,7 +9,12 @@ export type OrderSource =
   | "manual"
   | "walk_in"
   | "phone";
-export type PaymentMethod = "cash_on_delivery" | "bank_transfer" | "stripe" | "manual";
+export type PaymentMethod =
+  | "cash_on_delivery"
+  | "bank_transfer"
+  | "online_card"
+  | "online_bank_debit"
+  | "manual";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type OrderStatus =
   | "draft"
