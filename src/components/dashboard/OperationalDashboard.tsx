@@ -264,6 +264,12 @@ export function OperationalDashboard() {
               >
                 Overhead
               </Link>
+              <Link
+                href={routes.analytics.discounts}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Discounts
+              </Link>
             </div>
           </div>
         ) : null}

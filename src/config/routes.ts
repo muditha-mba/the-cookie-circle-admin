@@ -89,6 +89,7 @@ export const routes = {
     orders: "/analytics/orders",
     operations: "/analytics/operations",
     overhead: "/analytics/overhead",
+    discounts: "/analytics/discounts",
   },
   productItemTypes: {
     list: "/product-item-types",
@@ -119,6 +120,24 @@ export const routes = {
     create: "/tax-charges/new",
     detail: (id: string) => `/tax-charges/${id}`,
     edit: (id: string) => `/tax-charges/${id}/edit`,
+  },
+  discounts: {
+    rules: {
+      list: "/discounts/rules",
+      create: "/discounts/rules/new",
+      detail: (id: string) => `/discounts/rules/${id}`,
+      edit: (id: string) => `/discounts/rules/${id}/edit`,
+    },
+    eligibleCustomers: "/discounts/eligible-customers",
+    history: "/discounts/history",
+    auditEvents: "/discounts/audit-events",
+  },
+  promotions: {
+    slides: {
+      list: "/promotions/slides",
+      create: "/promotions/slides/new",
+      edit: (id: string) => `/promotions/slides/${id}/edit`,
+    },
   },
   inventory: {
     overview: "/inventory",
@@ -174,6 +193,10 @@ const protectedPrefixes = [
   routes.utilityCharges.list,
   routes.labourCharges.list,
   routes.taxCharges.list,
+  routes.discounts.rules.list,
+  routes.discounts.eligibleCustomers,
+  routes.discounts.history,
+  routes.promotions.slides.list,
   routes.inventory.overview,
   routes.inventory.consumption.list,
 ] as const;

@@ -95,6 +95,12 @@ export type TaxLineSnapshot = {
 export type OrderFinancialSnapshot = {
   products_subtotal_snapshot: string;
   collections_subtotal_snapshot: string;
+  pre_discount_subtotal_snapshot?: string;
+  discount_amount_snapshot?: string;
+  discount_type_snapshot?: string | null;
+  discount_value_snapshot?: string | null;
+  discount_source_snapshot?: string | null;
+  gross_revenue_snapshot?: string;
   delivery_fee_snapshot: string;
   delivery_cost_snapshot: string;
   package_fee_revenue_snapshot: string;

@@ -8,6 +8,7 @@ import {
   Layers,
   Package,
   ShoppingCart,
+  TicketPercent,
   TrendingUp,
   Users,
   Wrench,
@@ -28,6 +29,7 @@ const CATEGORY_HREFS: Partial<Record<string, string>> = {
   orders: routes.analytics.orders,
   operations: routes.analytics.operations,
   overhead: routes.analytics.overhead,
+  discounts: routes.analytics.discounts,
 };
 
 const CATEGORY_ICONS: Record<string, LucideIcon> = {
@@ -39,6 +41,7 @@ const CATEGORY_ICONS: Record<string, LucideIcon> = {
   production: Factory,
   operations: Gauge,
   overhead: Wrench,
+  discounts: TicketPercent,
 };
 
 function formatPresetLabel(preset: string | null) {

@@ -9,7 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
+import type { OrderCollectionLine } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
+import type { CollectionSearchOption } from "@/components/orders/CollectionSearchSelect";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import {
   toOrderDeliveryPayload,
@@ -17,6 +19,20 @@ import {
   toValidProductLines,
   type OrderFormValues,
 } from "@/lib/validation/order";
+
+function collectionLineToSearchOption(line: OrderCollectionLine): CollectionSearchOption {
+  const snapshotCookies =
+    line.total_cookies_per_pack != null ? Number(line.total_cookies_per_pack) : 0;
+  const selectionCookies =
+    line.selections?.reduce((total, selection) => total + Number(selection.quantity), 0) ?? 0;
+
+  return {
+    id: line.collection_id,
+    name: line.collection_name_snapshot,
+    package_size: snapshotCookies > 0 ? snapshotCookies : selectionCookies,
+    package_name: "Package",
+  };
+}
 
 export default function EditOrderPage() {
   const params = useParams<{ id: string }>();
@@ -92,12 +108,7 @@ export default function EditOrderPage() {
           name: line.product_name_snapshot,
           selling_price: line.product_selling_price_snapshot,
         }))}
-        collectionSnapshots={data.collection_lines.map((line) => ({
-          id: line.collection_id,
-          name: line.collection_name_snapshot,
-          package_size: 0,
-          package_name: "Package",
-        }))}
+        collectionSnapshots={data.collection_lines.map(collectionLineToSearchOption)}
         defaultValues={{
           customer_id: data.customer.id,
           delivery_area_id: data.delivery_area?.id ?? "",

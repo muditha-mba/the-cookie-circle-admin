@@ -18,6 +18,7 @@ export const businessSettingsSchema = z.object({
   stripe_enabled: z.boolean(),
   bank_transfer_enabled: z.boolean(),
   cod_enabled: z.boolean(),
+  discounts_enabled: z.boolean(),
 });
 
 export type BusinessSettingsFormValues = z.infer<typeof businessSettingsSchema>;

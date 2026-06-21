@@ -682,6 +682,34 @@ export type OverheadCategoryRow = {
   entry_count: number;
 };
 
+export type DiscountKpis = {
+  date_range: { start: string; end: string };
+  total_grants_issued: number;
+  total_grants_used: number;
+  total_grants_expired: number;
+  total_grants_revoked: number;
+  redemption_rate_pct: number;
+  total_discount_amount: string;
+  avg_discount_per_order: string;
+  orders_with_discount: number;
+};
+
+export type DiscountMonthlyRow = {
+  month: string;
+  orders_with_discount: number;
+  total_discount_amount: string;
+};
+
+export type DiscountRulePerformanceRow = {
+  rule_id: string;
+  rule_name: string;
+  grants_issued: number;
+  grants_used: number;
+  grants_expired: number;
+  redemption_rate_pct: number;
+  total_discount_given: string;
+};
+
 const BASE = "/api/v1/analytics";
 
 export const analyticsApi = {
@@ -937,6 +965,16 @@ export const analyticsApi = {
 
   getOverheadCategoryBreakdown: (year: number) =>
     apiClient.get<OverheadCategoryRow[]>(`${BASE}/overhead/category-breakdown`, { params: { year } }),
+
+  // Discount analytics
+  getDiscountKpis: (params?: { preset?: string; start_date?: string; end_date?: string }) =>
+    apiClient.get<DiscountKpis>(`${BASE}/discounts/kpis`, { params }),
+
+  getDiscountMonthlyTrends: () =>
+    apiClient.get<DiscountMonthlyRow[]>(`${BASE}/discounts/monthly-trends`),
+
+  getDiscountRulePerformance: () =>
+    apiClient.get<DiscountRulePerformanceRow[]>(`${BASE}/discounts/rule-performance`),
 };
 
 export const ANALYTICS_DATE_PRESETS: {

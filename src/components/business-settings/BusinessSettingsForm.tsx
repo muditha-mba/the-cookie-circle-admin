@@ -46,6 +46,7 @@ export function BusinessSettingsForm({
       stripe_enabled: defaultValues.stripe_enabled,
       bank_transfer_enabled: defaultValues.bank_transfer_enabled,
       cod_enabled: defaultValues.cod_enabled,
+      discounts_enabled: defaultValues.discounts_enabled,
     },
   });
 
@@ -154,6 +155,31 @@ export function BusinessSettingsForm({
           Stripe enabled
         </label>
       </div>
+
+      <div className="border-t border-border pt-6">
+        <h3 className="text-sm font-semibold text-text-primary">Discounts</h3>
+        <p className="mt-1 text-xs text-text-muted">
+          Master switch for all discount and grant functionality. Must be enabled before any discounts
+          are applied to orders.
+        </p>
+      </div>
+
+      <label className="flex items-start gap-3 rounded-md border border-border bg-surface-elevated px-4 py-3">
+        <input
+          type="checkbox"
+          className="mt-0.5 h-4 w-4 rounded border-border"
+          {...register("discounts_enabled")}
+        />
+        <span className="space-y-1">
+          <span className="block text-sm font-medium text-text-primary">
+            Enable discounts
+          </span>
+          <span className="block text-xs text-text-muted">
+            When enabled, eligible customers may receive automatic or manually granted discounts on
+            their orders. Rules, grants, and promotions are evaluated only when this is on.
+          </span>
+        </span>
+      </label>
 
       {error ? <p className="text-sm text-danger">{error}</p> : null}
 

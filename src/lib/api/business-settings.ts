@@ -19,6 +19,7 @@ export type BusinessSettings = {
   stripe_enabled: boolean;
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
+  discounts_enabled: boolean;
 };
 
 export type BusinessSettingsUpdate = Partial<{
@@ -31,6 +32,7 @@ export type BusinessSettingsUpdate = Partial<{
   stripe_enabled: boolean;
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
+  discounts_enabled: boolean;
 }>;
 
 export type SuggestedDeliveryDate = {
