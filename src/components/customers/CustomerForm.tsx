@@ -8,6 +8,7 @@ import { CustomerUserSearchSelect } from "@/components/customers/CustomerUserSea
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
 import type { LinkableUser } from "@/lib/api/users";
+import { MARKETING_SOURCE_OPTIONS } from "@/lib/marketing-sources";
 import { customerSchema, type CustomerFormValues } from "@/lib/validation/customer";
 
 type CustomerFormProps = {
@@ -133,13 +134,11 @@ export function CustomerForm({
           {...register("marketing_source")}
         >
           <option value="">Not specified</option>
-          <option value="instagram">Instagram</option>
-          <option value="facebook">Facebook</option>
-          <option value="whatsapp">WhatsApp</option>
-          <option value="referral">Referral</option>
-          <option value="google">Google</option>
-          <option value="walk_in">Walk In</option>
-          <option value="other">Other</option>
+          {MARKETING_SOURCE_OPTIONS.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
       </FormField>
 

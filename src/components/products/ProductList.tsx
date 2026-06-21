@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,10 +12,13 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { ProductSummary } from "@/lib/api/products";
 import { productsApi } from "@/lib/api/products";
 import { formatCount, formatCurrency } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -24,8 +27,20 @@ const SORT_OPTIONS: SortOption[] = [
   { value: "created_at", label: "Created" },
 ];
 
+function unitSellingPrice(sellingPrice: string, yieldQuantity: string): number | null {
+  const selling = Number(sellingPrice);
+  const yieldQty = Number(yieldQuantity);
+  if (Number.isNaN(selling) || Number.isNaN(yieldQty) || yieldQty <= 0) {
+    return null;
+  }
+  return selling / yieldQty;
+}
+
 export function ProductList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -44,24 +59,27 @@ export function ProductList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<ProductSummary>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => productsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+  });
+
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || option.value !== "selling_price",
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<ProductSummary>[]>(() => {
+    const base: ColumnDef<ProductSummary>[] = [
       {
         header: "Name",
         accessorKey: "name",
-        cell: ({ row }) => (
-          <span className="font-medium">{row.original.name}</span>
-        ),
-      },
-      {
-        header: "Selling price",
-        accessorKey: "selling_price",
-        cell: ({ row }) => formatCurrency(row.original.selling_price),
-      },
-      {
-        header: "Buffer",
-        accessorKey: "buffer_amount",
-        cell: ({ row }) => formatCurrency(row.original.buffer_amount),
+        cell: ({ row }) => <span className="font-medium">{row.original.name}</span>,
       },
       {
         header: "Yield",
@@ -75,12 +93,52 @@ export function ProductList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canViewFinancials) {
+      base.splice(1, 0, {
+        header: "Selling price",
+        accessorKey: "selling_price",
+        cell: ({ row }) => formatCurrency(row.original.selling_price),
+      });
+      base.splice(2, 0, {
+        header: "Price per item",
+        id: "price_per_item",
+        cell: ({ row }) => {
+          const unitPrice = unitSellingPrice(
+            row.original.selling_price,
+            row.original.yield_quantity,
+          );
+          return unitPrice == null ? "—" : formatCurrency(unitPrice);
+        },
+      });
+      base.splice(3, 0, {
+        header: "Buffer",
+        accessorKey: "buffer_amount",
+        cell: ({ row }) => formatCurrency(row.original.buffer_amount),
+      });
+    }
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<ProductSummary>({
+          getViewHref: (row) => routes.products.detail(row.id),
+          getEditHref: (row) => routes.products.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete "${row.name}"? This action cannot be undone.`,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-6">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {
@@ -90,7 +148,7 @@ export function ProductList() {
         searchPlaceholder="Search products..."
         sortBy={sortBy}
         sortOrder={sortOrder}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         onSortByChange={(value) => {
           setSortBy(value);
           setPage(1);

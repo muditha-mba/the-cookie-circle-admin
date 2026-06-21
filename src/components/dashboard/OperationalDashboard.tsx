@@ -18,6 +18,7 @@ import {
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { dashboardApi } from "@/lib/api/dashboard";
 import { formatCount, formatCurrency, formatDate } from "@/lib/format";
 
@@ -82,6 +83,7 @@ function ActionButton({
 }
 
 export function OperationalDashboard() {
+  const { canViewFinancials } = useAdminPermissions();
   const { data, isLoading, isError } = useQuery({
     queryKey: ["dashboard", "overview"],
     queryFn: dashboardApi.getOverview,
@@ -107,15 +109,17 @@ export function OperationalDashboard() {
               isLoading || !data ? "—" : data.today_snapshot.orders_today.toString()
             }
           />
-          <SnapshotCard
-            label="Revenue Today"
-            icon={<Boxes className="h-4 w-4" />}
-            value={
-              isLoading || !data
-                ? "—"
-                : formatCurrency(data.today_snapshot.revenue_today)
-            }
-          />
+          {canViewFinancials ? (
+            <SnapshotCard
+              label="Revenue Today"
+              icon={<Boxes className="h-4 w-4" />}
+              value={
+                isLoading || !data
+                  ? "—"
+                  : formatCurrency(data.today_snapshot.revenue_today)
+              }
+            />
+          ) : null}
           <SnapshotCard
             label="Deliveries Today"
             icon={<Truck className="h-4 w-4" />}
@@ -205,55 +209,57 @@ export function OperationalDashboard() {
           )}
         </SectionCard>
 
-        <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
-          <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
-            Dashboard Drilldowns
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link
-              href={routes.analytics.revenue}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Revenue
-            </Link>
-            <Link
-              href={routes.analytics.products}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Products
-            </Link>
-            <Link
-              href={routes.analytics.collections}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Collections
-            </Link>
-            <Link
-              href={routes.analytics.customers}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Customers
-            </Link>
-            <Link
-              href={routes.analytics.orders}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Orders
-            </Link>
-            <Link
-              href={routes.analytics.production}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Production
-            </Link>
-            <Link
-              href={routes.analytics.operations}
-              className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
-            >
-              Operations
-            </Link>
+        {canViewFinancials ? (
+          <div className="rounded-xl border border-border bg-surface p-4 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-text-secondary">
+              Dashboard Drilldowns
+            </p>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link
+                href={routes.analytics.revenue}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Revenue
+              </Link>
+              <Link
+                href={routes.analytics.products}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Products
+              </Link>
+              <Link
+                href={routes.analytics.collections}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Collections
+              </Link>
+              <Link
+                href={routes.analytics.customers}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Customers
+              </Link>
+              <Link
+                href={routes.analytics.orders}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Orders
+              </Link>
+              <Link
+                href={routes.analytics.production}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Production
+              </Link>
+              <Link
+                href={routes.analytics.operations}
+                className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover"
+              >
+                Operations
+              </Link>
+            </div>
           </div>
-        </div>
+        ) : null}
 
         <div className="grid gap-6 xl:grid-cols-2">
           <SectionCard
@@ -400,11 +406,13 @@ export function OperationalDashboard() {
                 icon={<Boxes className="h-4 w-4" />}
                 label="View Production"
               />
-              <ActionButton
-                href={routes.analytics.home}
-                icon={<BellRing className="h-4 w-4" />}
-                label="View Analytics"
-              />
+              {canViewFinancials ? (
+                <ActionButton
+                  href={routes.analytics.home}
+                  icon={<BellRing className="h-4 w-4" />}
+                  label="View Analytics"
+                />
+              ) : null}
             </div>
           </SectionCard>
 

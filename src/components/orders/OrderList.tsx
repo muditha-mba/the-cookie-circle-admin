@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -11,10 +11,28 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { EnumStatusBadge } from "@/components/ui/EnumStatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { OrderSummary } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
-import { formatCurrency } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
+
+function formatEnumLabel(value: string): string {
+  return value.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function formatDeliveryAreaLabel(
+  area: OrderSummary["delivery_area"],
+): string {
+  if (!area) {
+    return "—";
+  }
+  if (area.pickup_only) {
+    return "Pickup";
+  }
+  return area.name;
+}
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "order_number", label: "Order number" },
@@ -27,6 +45,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function OrderList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -45,38 +66,96 @@ export function OrderList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<OrderSummary>[]>(
-    () => [
-      { header: "Order", accessorKey: "order_number", cell: ({ row }) => (
-        <span className="font-medium">{row.original.order_number}</span>
-      )},
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => ordersApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["orders"] });
+    },
+  });
+
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || (option.value !== "revenue" && option.value !== "profit"),
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<OrderSummary>[]>(() => {
+    const base: ColumnDef<OrderSummary>[] = [
+      {
+        header: "Order",
+        accessorKey: "order_number",
+        cell: ({ row }) => <span className="font-medium">{row.original.order_number}</span>,
+      },
       { header: "Customer", accessorKey: "customer_name" },
-      { header: "Scheduled", accessorKey: "scheduled_delivery_date", cell: ({ row }) =>
-        new Date(row.original.scheduled_delivery_date).toLocaleDateString()},
-      { header: "Requested", accessorKey: "requested_delivery_date", cell: ({ row }) =>
-        new Date(row.original.requested_delivery_date).toLocaleDateString()},
+      {
+        header: "Scheduled",
+        accessorKey: "scheduled_delivery_date",
+        cell: ({ row }) => new Date(row.original.scheduled_delivery_date).toLocaleDateString(),
+      },
+      {
+        header: "Requested",
+        accessorKey: "requested_delivery_date",
+        cell: ({ row }) => new Date(row.original.requested_delivery_date).toLocaleDateString(),
+      },
       {
         header: "Status",
         accessorKey: "status",
+        cell: ({ row }) => <EnumStatusBadge kind="order" value={row.original.status} />,
+      },
+      {
+        header: "Order type",
+        accessorKey: "order_type",
         cell: ({ row }) => (
-          <EnumStatusBadge kind="order" value={row.original.status} />
+          <span className="text-text-secondary">{formatEnumLabel(row.original.order_type)}</span>
         ),
       },
-      { header: "Revenue", accessorKey: "total_revenue_snapshot", cell: ({ row }) =>
-        formatCurrency(row.original.total_revenue_snapshot)},
-      { header: "Profit", accessorKey: "total_profit_snapshot", cell: ({ row }) =>
-        formatCurrency(row.original.total_profit_snapshot)},
-    ],
-    [],
-  );
+      {
+        header: "Payment method",
+        accessorKey: "payment_method",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">
+            {formatEnumLabel(row.original.payment_method)}
+          </span>
+        ),
+      },
+      {
+        header: "Delivery area",
+        id: "delivery_area",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">
+            {formatDeliveryAreaLabel(row.original.delivery_area)}
+          </span>
+        ),
+      },
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<OrderSummary>({
+          getViewHref: (row) => routes.orders.detail(row.id),
+          getEditHref: (row) => routes.orders.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete order ${row.order_number}? This action cannot be undone.`,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => { setSearch(value); setPage(1); }}
         sortBy={sortBy}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         sortOrder={sortOrder}
         onSortByChange={setSortBy}
         onSortOrderChange={setSortOrder}

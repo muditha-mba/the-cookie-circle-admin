@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -12,10 +12,13 @@ import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { Charge } from "@/lib/api/charge-types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
 import { formatChargeApplicability } from "@/lib/charge-applicability";
+import { buildCrudActionsColumn } from "@/lib/list-table-actions";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -30,6 +33,9 @@ type ChargeListProps = {
 
 export function ChargeList({ module }: ChargeListProps) {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canManageFinancialRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -48,8 +54,15 @@ export function ChargeList({ module }: ChargeListProps) {
       }),
   });
 
-  const columns = useMemo<ColumnDef<Charge>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => module.api.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [module.queryKey] });
+    },
+  });
+
+  const columns = useMemo<ColumnDef<Charge>[]>(() => {
+    const base: ColumnDef<Charge>[] = [
       {
         header: "Name",
         accessorKey: "name",
@@ -85,12 +98,25 @@ export function ChargeList({ module }: ChargeListProps) {
         accessorKey: "created_at",
         cell: ({ row }) => formatDateTime(row.original.created_at),
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canManageFinancialRecords) {
+      base.push(
+        buildCrudActionsColumn<Charge>({
+          routes: module.routes,
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageFinancialRecords, confirmDelete, deleteMutation, module]);
 
   return (
     <div className="space-y-6">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

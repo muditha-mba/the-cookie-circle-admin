@@ -10,6 +10,7 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
 import type { ApiError } from "@/lib/api/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
@@ -19,8 +20,8 @@ export default function DeliveryAreaDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["delivery-areas", params.id],
@@ -28,22 +29,25 @@ export default function DeliveryAreaDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
-    if (!data || !window.confirm(`Delete ${data.name}?`)) {
+  const handleDelete = () => {
+    if (!data) {
       return;
     }
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await deliveryAreasApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["delivery-areas", data.id], ["delivery-areas"]);
-      router.push(routes.deliveryAreas.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete delivery area.");
-    } finally {
-      setIsDeleting(false);
-    }
+
+    confirmDelete({
+      message: `Are you sure you want to delete ${data.name}? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await deliveryAreasApi.delete(data.id);
+          cacheEntityRemove(queryClient, ["delivery-areas", data.id], ["delivery-areas"]);
+          router.push(routes.deliveryAreas.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete delivery area.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -65,10 +69,11 @@ export default function DeliveryAreaDetailPage() {
 
   return (
     <DashboardPageShell title={data.name} description="Delivery area configuration.">
+      {deleteDialog}
       <PageActions backHref={routes.deliveryAreas.list} className="mb-6">
         <PrimaryLink href={routes.deliveryAreas.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton variant="danger" disabled={isDeleting} onClick={() => void handleDelete()}>
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

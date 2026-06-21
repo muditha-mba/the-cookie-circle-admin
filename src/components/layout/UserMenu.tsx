@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useAuth } from "@/providers/AuthProvider";
 import {
-  formatUserRole,
+  formatSignedInRole,
   getUserDisplayName,
   getUserInitials,
 } from "@/lib/user-display";
@@ -87,7 +87,7 @@ export function UserMenu() {
               {user.email}
             </p>
             <p className="mt-2 inline-flex rounded-full bg-surface px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-text-muted">
-              {formatUserRole(user.role)}
+              {formatSignedInRole(user)}
             </p>
           </div>
 

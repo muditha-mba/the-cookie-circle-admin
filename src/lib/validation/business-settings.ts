@@ -15,8 +15,6 @@ export const businessSettingsSchema = z.object({
   use_fixed_delivery_fee: z.boolean(),
   order_cutoff_day: weekdaySchema,
   delivery_day: weekdaySchema,
-  business_phone: z.string().max(50),
-  business_email: z.string().max(320),
   stripe_enabled: z.boolean(),
   bank_transfer_enabled: z.boolean(),
   cod_enabled: z.boolean(),

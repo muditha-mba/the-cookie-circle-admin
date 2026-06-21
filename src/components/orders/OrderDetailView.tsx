@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+
 import { DeliveryLocationPickerLazy } from "@/components/orders/DeliveryLocationPickerLazy";
 import { OrderCollectionLineDetail } from "@/components/orders/OrderCollectionLineDetail";
 import { OrderFinancialPerformance } from "@/components/orders/OrderFinancialPerformance";
@@ -52,6 +54,7 @@ function formatBillingAddress(order: OrderDetail) {
 }
 
 export function OrderDetailView({ order }: OrderDetailViewProps) {
+  const { canViewFinancials } = useAdminPermissions();
   const lifecycleEntries = [
     { label: "Confirmed", at: order.lifecycle.confirmed_at },
     { label: "Preparing", at: order.lifecycle.preparing_at },
@@ -118,6 +121,10 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           value={new Date(order.scheduled_delivery_date).toLocaleDateString()}
         />
         <DetailField label="Created" value={formatDateTime(order.created_at)} />
+        <DetailField
+          label="Customer total"
+          value={formatCurrency(order.total_revenue_snapshot)}
+        />
         <DetailField label="Customer notes" value={order.customer_notes || "—"} fullWidth />
         <DetailField label="Internal notes" value={order.internal_notes || "—"} fullWidth />
       </DetailMetadataCard>
@@ -179,7 +186,7 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           <div>
             <dt className="text-text-secondary">Delivery fee (snapshot)</dt>
             <dd className="text-text-primary">
-              {formatCurrency(order.financial_performance.snapshot.delivery_fee_snapshot)}
+              {formatCurrency(order.delivery_fee_snapshot)}
             </dd>
           </div>
           <div className="sm:col-span-2">
@@ -252,18 +259,25 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
         </section>
       ) : null}
 
-      <OrderFinancialPerformance performance={order.financial_performance} />
+      {canViewFinancials && order.financial_performance ? (
+        <OrderFinancialPerformance
+          performance={order.financial_performance}
+          orderType={order.order_type}
+        />
+      ) : null}
 
-      {order.order_type === "catering" && order.product_lines.length > 0 ? (
-        <section className="space-y-4">
-          <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
-            Catering cookies
-          </h3>
+      {canViewFinancials ? (
+        order.order_type === "catering" && order.product_lines.length > 0 ? (
+          <section className="space-y-4">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-text-secondary">
+              Catering cookies
+            </h3>
+            <OrderProductFinancialBreakdown productLines={order.product_lines} />
+          </section>
+        ) : (
           <OrderProductFinancialBreakdown productLines={order.product_lines} />
-        </section>
-      ) : (
-        <OrderProductFinancialBreakdown productLines={order.product_lines} />
-      )}
+        )
+      ) : null}
 
       {order.collection_lines.length > 0 ? (
         <section className="space-y-4">

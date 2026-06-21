@@ -11,6 +11,7 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import type { ApiError } from "@/lib/api/types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
 import { formatChargeApplicability } from "@/lib/charge-applicability";
@@ -25,8 +26,8 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: [module.queryKey, params.id],
@@ -34,28 +35,27 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!data) {
       return;
     }
-    if (!window.confirm(`Delete "${data.name}"? This cannot be undone.`)) {
-      return;
-    }
 
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await module.api.delete(data.id);
-      cacheEntityRemove(queryClient, [module.queryKey, data.id], [module.queryKey], {
-        alsoInvalidate: [["products"], ["collections"]],
-      });
-      router.push(module.routes.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? `Unable to delete ${module.singular.toLowerCase()}.`);
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmDelete({
+      message: `Are you sure you want to delete "${data.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await module.api.delete(data.id);
+          cacheEntityRemove(queryClient, [module.queryKey, data.id], [module.queryKey], {
+            alsoInvalidate: [["products"], ["collections"]],
+          });
+          router.push(module.routes.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? `Unable to delete ${module.singular.toLowerCase()}.`);
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -77,14 +77,11 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
 
   return (
     <DashboardPageShell title={data.name} description={`${module.singular} details.`}>
+      {deleteDialog}
       <PageActions backHref={module.routes.list} className="mb-6">
         <PrimaryLink href={module.routes.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton
-          variant="danger"
-          disabled={isDeleting}
-          onClick={() => void handleDelete()}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

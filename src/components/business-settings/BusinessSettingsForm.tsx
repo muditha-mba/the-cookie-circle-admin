@@ -43,8 +43,6 @@ export function BusinessSettingsForm({
       use_fixed_delivery_fee: defaultValues.use_fixed_delivery_fee,
       order_cutoff_day: defaultValues.order_cutoff_day,
       delivery_day: defaultValues.delivery_day,
-      business_phone: defaultValues.business_phone,
-      business_email: defaultValues.business_email,
       stripe_enabled: defaultValues.stripe_enabled,
       bank_transfer_enabled: defaultValues.bank_transfer_enabled,
       cod_enabled: defaultValues.cod_enabled,
@@ -126,32 +124,6 @@ export function BusinessSettingsForm({
           {...register("delivery_fee", { valueAsNumber: true })}
         />
       </FormField>
-
-      <div className="border-t border-border pt-6">
-        <h3 className="text-sm font-semibold text-text-primary">Contact</h3>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
-        <FormField
-          label="Business phone"
-          htmlFor="business_phone"
-          error={errors.business_phone?.message}
-        >
-          <input id="business_phone" className={formInputClassName} {...register("business_phone")} />
-        </FormField>
-        <FormField
-          label="Business email"
-          htmlFor="business_email"
-          error={errors.business_email?.message}
-        >
-          <input
-            id="business_email"
-            type="email"
-            className={formInputClassName}
-            {...register("business_email")}
-          />
-        </FormField>
-      </div>
 
       <div className="border-t border-border pt-6">
         <h3 className="text-sm font-semibold text-text-primary">Payment options</h3>

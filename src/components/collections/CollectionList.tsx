@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -13,11 +13,14 @@ import { PrimaryLink } from "@/components/data/PageActions";
 import { CollectionPackageBadge } from "@/components/collections/CollectionPackageBadge";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { collectionsApi } from "@/lib/api/collections";
 import { formatCount, formatCurrency } from "@/lib/format";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "name", label: "Name" },
@@ -28,6 +31,9 @@ const SORT_OPTIONS: SortOption[] = [
 
 export function CollectionList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -66,8 +72,15 @@ export function CollectionList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<CollectionSummary>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => collectionsApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  const columns = useMemo<ColumnDef<CollectionSummary>[]>(() => {
+    const base: ColumnDef<CollectionSummary>[] = [
       {
         header: "Name",
         accessorKey: "name",
@@ -88,11 +101,16 @@ export function CollectionList() {
         accessorKey: "package_size",
         cell: ({ row }) => `${formatCount(row.original.package_size)} cookies`,
       },
-      {
-        header: "Fee",
-        accessorKey: "package_fee",
-        cell: ({ row }) => formatCurrency(row.original.package_fee),
-      },
+      ...(canViewFinancials
+        ? [
+            {
+              header: "Fee",
+              accessorKey: "package_fee",
+              cell: ({ row }: { row: { original: CollectionSummary } }) =>
+                formatCurrency(row.original.package_fee),
+            } satisfies ColumnDef<CollectionSummary>,
+          ]
+        : []),
       {
         header: "Status",
         accessorKey: "is_active",
@@ -103,12 +121,28 @@ export function CollectionList() {
         accessorKey: "created_at",
         cell: ({ row }) => new Date(row.original.created_at).toLocaleDateString(),
       },
-    ],
-    [packageMap],
-  );
+    ];
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<CollectionSummary>({
+          getViewHref: (row) => routes.collections.detail(row.id),
+          getEditHref: (row) => routes.collections.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete "${row.name}"? This action cannot be undone.`,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation, packageMap]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

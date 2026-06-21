@@ -8,6 +8,7 @@ import { OrderDetailView } from "@/components/orders/OrderDetailView";
 import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import type { ApiError } from "@/lib/api/types";
 import { ordersApi } from "@/lib/api/orders";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
@@ -16,8 +17,8 @@ export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["orders", params.id],
@@ -25,22 +26,25 @@ export default function OrderDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
-    if (!data || !window.confirm(`Delete order ${data.order_number}?`)) {
+  const handleDelete = () => {
+    if (!data) {
       return;
     }
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await ordersApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["orders", data.id], ["orders"]);
-      router.push(routes.orders.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete order.");
-    } finally {
-      setIsDeleting(false);
-    }
+
+    confirmDelete({
+      message: `Are you sure you want to delete order ${data.order_number}? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await ordersApi.delete(data.id);
+          cacheEntityRemove(queryClient, ["orders", data.id], ["orders"]);
+          router.push(routes.orders.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete order.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -65,6 +69,7 @@ export default function OrderDetailPage() {
       title={data.order_number}
       description="Order detail with snapshots and financial summary."
     >
+      {deleteDialog}
       <PageActions backHref={routes.orders.list} className="mb-6">
         <PrimaryLink href={routes.orders.edit(data.id)}>Edit</PrimaryLink>
         {data.customer_review ? (
@@ -72,8 +77,8 @@ export default function OrderDetailPage() {
             View review
           </PrimaryLink>
         ) : null}
-        <SecondaryButton variant="danger" disabled={isDeleting} onClick={() => void handleDelete()}>
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 

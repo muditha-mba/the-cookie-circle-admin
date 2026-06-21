@@ -12,6 +12,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import type { ApiError } from "@/lib/api/types";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCount, formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
@@ -20,8 +22,9 @@ export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { canViewFinancials } = useAdminPermissions();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["collections", params.id],
@@ -29,26 +32,25 @@ export default function CollectionDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!data) {
       return;
     }
-    if (!window.confirm(`Delete "${data.name}"? This cannot be undone.`)) {
-      return;
-    }
 
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await collectionsApi.delete(data.id);
-      cacheEntityRemove(queryClient, ["collections", data.id], ["collections"]);
-      router.push(routes.collections.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete collection.");
-    } finally {
-      setIsDeleting(false);
-    }
+    confirmDelete({
+      message: `Are you sure you want to delete "${data.name}"? This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await collectionsApi.delete(data.id);
+          cacheEntityRemove(queryClient, ["collections", data.id], ["collections"]);
+          router.push(routes.collections.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete collection.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -73,14 +75,11 @@ export default function CollectionDetailPage() {
       title={data.name}
       description="Package configuration for the customer-facing builder."
     >
+      {deleteDialog}
       <PageActions backHref={routes.collections.list} className="mb-6">
         <PrimaryLink href={routes.collections.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton
-          variant="danger"
-          disabled={isDeleting}
-          onClick={() => void handleDelete()}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
 
@@ -97,7 +96,9 @@ export default function CollectionDetailPage() {
           label="Package size"
           value={`${formatCount(data.package_size)} cookies`}
         />
-        <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+        {canViewFinancials ? (
+          <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+        ) : null}
         <DetailField
           label="Allowed categories"
           value={data.allowed_categories.map((row) => row.name).join(", ") || "—"}

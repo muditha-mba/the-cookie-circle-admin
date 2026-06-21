@@ -7,10 +7,30 @@ export type MarketingSource =
   | "instagram"
   | "facebook"
   | "whatsapp"
+  | "tiktok"
+  | "linkedin"
+  | "youtube"
+  | "twitter"
+  | "pinterest"
+  | "email"
   | "referral"
   | "google"
   | "walk_in"
   | "other";
+
+export type MarketingAttribution = {
+  utm_source?: string | null;
+  utm_medium?: string | null;
+  utm_campaign?: string | null;
+  utm_content?: string | null;
+  utm_term?: string | null;
+  referrer?: string | null;
+  referrer_host?: string | null;
+  landing_path?: string | null;
+  captured_at?: string | null;
+  resolution?: string | null;
+  resolved_source?: string | null;
+};
 
 export type CustomerSegment = "new" | "returning" | "vip" | "inactive";
 
@@ -34,6 +54,7 @@ export type CustomerSummary = {
   landmark: string | null;
   source: CustomerSource;
   marketing_source: MarketingSource | null;
+  marketing_attribution: MarketingAttribution | null;
   notes: string | null;
   is_active: boolean;
   created_at: string;

@@ -11,6 +11,7 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import type { ApiError } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
@@ -20,8 +21,8 @@ export default function CollectionPackageDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { confirmDelete, deleteDialog, isConfirming } = useConfirmDelete();
   const [deleteError, setDeleteError] = useState<string | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ["collection-package", params.id],
@@ -29,34 +30,30 @@ export default function CollectionPackageDetailPage() {
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = async () => {
+  const handleDelete = () => {
     if (!data) {
       return;
     }
-    if (
-      !window.confirm(
-        `Delete "${data.name}"? This cannot be undone if collections are linked.`,
-      )
-    ) {
-      return;
-    }
-    setDeleteError(null);
-    setIsDeleting(true);
-    try {
-      await collectionPackagesApi.delete(data.id);
-      cacheEntityRemove(
-        queryClient,
-        ["collection-package", data.id],
-        ["collection-packages"],
-        { alsoInvalidate: [["collections"]] },
-      );
-      router.push(routes.collectionPackages.list);
-    } catch (err) {
-      const apiError = err as ApiError;
-      setDeleteError(apiError.message ?? "Unable to delete collection package.");
-    } finally {
-      setIsDeleting(false);
-    }
+
+    confirmDelete({
+      message: `Are you sure you want to delete "${data.name}"? Linked collections may be affected. This action cannot be undone.`,
+      onConfirm: async () => {
+        setDeleteError(null);
+        try {
+          await collectionPackagesApi.delete(data.id);
+          cacheEntityRemove(
+            queryClient,
+            ["collection-package", data.id],
+            ["collection-packages"],
+            { alsoInvalidate: [["collections"]] },
+          );
+          router.push(routes.collectionPackages.list);
+        } catch (err) {
+          const apiError = err as ApiError;
+          setDeleteError(apiError.message ?? "Unable to delete collection package.");
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -78,14 +75,11 @@ export default function CollectionPackageDetailPage() {
 
   return (
     <DashboardPageShell title={data.name} description="Collection package definition details.">
+      {deleteDialog}
       <PageActions backHref={routes.collectionPackages.list} className="mb-6">
         <PrimaryLink href={routes.collectionPackages.edit(data.id)}>Edit</PrimaryLink>
-        <SecondaryButton
-          variant="danger"
-          disabled={isDeleting}
-          onClick={() => void handleDelete()}
-        >
-          {isDeleting ? "Deleting..." : "Delete"}
+        <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
+          {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
       </PageActions>
       {deleteError ? <p className="mb-4 text-sm text-danger">{deleteError}</p> : null}

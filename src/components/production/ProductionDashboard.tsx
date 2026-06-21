@@ -18,6 +18,7 @@ import type {
   ProductionSummaryResponse,
   PurchasePlanningStatus,
 } from "@/lib/api/production";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { productionApi } from "@/lib/api/production";
 import { formatCount } from "@/lib/format";
 import {
@@ -28,7 +29,13 @@ import {
 import { formatCurrency, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
-function FulfillmentGroups({ groups }: { groups: FulfillmentStatusGroup[] }) {
+function FulfillmentGroups({
+  groups,
+  canViewFinancials,
+}: {
+  groups: FulfillmentStatusGroup[];
+  canViewFinancials: boolean;
+}) {
   if (groups.length === 0) {
     return <EmptyState message="No orders scheduled for this date." />;
   }
@@ -57,8 +64,10 @@ function FulfillmentGroups({ groups }: { groups: FulfillmentStatusGroup[] }) {
                   <span className="text-text-secondary">{order.customer_name}</span>
                 </div>
                 <div className="tabular-nums text-text-secondary">
-                  {formatCurrency(order.total_revenue_snapshot)} revenue ·{" "}
-                  {formatCurrency(order.total_profit_snapshot)} profit
+                  {formatCurrency(order.total_revenue_snapshot)}
+                  {canViewFinancials
+                    ? ` revenue · ${formatCurrency(order.total_profit_snapshot)} profit`
+                    : " total"}
                 </div>
               </li>
             ))}
@@ -73,10 +82,12 @@ function SummaryTab({
   summary,
   onExport,
   isExporting,
+  canViewFinancials,
 }: {
   summary: ProductionSummaryResponse;
   onExport: () => void;
   isExporting: boolean;
+  canViewFinancials: boolean;
 }) {
   return (
     <div className="space-y-6">
@@ -84,14 +95,16 @@ function SummaryTab({
         title="Order summary"
         description="Totals from order financial snapshots. Draft and cancelled orders are excluded from demand calculations."
         actions={
-          <button
-            type="button"
-            disabled={isExporting}
-            onClick={onExport}
-            className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-          >
-            {isExporting ? "Exporting…" : "Export production CSV"}
-          </button>
+          canViewFinancials ? (
+            <button
+              type="button"
+              disabled={isExporting}
+              onClick={onExport}
+              className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              {isExporting ? "Exporting…" : "Export production CSV"}
+            </button>
+          ) : null
         }
       >
         <dl className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
@@ -101,7 +114,9 @@ function SummaryTab({
             ["Products ordered", summary.order_summary.total_products_ordered],
             ["Collections ordered", summary.order_summary.total_collections_ordered],
             ["Revenue", formatCurrency(summary.order_summary.total_revenue)],
-            ["Profit", formatCurrency(summary.order_summary.total_profit)],
+            ...(canViewFinancials
+              ? [["Profit", formatCurrency(summary.order_summary.total_profit)] as const]
+              : []),
           ].map(([label, value]) => (
             <div key={String(label)}>
               <dt className="text-xs text-text-secondary">{label}</dt>
@@ -130,13 +145,17 @@ function SummaryTab({
         title="Fulfillment status"
         description={`${summary.fulfillment.total_orders} orders scheduled for this date, grouped by status.`}
       >
-        <FulfillmentGroups groups={summary.fulfillment.groups} />
+        <FulfillmentGroups
+          groups={summary.fulfillment.groups}
+          canViewFinancials={canViewFinancials}
+        />
       </SectionCard>
     </div>
   );
 }
 
 export function ProductionDashboard() {
+  const { canViewFinancials } = useAdminPermissions();
   const queryClient = useQueryClient();
   const [deliveryDate, setDeliveryDate] = useState("");
   const [showDeliveryDayBatchesOnly, setShowDeliveryDayBatchesOnly] = useState(true);
@@ -308,6 +327,7 @@ export function ProductionDashboard() {
               summary={summary}
               onExport={() => exportMutation.mutate()}
               isExporting={exportMutation.isPending}
+              canViewFinancials={canViewFinancials}
             />
           ) : null}
 
@@ -317,12 +337,20 @@ export function ProductionDashboard() {
               description="Calculated from current product recipes and aggregated demand."
             >
               <SimpleTable
-                headers={["Ingredient", "Required", "Est. cost"]}
-                rows={summary.ingredient_requirements.map((line) => [
-                  line.product_item_name,
-                  formatQuantity(line.quantity, line.unit),
-                  formatCurrency(line.estimated_cost),
-                ])}
+                headers={
+                  canViewFinancials
+                    ? ["Ingredient", "Required", "Est. cost"]
+                    : ["Ingredient", "Required"]
+                }
+                rows={summary.ingredient_requirements.map((line) =>
+                  canViewFinancials
+                    ? [
+                        line.product_item_name,
+                        formatQuantity(line.quantity, line.unit),
+                        formatCurrency(line.estimated_cost),
+                      ]
+                    : [line.product_item_name, formatQuantity(line.quantity, line.unit)],
+                )}
               />
             </SectionCard>
           ) : null}
@@ -333,13 +361,25 @@ export function ProductionDashboard() {
               description="Calculated from current collection packaging lines."
             >
               <SimpleTable
-                headers={["Item", "Type", "Required", "Est. cost"]}
-                rows={summary.packaging_requirements.map((line) => [
-                  line.product_item_name,
-                  line.item_type_name ?? "—",
-                  formatQuantity(line.quantity, line.unit),
-                  formatCurrency(line.estimated_cost),
-                ])}
+                headers={
+                  canViewFinancials
+                    ? ["Item", "Type", "Required", "Est. cost"]
+                    : ["Item", "Type", "Required"]
+                }
+                rows={summary.packaging_requirements.map((line) =>
+                  canViewFinancials
+                    ? [
+                        line.product_item_name,
+                        line.item_type_name ?? "—",
+                        formatQuantity(line.quantity, line.unit),
+                        formatCurrency(line.estimated_cost),
+                      ]
+                    : [
+                        line.product_item_name,
+                        line.item_type_name ?? "—",
+                        formatQuantity(line.quantity, line.unit),
+                      ],
+                )}
               />
             </SectionCard>
           ) : null}
@@ -420,22 +460,28 @@ export function ProductionDashboard() {
                     title="Purchase planning"
                     description="Combined ingredient and packaging demand with primary suppliers. Update status as purchasing progresses."
                     actions={
-                      <button
-                        type="button"
-                        disabled={purchaseExportMutation.isPending}
-                        onClick={() => purchaseExportMutation.mutate()}
-                        className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
-                      >
-                        {purchaseExportMutation.isPending ? "Exporting…" : "Export purchase CSV"}
-                      </button>
+                      canViewFinancials ? (
+                        <button
+                          type="button"
+                          disabled={purchaseExportMutation.isPending}
+                          onClick={() => purchaseExportMutation.mutate()}
+                          className="rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                        >
+                          {purchaseExportMutation.isPending ? "Exporting…" : "Export purchase CSV"}
+                        </button>
+                      ) : null
                     }
                   >
                     <SimpleTable
-                      headers={["Item", "Required", "Est. cost", "Supplier", "Status"]}
+                      headers={
+                        canViewFinancials
+                          ? ["Item", "Required", "Est. cost", "Supplier", "Status"]
+                          : ["Item", "Required", "Supplier", "Status"]
+                      }
                       rows={purchasePlanQuery.data.items.map((line) => [
                         line.product_item_name,
                         formatQuantity(line.quantity, line.unit),
-                        formatCurrency(line.estimated_cost),
+                        ...(canViewFinancials ? [formatCurrency(line.estimated_cost)] : []),
                         line.supplier?.supplier_name ?? (
                           <span className="text-warning">Unassigned</span>
                         ),

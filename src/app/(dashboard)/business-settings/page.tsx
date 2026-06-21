@@ -4,7 +4,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
 import { BusinessSettingsForm } from "@/components/business-settings/BusinessSettingsForm";
-import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
+import { BusinessSettingsPageShell } from "@/components/business-settings/BusinessSettingsPageShell";
 import type { ApiError } from "@/lib/api/types";
 import { businessSettingsApi } from "@/lib/api/business-settings";
 import type { BusinessSettingsFormValues } from "@/lib/validation/business-settings";
@@ -35,25 +35,22 @@ export default function BusinessSettingsPage() {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title="Business Settings" description="Loading...">
+      <BusinessSettingsPageShell>
         <div className="h-48 animate-pulse rounded-lg bg-surface-hover" />
-      </DashboardPageShell>
+      </BusinessSettingsPageShell>
     );
   }
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title="Business Settings" description="Unable to load settings">
+      <BusinessSettingsPageShell>
         <p className="text-sm text-danger">Settings could not be loaded.</p>
-      </DashboardPageShell>
+      </BusinessSettingsPageShell>
     );
   }
 
   return (
-    <DashboardPageShell
-      title="Business Settings"
-      description="Operational settings for delivery scheduling, fees, and payment options."
-    >
+    <BusinessSettingsPageShell>
       <BusinessSettingsForm
         defaultValues={data}
         submitLabel="Save settings"
@@ -61,6 +58,6 @@ export default function BusinessSettingsPage() {
         error={error}
         onSubmit={handleSubmit}
       />
-    </DashboardPageShell>
+    </BusinessSettingsPageShell>
   );
 }

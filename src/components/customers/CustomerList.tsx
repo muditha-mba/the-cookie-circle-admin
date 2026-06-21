@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -12,6 +12,8 @@ import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type {
   CustomerListItem,
@@ -20,6 +22,8 @@ import type {
 } from "@/lib/api/customers";
 import { customersApi } from "@/lib/api/customers";
 import { formatCurrency } from "@/lib/format";
+import { MARKETING_SOURCE_OPTIONS } from "@/lib/marketing-sources";
+import { createTableActionsColumn } from "@/lib/table-actions-column";
 
 const SORT_OPTIONS: SortOption[] = [
   { value: "created_at", label: "Created" },
@@ -35,6 +39,9 @@ function formatSource(source: string) {
 
 export function CustomerList() {
   const router = useRouter();
+  const queryClient = useQueryClient();
+  const { canViewFinancials, canManageRecords } = useAdminPermissions();
+  const { confirmDelete, deleteDialog } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -71,8 +78,23 @@ export function CustomerList() {
       }),
   });
 
-  const columns = useMemo<ColumnDef<CustomerListItem>[]>(
-    () => [
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => customersApi.delete(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["customers"] });
+    },
+  });
+
+  const sortOptions = useMemo(
+    () =>
+      SORT_OPTIONS.filter(
+        (option) => canViewFinancials || option.value !== "lifetime_spend",
+      ),
+    [canViewFinancials],
+  );
+
+  const columns = useMemo<ColumnDef<CustomerListItem>[]>(() => {
+    const base: ColumnDef<CustomerListItem>[] = [
       {
         header: "Name",
         accessorKey: "first_name",
@@ -91,11 +113,6 @@ export function CustomerList() {
         header: "Orders",
         accessorKey: "total_orders",
         cell: ({ row }) => row.original.total_orders,
-      },
-      {
-        header: "Lifetime spend",
-        accessorKey: "lifetime_spend",
-        cell: ({ row }) => formatCurrency(row.original.lifetime_spend),
       },
       {
         header: "Last order",
@@ -123,12 +140,36 @@ export function CustomerList() {
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
       },
-    ],
-    [],
-  );
+    ];
+
+    if (canViewFinancials) {
+      base.splice(3, 0, {
+        header: "Lifetime spend",
+        accessorKey: "lifetime_spend",
+        cell: ({ row }) => formatCurrency(row.original.lifetime_spend),
+      });
+    }
+
+    if (canManageRecords) {
+      base.push(
+        createTableActionsColumn<CustomerListItem>({
+          getViewHref: (row) => routes.customers.detail(row.id),
+          getEditHref: (row) => routes.customers.edit(row.id),
+          onDelete: (row) => deleteMutation.mutate(row.id),
+          confirmDelete,
+          deleteDisabled: deleteMutation.isPending,
+          getDeleteMessage: (row) =>
+            `Are you sure you want to delete ${row.first_name} ${row.last_name}? This action cannot be undone.`,
+        }),
+      );
+    }
+
+    return base;
+  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
 
   return (
     <div className="space-y-4">
+      {deleteDialog}
       <div className="grid gap-3 rounded-lg border border-border bg-surface p-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <label className="block text-xs font-medium text-text-secondary">Segment</label>
@@ -160,13 +201,11 @@ export function CustomerList() {
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
           >
             <option value="">All sources</option>
-            <option value="instagram">Instagram</option>
-            <option value="facebook">Facebook</option>
-            <option value="whatsapp">WhatsApp</option>
-            <option value="referral">Referral</option>
-            <option value="google">Google</option>
-            <option value="walk_in">Walk In</option>
-            <option value="other">Other</option>
+            {MARKETING_SOURCE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
           </select>
         </div>
         <div>
@@ -184,22 +223,24 @@ export function CustomerList() {
             className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
           />
         </div>
-        <div>
-          <label className="block text-xs font-medium text-text-secondary">
-            Min lifetime spend
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={minLifetimeSpend}
-            onChange={(event) => {
-              setMinLifetimeSpend(event.target.value);
-              setPage(1);
-            }}
-            className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
-          />
-        </div>
+        {canViewFinancials ? (
+          <div>
+            <label className="block text-xs font-medium text-text-secondary">
+              Min lifetime spend
+            </label>
+            <input
+              type="number"
+              min={0}
+              step="0.01"
+              value={minLifetimeSpend}
+              onChange={(event) => {
+                setMinLifetimeSpend(event.target.value);
+                setPage(1);
+              }}
+              className="mt-1 w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+            />
+          </div>
+        ) : null}
       </div>
 
       <ListToolbar
@@ -209,7 +250,7 @@ export function CustomerList() {
           setPage(1);
         }}
         sortBy={sortBy}
-        sortOptions={SORT_OPTIONS}
+        sortOptions={sortOptions}
         sortOrder={sortOrder}
         onSortByChange={setSortBy}
         onSortOrderChange={setSortOrder}

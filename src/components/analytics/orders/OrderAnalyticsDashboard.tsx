@@ -150,6 +150,15 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
     ),
   },
   {
+    accessorKey: "package_fee_revenue_snapshot",
+    header: "Package fees",
+    cell: ({ row }) => (
+      <span className="tabular-nums">
+        {formatCurrency(row.original.package_fee_revenue_snapshot)}
+      </span>
+    ),
+  },
+  {
     accessorKey: "total_revenue_snapshot",
     header: "Revenue",
     cell: ({ row }) => (
@@ -182,6 +191,20 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
     header: "Delivery fee",
     cell: ({ row }) => (
       <span className="tabular-nums">{formatCurrency(row.original.delivery_fee_snapshot)}</span>
+    ),
+  },
+  {
+    accessorKey: "delivery_cost_snapshot",
+    header: "Delivery cost",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.delivery_cost_snapshot)}</span>
+    ),
+  },
+  {
+    accessorKey: "packaging_cost_snapshot",
+    header: "Packaging cost",
+    cell: ({ row }) => (
+      <span className="tabular-nums">{formatCurrency(row.original.packaging_cost_snapshot)}</span>
     ),
   },
   {
@@ -510,6 +533,14 @@ export function OrderAnalyticsDashboard() {
                 dateRangeLabel={rangeLabel}
                 trendPercentage={kpis.revenue_from_orders.trend_percentage}
                 trendDirection={kpis.revenue_from_orders.trend_direction}
+              />
+              <AnalyticsKpiCard
+                variant="orders"
+                label="Package fee revenue"
+                value={formatCurrency(kpis.package_fee_revenue.value)}
+                dateRangeLabel={rangeLabel}
+                trendPercentage={kpis.package_fee_revenue.trend_percentage}
+                trendDirection={kpis.package_fee_revenue.trend_direction}
               />
               <AnalyticsKpiCard
                 variant="orders"
