@@ -11,12 +11,12 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCount, formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function CollectionDetailPage() {
   const params = useParams<{ id: string }>();
@@ -44,11 +44,11 @@ export default function CollectionDetailPage() {
         try {
           await collectionsApi.delete(data.id);
           cacheEntityRemove(queryClient, ["collections", data.id], ["collections"]);
+          notifyActionSuccess("Collection deleted successfully.");
           router.push(routes.collections.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete collection.");
-        }
+      notifyActionError(err, "Unable to delete collection.", setDeleteError);
+    }
       },
     });
   };

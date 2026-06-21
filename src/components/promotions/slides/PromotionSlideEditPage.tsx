@@ -9,8 +9,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { PageActions } from "@/components/data/PageActions";
 import { promotionSlidesApi } from "@/lib/api/promotion-slides";
 import type { PromotionSlideFormValues } from "@/lib/validation/promotion-slide";
-import type { ApiError } from "@/lib/api/types";
 import { routes } from "@/config/routes";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type Props = { slideId: string };
 
@@ -42,10 +42,10 @@ export function PromotionSlideEditPage({ slideId }: Props) {
         is_active: values.is_active,
       });
       queryClient.invalidateQueries({ queryKey: ["promotion-slides"] });
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.promotions.slides.list);
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Failed to update promotion slide.");
+      notifyActionError(err, "Failed to update promotion slide.", setError);
     } finally {
       setIsSubmitting(false);
     }

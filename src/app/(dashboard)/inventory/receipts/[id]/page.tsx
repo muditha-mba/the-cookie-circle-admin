@@ -11,9 +11,10 @@ import { PurchaseReceiptAttachments } from "@/components/inventory/PurchaseRecei
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { purchaseReceiptsApi } from "@/lib/api/purchase-receipts";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
+import { getErrorMessage } from "@/lib/api/error-message";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function PurchaseReceiptDetailPage() {
   const params = useParams<{ id: string }>();
@@ -29,6 +30,7 @@ export default function PurchaseReceiptDetailPage() {
   });
 
   const confirmMutation = useMutation({
+    meta: { successMessage: "Receipt confirmed and stock updated." },
     mutationFn: () => purchaseReceiptsApi.confirm(params.id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
@@ -45,9 +47,15 @@ export default function PurchaseReceiptDetailPage() {
     confirmDelete({
       message: "Delete this draft purchase receipt?",
       onConfirm: async () => {
-        await purchaseReceiptsApi.delete(data.id);
-        await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
-        router.push(routes.inventory.receipts.list);
+        setActionError(null);
+        try {
+          await purchaseReceiptsApi.delete(data.id);
+          await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
+          notifyActionSuccess("Purchase receipt deleted successfully.");
+          router.push(routes.inventory.receipts.list);
+        } catch (err) {
+          notifyActionError(err, "Unable to delete purchase receipt.", setActionError);
+        }
       },
     });
   };
@@ -75,8 +83,7 @@ export default function PurchaseReceiptDetailPage() {
         try {
           await confirmMutation.mutateAsync();
         } catch (err) {
-          const apiError = err as ApiError;
-          setActionError(apiError.message ?? "Unable to confirm receipt.");
+          setActionError(getErrorMessage(err, "Unable to confirm receipt."));
         }
       },
     });

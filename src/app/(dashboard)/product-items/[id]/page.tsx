@@ -11,10 +11,10 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCurrency, formatDateTime, formatQuantity } from "@/lib/format";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function ProductItemDetailPage() {
   const params = useParams<{ id: string }>();
@@ -40,14 +40,14 @@ export default function ProductItemDetailPage() {
         setDeleteError(null);
         try {
           await productItemsApi.delete(data.id);
+          notifyActionSuccess("Product item deleted successfully.");
           cacheEntityRemove(queryClient, ["product-item", data.id], ["product-items"], {
             alsoInvalidate: [["products"]],
           });
           router.push(routes.productItems.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete product item.");
-        }
+      notifyActionError(err, "Unable to delete product item.", setDeleteError);
+    }
       },
     });
   };

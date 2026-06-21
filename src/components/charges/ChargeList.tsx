@@ -55,6 +55,7 @@ export function ChargeList({ module }: ChargeListProps) {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Charge deleted successfully." },
     mutationFn: (id: string) => module.api.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [module.queryKey] });

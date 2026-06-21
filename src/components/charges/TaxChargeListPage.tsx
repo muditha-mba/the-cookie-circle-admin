@@ -50,6 +50,7 @@ export function TaxChargeListPage() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Tax charge deleted successfully." },
     mutationFn: (id: string) => taxChargesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [taxChargeModule.queryKey] });

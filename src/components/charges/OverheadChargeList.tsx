@@ -53,6 +53,7 @@ export function OverheadChargeList({ module, api }: OverheadChargeListProps) {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Overhead charge deleted successfully." },
     mutationFn: (id: string) => api.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [module.queryKey] });

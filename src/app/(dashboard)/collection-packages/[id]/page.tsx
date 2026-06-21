@@ -13,9 +13,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
-import type { ApiError } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function CollectionPackageDetailPage() {
   const params = useParams<{ id: string }>();
@@ -41,6 +41,7 @@ export default function CollectionPackageDetailPage() {
         setDeleteError(null);
         try {
           await collectionPackagesApi.delete(data.id);
+          notifyActionSuccess("Package deleted successfully.");
           cacheEntityRemove(
             queryClient,
             ["collection-package", data.id],
@@ -49,9 +50,8 @@ export default function CollectionPackageDetailPage() {
           );
           router.push(routes.collectionPackages.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete collection package.");
-        }
+      notifyActionError(err, "Unable to delete collection package.", setDeleteError);
+    }
       },
     });
   };

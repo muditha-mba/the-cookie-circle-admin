@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import type { OverheadModuleMeta } from "@/config/charge-modules";
 import type { OverheadChargeApi } from "@/lib/api/charge-types";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { OverheadChargeFormValues } from "@/lib/validation/charge";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type OverheadChargeNewPageProps = {
   module: OverheadModuleMeta;
@@ -34,10 +34,10 @@ export function OverheadChargeNewPage({ module, api }: OverheadChargeNewPageProp
         is_active: values.is_active,
       });
       cacheEntitySave(queryClient, [module.queryKey, created.id], [module.queryKey], created);
+      notifyActionSuccess(`${module.singular} created successfully.`);
       router.push(module.routes.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? `Unable to create ${module.singular.toLowerCase()}.`);
+      notifyActionError(err, `Unable to create ${module.singular.toLowerCase()}.`, setError);
     } finally {
       setIsSubmitting(false);
     }

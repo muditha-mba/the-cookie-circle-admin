@@ -6,8 +6,8 @@ import { useEffect, useMemo, useState } from "react";
 
 import type { PurchaseReceiptAttachment } from "@/lib/api/purchase-receipts";
 import { purchaseReceiptsApi } from "@/lib/api/purchase-receipts";
-import type { ApiError } from "@/lib/api/types";
 import { getAccessToken } from "@/lib/auth/token-storage";
+import { notifyActionError, notifyActionSuccess, notifyActionWarning } from "@/lib/forms/feedback";
 import {
   MAX_FILES,
   uploadPurchaseReceiptAttachment,
@@ -204,6 +204,7 @@ export function PurchaseReceiptAttachments({
   const canAddMore = totalCount < MAX_FILES && Boolean(receiptId || onPendingFilesChange);
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Attachment removed successfully." },
     mutationFn: (attachmentId: string) =>
       purchaseReceiptsApi.deleteAttachment(receiptId!, attachmentId),
     onSuccess: async () => {
@@ -222,7 +223,7 @@ export function PurchaseReceiptAttachments({
       receiptId ? selected : combined.slice(0, MAX_FILES - attachments.length),
     );
     if (validationError) {
-      setError(validationError);
+      notifyActionWarning(validationError, setError);
       return;
     }
 
@@ -232,7 +233,7 @@ export function PurchaseReceiptAttachments({
     }
 
     if (attachments.length + selected.length > MAX_FILES) {
-      setError(`You can attach up to ${MAX_FILES} files per receipt.`);
+      notifyActionWarning(`You can attach up to ${MAX_FILES} files per receipt.`, setError);
       return;
     }
 
@@ -243,11 +244,13 @@ export function PurchaseReceiptAttachments({
       }
       await queryClient.invalidateQueries({ queryKey: ["purchase-receipts", receiptId] });
       await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
-    } catch (err) {
-      const apiError = err as ApiError;
-      setError(
-        apiError.message ?? (err instanceof Error ? err.message : "Unable to upload receipt files."),
+      notifyActionSuccess(
+        selected.length === 1
+          ? "File uploaded successfully."
+          : `${selected.length} files uploaded successfully.`,
       );
+    } catch (err) {
+      notifyActionError(err, "Unable to upload receipt files.", setError);
     } finally {
       setIsUploading(false);
     }

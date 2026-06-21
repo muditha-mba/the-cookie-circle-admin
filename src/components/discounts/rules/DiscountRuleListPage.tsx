@@ -53,6 +53,7 @@ export function DiscountRuleListPage() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Discount rule deleted successfully." },
     mutationFn: (id: string) => discountRulesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });

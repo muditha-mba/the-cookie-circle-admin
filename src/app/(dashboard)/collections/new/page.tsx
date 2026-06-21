@@ -8,10 +8,10 @@ import { CollectionForm } from "@/components/collections/CollectionForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { CollectionFormValues } from "@/lib/validation/collection-catalog";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function NewCollectionPage() {
   const router = useRouter();
@@ -35,10 +35,10 @@ export default function NewCollectionPage() {
         item_lines: values.item_lines,
       });
       cacheEntitySave(queryClient, ["collections", created.id], ["collections"], created);
+      notifyActionSuccess("Collection created successfully.");
       router.push(routes.collections.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create collection.");
+      notifyActionError(err, "Unable to create collection.", setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -12,10 +12,10 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
 import { formatChargeApplicability } from "@/lib/charge-applicability";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type ChargeDetailPageProps = {
   moduleId: ChargeModuleId;
@@ -51,8 +51,7 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
           });
           router.push(module.routes.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? `Unable to delete ${module.singular.toLowerCase()}.`);
+          notifyActionError(err, `Unable to delete ${module.singular.toLowerCase()}.`, setDeleteError);
         }
       },
     });

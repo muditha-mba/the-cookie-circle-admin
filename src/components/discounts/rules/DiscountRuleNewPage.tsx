@@ -9,8 +9,8 @@ import { PageActions } from "@/components/data/PageActions";
 import Link from "next/link";
 import { discountRulesApi } from "@/lib/api/discount-rules";
 import type { DiscountRuleFormValues } from "@/lib/validation/discount-rule";
-import type { ApiError } from "@/lib/api/types";
 import { routes } from "@/config/routes";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export function DiscountRuleNewPage() {
   const router = useRouter();
@@ -29,10 +29,10 @@ export function DiscountRuleNewPage() {
         priority: values.priority,
         is_active: values.is_active,
       });
+      notifyActionSuccess("Discount rule created successfully.");
       router.push(routes.discounts.rules.detail(rule.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Failed to create discount rule.");
+      notifyActionError(err, "Failed to create discount rule.", setError);
     } finally {
       setIsSubmitting(false);
     }

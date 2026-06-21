@@ -12,9 +12,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
-import type { ApiError } from "@/lib/api/types";
 import { formatCurrency, formatDateTime } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function DeliveryAreaDetailPage() {
   const params = useParams<{ id: string }>();
@@ -41,11 +41,11 @@ export default function DeliveryAreaDetailPage() {
         try {
           await deliveryAreasApi.delete(data.id);
           cacheEntityRemove(queryClient, ["delivery-areas", data.id], ["delivery-areas"]);
+          notifyActionSuccess("Delivery area deleted successfully.");
           router.push(routes.deliveryAreas.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete delivery area.");
-        }
+      notifyActionError(err, "Unable to delete delivery area.", setDeleteError);
+    }
       },
     });
   };

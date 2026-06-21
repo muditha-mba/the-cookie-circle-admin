@@ -8,11 +8,11 @@ import { OrderForm } from "@/components/orders/OrderForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import type { OrderCollectionLine } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
 import type { CollectionSearchOption } from "@/components/orders/CollectionSearchSelect";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 import {
   toOrderDeliveryPayload,
   toValidCollectionLines,
@@ -65,10 +65,10 @@ export default function EditOrderPage() {
         ...toOrderDeliveryPayload(values),
       });
       cacheEntitySave(queryClient, ["orders", params.id], ["orders"], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.orders.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update order.");
+      notifyActionError(err, "Unable to update order.", setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -9,8 +9,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { PageActions } from "@/components/data/PageActions";
 import { discountRulesApi } from "@/lib/api/discount-rules";
 import type { DiscountRuleFormValues } from "@/lib/validation/discount-rule";
-import type { ApiError } from "@/lib/api/types";
 import { routes } from "@/config/routes";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type Props = { ruleId: string };
 
@@ -36,10 +36,10 @@ export function DiscountRuleEditPage({ ruleId }: Props) {
         priority: values.priority,
         is_active: values.is_active,
       });
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.discounts.rules.detail(ruleId));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Failed to update discount rule.");
+      notifyActionError(err, "Failed to update discount rule.", setError);
     } finally {
       setIsSubmitting(false);
     }

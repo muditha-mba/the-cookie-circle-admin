@@ -8,8 +8,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { PageActions } from "@/components/data/PageActions";
 import { promotionSlidesApi } from "@/lib/api/promotion-slides";
 import type { PromotionSlideFormValues } from "@/lib/validation/promotion-slide";
-import type { ApiError } from "@/lib/api/types";
 import { routes } from "@/config/routes";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export function PromotionSlideNewPage() {
   const router = useRouter();
@@ -31,10 +31,10 @@ export function PromotionSlideNewPage() {
         ends_at: values.ends_at || null,
         is_active: values.is_active,
       });
+      notifyActionSuccess("Promotion slide created successfully.");
       router.push(routes.promotions.slides.list);
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Failed to create promotion slide.");
+      notifyActionError(err, "Failed to create promotion slide.", setError);
     } finally {
       setIsSubmitting(false);
     }

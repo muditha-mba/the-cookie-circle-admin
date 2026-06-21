@@ -51,6 +51,7 @@ export function CollectionPackageList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Package deleted successfully." },
     mutationFn: (id: string) => collectionPackagesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collection-packages"] });

@@ -48,6 +48,7 @@ export function SupplierList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Supplier deleted successfully." },
     mutationFn: (id: string) => suppliersApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["suppliers"] });

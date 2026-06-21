@@ -20,6 +20,7 @@ import type { BillEntry, OverheadChargeApi } from "@/lib/api/charge-types";
 import { formatCurrency, formatDateTime, formatYearMonth } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import type { BillEntryFormValues } from "@/lib/validation/charge";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type OverheadChargeDetailPageProps = {
   module: OverheadModuleMeta;
@@ -42,10 +43,12 @@ export function OverheadChargeDetailPage({ module, api }: OverheadChargeDetailPa
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Overhead charge deleted successfully." },
     mutationFn: () => api.delete(params.id),
   });
 
   const addBillMutation = useMutation({
+    meta: { successMessage: "Bill entry added successfully." },
     mutationFn: (payload: BillEntryFormValues) =>
       api.addBillEntry(params.id, {
         year: payload.year,
@@ -64,6 +67,7 @@ export function OverheadChargeDetailPage({ module, api }: OverheadChargeDetailPa
   });
 
   const deleteBillMutation = useMutation({
+    meta: { successMessage: "Bill entry removed successfully." },
     mutationFn: (entryId: string) => api.deleteBillEntry(params.id, entryId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [module.queryKey, params.id] });
@@ -78,11 +82,11 @@ export function OverheadChargeDetailPage({ module, api }: OverheadChargeDetailPa
         setDeleteError(null);
         try {
           await deleteMutation.mutateAsync();
+          notifyActionSuccess(`${module.singular} deleted successfully.`);
           cacheEntityRemove(queryClient, [module.queryKey, data.id], [module.queryKey]);
           router.push(module.routes.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? `Unable to delete ${module.singular.toLowerCase()}.`);
+          notifyActionError(err, `Unable to delete ${module.singular.toLowerCase()}.`, setDeleteError);
         }
       },
     });

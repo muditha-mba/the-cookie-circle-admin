@@ -49,6 +49,7 @@ export function PurchaseReceiptList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Purchase receipt deleted successfully." },
     mutationFn: (id: string) => purchaseReceiptsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });

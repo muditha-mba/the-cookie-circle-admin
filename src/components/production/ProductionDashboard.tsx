@@ -193,14 +193,17 @@ export function ProductionDashboard() {
   });
 
   const exportMutation = useMutation({
+    meta: { successMessage: "Production CSV exported successfully." },
     mutationFn: () => productionApi.exportCsv(deliveryDate),
   });
 
   const purchaseExportMutation = useMutation({
+    meta: { successMessage: "Purchase plan CSV exported successfully." },
     mutationFn: () => productionApi.exportPurchaseCsv(deliveryDate),
   });
 
   const batchUpdateMutation = useMutation({
+    meta: { successMessage: "Production batch updated successfully." },
     mutationFn: (payload: { batchId: string; status?: ProductionBatchStatus; notes?: string | null }) =>
       productionApi.updatePlanningBatch(payload.batchId, {
         status: payload.status,
@@ -212,6 +215,7 @@ export function ProductionDashboard() {
   });
 
   const purchaseStatusMutation = useMutation({
+    meta: { successMessage: "Purchase status updated successfully." },
     mutationFn: (payload: {
       product_item_id: string;
       purchase_status: PurchasePlanningStatus;

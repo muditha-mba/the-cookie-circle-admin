@@ -8,10 +8,10 @@ import { CollectionForm } from "@/components/collections/CollectionForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { collectionsApi } from "@/lib/api/collections";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { CollectionFormValues } from "@/lib/validation/collection-catalog";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function EditCollectionPage() {
   const params = useParams<{ id: string }>();
@@ -42,10 +42,10 @@ export default function EditCollectionPage() {
         item_lines: values.item_lines,
       });
       cacheEntitySave(queryClient, ["collections", params.id], ["collections"], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.collections.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update collection.");
+      notifyActionError(err, "Unable to update collection.", setError);
     } finally {
       setIsSubmitting(false);
     }

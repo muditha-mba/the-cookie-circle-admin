@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import type { OverheadModuleMeta } from "@/config/charge-modules";
 import type { OverheadChargeApi } from "@/lib/api/charge-types";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { OverheadChargeFormValues } from "@/lib/validation/charge";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type OverheadChargeEditPageProps = {
   module: OverheadModuleMeta;
@@ -41,10 +41,10 @@ export function OverheadChargeEditPage({ module, api }: OverheadChargeEditPagePr
         is_active: values.is_active,
       });
       cacheEntitySave(queryClient, [module.queryKey, updated.id], [module.queryKey], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(module.routes.detail(updated.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? `Unable to update ${module.singular.toLowerCase()}.`);
+      notifyActionError(err, `Unable to update ${module.singular.toLowerCase()}.`, setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -16,6 +16,7 @@ export function SharedMemoriesSectionToggle() {
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: "Shared memories section visibility updated." },
     mutationFn: (section_enabled: boolean) =>
       sharedMemoriesApi.updateSectionSettings(section_enabled),
     onSuccess: (updated) => {

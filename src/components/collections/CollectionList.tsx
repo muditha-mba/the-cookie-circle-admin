@@ -73,6 +73,7 @@ export function CollectionList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Collection deleted successfully." },
     mutationFn: (id: string) => collectionsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["collections"] });

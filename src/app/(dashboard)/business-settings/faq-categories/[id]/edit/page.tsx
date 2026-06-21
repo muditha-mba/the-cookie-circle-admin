@@ -23,6 +23,7 @@ export default function EditFaqCategoryPage() {
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: "Changes saved successfully." },
     mutationFn: (values: FaqCategoryFormValues) =>
       faqCategoriesApi.update(params.id, values),
     onSuccess: () => {

@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { DeliveryAreaFormValues } from "@/lib/validation/delivery-area";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 function toPayload(values: DeliveryAreaFormValues) {
   return {
@@ -38,10 +38,10 @@ export default function NewDeliveryAreaPage() {
     try {
       const created = await deliveryAreasApi.create(toPayload(values));
       cacheEntitySave(queryClient, ["delivery-areas", created.id], ["delivery-areas"], created);
+      notifyActionSuccess("Delivery area created successfully.");
       router.push(routes.deliveryAreas.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create delivery area.");
+      notifyActionError(err, "Unable to create delivery area.", setError);
     } finally {
       setIsSubmitting(false);
     }

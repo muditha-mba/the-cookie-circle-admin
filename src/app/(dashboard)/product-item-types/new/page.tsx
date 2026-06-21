@@ -8,10 +8,10 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductItemTypeForm } from "@/components/product-item-types/ProductItemTypeForm";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemTypeFormValues } from "@/lib/validation/product";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function NewProductItemTypePage() {
   const router = useRouter();
@@ -35,10 +35,10 @@ export default function NewProductItemTypePage() {
         created,
         { alsoInvalidate: [["product-item-types", "all"]] },
       );
+      notifyActionSuccess("Product item type created successfully.");
       router.push(routes.productItemTypes.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create product item type.");
+      notifyActionError(err, "Unable to create product item type.", setError);
     } finally {
       setIsSubmitting(false);
     }

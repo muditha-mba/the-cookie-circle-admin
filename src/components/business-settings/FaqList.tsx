@@ -29,6 +29,7 @@ export function FaqList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "FAQ deleted successfully." },
     mutationFn: (id: string) => faqsApi.delete(id),
     onSuccess: () => {
       setActionError(null);

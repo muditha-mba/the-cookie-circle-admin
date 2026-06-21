@@ -28,6 +28,7 @@ export default function NewFaqPage() {
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: "FAQ created successfully." },
     mutationFn: (values: FaqFormValues) => faqsApi.create(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["faqs"] });

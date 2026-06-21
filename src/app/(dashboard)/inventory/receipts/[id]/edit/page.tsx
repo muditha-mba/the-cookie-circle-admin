@@ -9,11 +9,11 @@ import { PurchaseReceiptForm } from "@/components/inventory/PurchaseReceiptForm"
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { purchaseReceiptsApi } from "@/lib/api/purchase-receipts";
 import { suppliersApi } from "@/lib/api/suppliers";
 import type { PurchaseReceiptFormValues } from "@/lib/validation/inventory";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 function toPayload(values: PurchaseReceiptFormValues) {
   return {
@@ -65,10 +65,10 @@ export default function EditPurchaseReceiptPage() {
     try {
       await purchaseReceiptsApi.update(params.id, toPayload(values));
       await queryClient.invalidateQueries({ queryKey: ["purchase-receipts"] });
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.inventory.receipts.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update purchase receipt.");
+      notifyActionError(err, "Unable to update purchase receipt.", setError);
     } finally {
       setIsSubmitting(false);
     }

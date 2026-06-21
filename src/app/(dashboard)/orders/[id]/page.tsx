@@ -9,9 +9,9 @@ import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/Pag
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { ordersApi } from "@/lib/api/orders";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function OrderDetailPage() {
   const params = useParams<{ id: string }>();
@@ -38,11 +38,11 @@ export default function OrderDetailPage() {
         try {
           await ordersApi.delete(data.id);
           cacheEntityRemove(queryClient, ["orders", data.id], ["orders"]);
+          notifyActionSuccess("Order deleted successfully.");
           router.push(routes.orders.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete order.");
-        }
+      notifyActionError(err, "Unable to delete order.", setDeleteError);
+    }
       },
     });
   };

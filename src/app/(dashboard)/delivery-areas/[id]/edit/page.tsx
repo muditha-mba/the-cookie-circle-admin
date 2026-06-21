@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { deliveryAreasApi } from "@/lib/api/delivery-areas";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { DeliveryAreaFormValues } from "@/lib/validation/delivery-area";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 function toPayload(values: DeliveryAreaFormValues) {
   return {
@@ -45,10 +45,10 @@ export default function EditDeliveryAreaPage() {
     try {
       const updated = await deliveryAreasApi.update(params.id, toPayload(values));
       cacheEntitySave(queryClient, ["delivery-areas", params.id], ["delivery-areas"], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.deliveryAreas.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update delivery area.");
+      notifyActionError(err, "Unable to update delivery area.", setError);
     } finally {
       setIsSubmitting(false);
     }

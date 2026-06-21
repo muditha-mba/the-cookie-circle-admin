@@ -22,6 +22,7 @@ export default function NewSharedMemoryPage() {
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: "Shared memory created successfully." },
     mutationFn: (values: SharedMemoryFormValues) => sharedMemoriesApi.create(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shared-memories"] });

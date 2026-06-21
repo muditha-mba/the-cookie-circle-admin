@@ -193,6 +193,7 @@ function NotesPanel({ customerId }: { customerId: string }) {
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: "Note added successfully." },
     mutationFn: () => customersApi.createNote(customerId, note),
     onSuccess: () => {
       setNote("");
@@ -201,6 +202,7 @@ function NotesPanel({ customerId }: { customerId: string }) {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Note deleted successfully." },
     mutationFn: (noteId: string) => customersApi.deleteNote(customerId, noteId),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["customer-notes", customerId] });
@@ -282,6 +284,7 @@ function CommunicationsPanel({ customerId }: { customerId: string }) {
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: "Communication logged successfully." },
     mutationFn: () =>
       customersApi.createCommunication(customerId, {
         communication_type: communicationType,

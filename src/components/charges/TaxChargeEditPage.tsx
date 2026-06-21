@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { taxChargeModule } from "@/config/charge-modules";
 import { taxChargesApi } from "@/lib/api/tax-charges";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { TaxChargeFormValues } from "@/lib/validation/charge";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export function TaxChargeEditPage() {
   const params = useParams<{ id: string }>();
@@ -38,10 +38,10 @@ export function TaxChargeEditPage() {
         is_active: values.is_active,
       });
       cacheEntitySave(queryClient, [taxChargeModule.queryKey, params.id], [taxChargeModule.queryKey], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(taxChargeModule.routes.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update tax charge.");
+      notifyActionError(err, "Unable to update tax charge.", setError);
     } finally {
       setIsSubmitting(false);
     }

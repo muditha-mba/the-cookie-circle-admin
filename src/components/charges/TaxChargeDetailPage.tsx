@@ -12,9 +12,10 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { taxChargeModule } from "@/config/charge-modules";
 import { taxChargesApi } from "@/lib/api/tax-charges";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { getErrorMessage } from "@/lib/api/error-message";
+import { notifyActionSuccess } from "@/lib/forms/feedback";
 
 export function TaxChargeDetailPage() {
   const params = useParams<{ id: string }>();
@@ -30,6 +31,7 @@ export function TaxChargeDetailPage() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Tax charge deleted successfully." },
     mutationFn: () => taxChargesApi.delete(params.id),
   });
 
@@ -44,8 +46,7 @@ export function TaxChargeDetailPage() {
           cacheEntityRemove(queryClient, [taxChargeModule.queryKey, data.id], [taxChargeModule.queryKey]);
           router.push(taxChargeModule.routes.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete tax charge.");
+          setDeleteError(getErrorMessage(err, "Unable to delete tax charge."));
         }
       },
     });

@@ -52,6 +52,7 @@ export function PromotionSlideListPage() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Promotion slide deleted successfully." },
     mutationFn: (id: string) => promotionSlidesApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QUERY_KEY] });

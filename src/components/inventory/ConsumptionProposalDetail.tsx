@@ -12,9 +12,9 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import type { ConsumptionProposalLine } from "@/lib/api/consumption-proposals";
 import { consumptionProposalsApi } from "@/lib/api/consumption-proposals";
-import type { ApiError } from "@/lib/api/types";
 import { formatDate, formatDateTime, formatQuantity } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { getErrorMessage } from "@/lib/api/error-message";
 
 type ConsumptionProposalDetailProps = {
   proposalId: string;
@@ -60,6 +60,7 @@ export function ConsumptionProposalDetail({ proposalId }: ConsumptionProposalDet
   };
 
   const saveMutation = useMutation({
+    meta: { successMessage: "Changes saved successfully." },
     mutationFn: () =>
       consumptionProposalsApi.update(proposalId, {
         notes: notes || null,
@@ -75,6 +76,7 @@ export function ConsumptionProposalDetail({ proposalId }: ConsumptionProposalDet
   });
 
   const approveMutation = useMutation({
+    meta: { successMessage: "Proposal approved successfully." },
     mutationFn: async () => {
       await consumptionProposalsApi.update(proposalId, {
         notes: notes || null,
@@ -92,6 +94,7 @@ export function ConsumptionProposalDetail({ proposalId }: ConsumptionProposalDet
   });
 
   const dismissMutation = useMutation({
+    meta: { successMessage: "Proposal dismissed successfully." },
     mutationFn: () => consumptionProposalsApi.dismiss(proposalId),
     onSuccess: async () => {
       await invalidateAll();
@@ -119,8 +122,7 @@ export function ConsumptionProposalDetail({ proposalId }: ConsumptionProposalDet
         await dismissMutation.mutateAsync();
       }
     } catch (err) {
-      const apiError = err as ApiError;
-      setActionError(apiError.message ?? "Unable to complete this action.");
+      setActionError(getErrorMessage(err, "Unable to complete this action."));
     }
   };
 

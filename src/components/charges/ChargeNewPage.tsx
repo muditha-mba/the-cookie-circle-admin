@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import type { ChargeModuleId } from "@/config/charge-modules";
 import { getChargeModule } from "@/config/charge-modules.client";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ChargeFormValues } from "@/lib/validation/charge";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 type ChargeNewPageProps = {
   moduleId: ChargeModuleId;
@@ -39,10 +39,10 @@ export function ChargeNewPage({ moduleId }: ChargeNewPageProps) {
       cacheEntitySave(queryClient, [module.queryKey, created.id], [module.queryKey], created, {
         alsoInvalidate: [["products"], ["collections"]],
       });
+      notifyActionSuccess(`${module.singular} created successfully.`);
       router.push(module.routes.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? `Unable to create ${module.singular.toLowerCase()}.`);
+      notifyActionError(err, `Unable to create ${module.singular.toLowerCase()}.`, setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -8,10 +8,10 @@ import { CustomerForm } from "@/components/customers/CustomerForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { customersApi } from "@/lib/api/customers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { CustomerFormValues } from "@/lib/validation/customer";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -40,10 +40,10 @@ export default function NewCustomerPage() {
         user_id: values.user_id || null,
       });
       cacheEntitySave(queryClient, ["customers", created.id], ["customers"], created);
+      notifyActionSuccess("Customer created successfully.");
       router.push(routes.customers.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create customer.");
+      notifyActionError(err, "Unable to create customer.", setError);
     } finally {
       setIsSubmitting(false);
     }

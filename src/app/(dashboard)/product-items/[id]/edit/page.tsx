@@ -8,12 +8,12 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductItemForm } from "@/components/product-items/ProductItemForm";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function EditProductItemPage() {
   const params = useParams<{ id: string }>();
@@ -63,10 +63,10 @@ export default function EditProductItemPage() {
         updated,
         { alsoInvalidate: [["products"], ["collections"]] },
       );
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.productItems.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update product item.");
+      notifyActionError(err, "Unable to update product item.", setError);
     } finally {
       setIsSubmitting(false);
     }

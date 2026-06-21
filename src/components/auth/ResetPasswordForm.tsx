@@ -10,9 +10,10 @@ import { z } from "zod";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { routes } from "@/config/routes";
 import { authApi } from "@/lib/api/auth";
-import type { ApiError } from "@/lib/api/types";
 import { passwordSchema } from "@/lib/validation/auth";
 import { cn } from "@/lib/utils";
+import { appToast } from "@/lib/toast";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 const resetPasswordSchema = z
   .object({
@@ -50,16 +51,17 @@ export function ResetPasswordForm() {
   const onSubmit = handleSubmit(async (values) => {
     if (!token) {
       setError("Reset token is missing or invalid.");
+      appToast.warning("Reset token is missing or invalid.");
       return;
     }
 
     setError(null);
     try {
       await authApi.resetPassword({ token, password: values.password });
+      notifyActionSuccess("Password reset successfully. You can sign in now.");
       router.replace(routes.auth.login);
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to reset password.");
+      notifyActionError(err, "Unable to reset password.", setError);
     }
   });
 

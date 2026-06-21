@@ -16,6 +16,7 @@ export function FaqsSectionToggle() {
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: "FAQ section visibility updated." },
     mutationFn: (section_enabled: boolean) =>
       faqsApi.updateSectionSettings(section_enabled),
     onSuccess: (updated) => {
