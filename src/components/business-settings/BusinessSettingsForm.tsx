@@ -248,7 +248,7 @@ export function BusinessSettingsForm({
 
       {error && <p className="text-sm text-danger">{error}</p>}
 
-      <PrimaryButton type="submit" loading={isSubmitting}>
+      <PrimaryButton type="submit" disabled={isSubmitting}>
         {submitLabel}
       </PrimaryButton>
     </form>
