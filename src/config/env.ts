@@ -1,18 +1,26 @@
 /**
  * Validated environment configuration for the Admin Panel.
  * Only NEXT_PUBLIC_* variables are available in the browser.
+ *
+ * IMPORTANT: use direct `process.env.NEXT_PUBLIC_*` access so Next.js can
+ * inline values into the client bundle at build time. Dynamic lookups like
+ * `process.env[name]` are NOT replaced and break Vercel deployments.
  */
 
 export type AppEnv = "development" | "staging" | "production";
 
 const APP_ENV_VALUES: AppEnv[] = ["development", "staging", "production"];
 
-function requireEnv(name: string, fallback?: string): string {
-  const value = process.env[name] ?? fallback;
-  if (!value) {
+function resolveEnv(
+  value: string | undefined,
+  name: string,
+  fallback?: string,
+): string {
+  const resolved = (value ?? fallback)?.trim();
+  if (!resolved) {
     throw new Error(`Missing required environment variable: ${name}`);
   }
-  return value;
+  return resolved;
 }
 
 function parseAppEnv(value: string | undefined): AppEnv {
@@ -24,11 +32,13 @@ function parseAppEnv(value: string | undefined): AppEnv {
 
 const appEnv = parseAppEnv(process.env.NEXT_PUBLIC_APP_ENV);
 
-const apiUrl = requireEnv(
+const apiUrl = resolveEnv(
+  process.env.NEXT_PUBLIC_API_URL,
   "NEXT_PUBLIC_API_URL",
   appEnv === "development" ? "http://localhost:8000" : undefined,
 );
-const appUrl = requireEnv(
+const appUrl = resolveEnv(
+  process.env.NEXT_PUBLIC_APP_URL,
   "NEXT_PUBLIC_APP_URL",
   appEnv === "development" ? "http://localhost:3001" : undefined,
 );
@@ -44,7 +54,11 @@ if (
 
 export const env = {
   appEnv,
-  appName: requireEnv("NEXT_PUBLIC_APP_NAME", "The Cookie Circle Admin"),
+  appName: resolveEnv(
+    process.env.NEXT_PUBLIC_APP_NAME,
+    "NEXT_PUBLIC_APP_NAME",
+    "The Cookie Circle Admin",
+  ),
   appUrl,
   apiUrl,
   isDevelopment: appEnv === "development",
