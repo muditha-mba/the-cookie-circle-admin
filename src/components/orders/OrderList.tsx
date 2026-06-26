@@ -67,6 +67,7 @@ export function OrderList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Order deleted successfully." },
     mutationFn: (id: string) => ordersApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["orders"] });

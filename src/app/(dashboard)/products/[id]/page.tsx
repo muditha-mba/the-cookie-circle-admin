@@ -13,10 +13,10 @@ import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productsApi } from "@/lib/api/products";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
 import { formatCurrency, formatDateTime } from "@/lib/format";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function ProductDetailPage() {
   const params = useParams<{ id: string }>();
@@ -44,11 +44,11 @@ export default function ProductDetailPage() {
         try {
           await productsApi.delete(data.id);
           cacheEntityRemove(queryClient, ["products", data.id], ["products"]);
+          notifyActionSuccess("Product deleted successfully.");
           router.push(routes.products.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete product.");
-        }
+      notifyActionError(err, "Unable to delete product.", setDeleteError);
+    }
       },
     });
   };

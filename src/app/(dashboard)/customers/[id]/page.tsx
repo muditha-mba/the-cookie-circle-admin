@@ -9,9 +9,9 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { PageActions, SecondaryButton } from "@/components/data/PageActions";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { customersApi } from "@/lib/api/customers";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function CustomerDetailPage() {
   const params = useParams<{ id: string }>();
@@ -38,11 +38,11 @@ export default function CustomerDetailPage() {
         try {
           await customersApi.delete(data.id);
           cacheEntityRemove(queryClient, ["customers", data.id], ["customers"]);
+          notifyActionSuccess("Customer deleted successfully.");
           router.push(routes.customers.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete customer.");
-        }
+      notifyActionError(err, "Unable to delete customer.", setDeleteError);
+    }
       },
     });
   };

@@ -1,3 +1,3 @@
-import { createChargeApi } from "@/lib/api/charge-types";
+import { createOverheadChargeApi } from "@/lib/api/charge-types";
 
-export const utilityChargesApi = createChargeApi("/api/v1/utility-charges");
+export const utilityChargesApi = createOverheadChargeApi("/api/v1/utility-charges");

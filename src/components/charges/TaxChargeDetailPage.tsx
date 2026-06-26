@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { useState } from "react";
 
@@ -9,20 +9,15 @@ import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import type { ChargeModuleId } from "@/config/charge-modules";
-import { getChargeModule } from "@/config/charge-modules.client";
+import { taxChargeModule } from "@/config/charge-modules";
+import { taxChargesApi } from "@/lib/api/tax-charges";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
-import type { ApiError } from "@/lib/api/types";
 import { formatChargeAmount, formatDateTime } from "@/lib/format";
-import { formatChargeApplicability } from "@/lib/charge-applicability";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { getErrorMessage } from "@/lib/api/error-message";
+import { notifyActionSuccess } from "@/lib/forms/feedback";
 
-type ChargeDetailPageProps = {
-  moduleId: ChargeModuleId;
-};
-
-export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
-  const module = getChargeModule(moduleId);
+export function TaxChargeDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const queryClient = useQueryClient();
@@ -30,29 +25,28 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const { data, isLoading, isError } = useQuery({
-    queryKey: [module.queryKey, params.id],
-    queryFn: () => module.api.get(params.id),
+    queryKey: [taxChargeModule.queryKey, params.id],
+    queryFn: () => taxChargesApi.get(params.id),
     enabled: Boolean(params.id),
   });
 
-  const handleDelete = () => {
-    if (!data) {
-      return;
-    }
+  const deleteMutation = useMutation({
+    meta: { successMessage: "Tax charge deleted successfully." },
+    mutationFn: () => taxChargesApi.delete(params.id),
+  });
 
+  const handleDelete = () => {
+    if (!data) return;
     confirmDelete({
-      message: `Are you sure you want to delete "${data.name}"? This action cannot be undone.`,
+      message: `Are you sure you want to delete "${data.name}"? This tax will no longer be applied to new orders.`,
       onConfirm: async () => {
         setDeleteError(null);
         try {
-          await module.api.delete(data.id);
-          cacheEntityRemove(queryClient, [module.queryKey, data.id], [module.queryKey], {
-            alsoInvalidate: [["products"], ["collections"]],
-          });
-          router.push(module.routes.list);
+          await deleteMutation.mutateAsync();
+          cacheEntityRemove(queryClient, [taxChargeModule.queryKey, data.id], [taxChargeModule.queryKey]);
+          router.push(taxChargeModule.routes.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? `Unable to delete ${module.singular.toLowerCase()}.`);
+          setDeleteError(getErrorMessage(err, "Unable to delete tax charge."));
         }
       },
     });
@@ -60,7 +54,7 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title={module.singular} description="Loading...">
+      <DashboardPageShell title="Tax Charge" description="Loading...">
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
       </DashboardPageShell>
     );
@@ -68,18 +62,18 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title={module.singular} description="Not found">
-        <p className="text-sm text-danger">{module.singular} not found.</p>
-        <PageActions backHref={module.routes.list} className="mt-6" />
+      <DashboardPageShell title="Tax Charge" description="Not found">
+        <p className="text-sm text-danger">Tax charge not found.</p>
+        <PageActions backHref={taxChargeModule.routes.list} className="mt-6" />
       </DashboardPageShell>
     );
   }
 
   return (
-    <DashboardPageShell title={data.name} description={`${module.singular} details.`}>
+    <DashboardPageShell title={data.name} description="Tax charge details.">
       {deleteDialog}
-      <PageActions backHref={module.routes.list} className="mb-6">
-        <PrimaryLink href={module.routes.edit(data.id)}>Edit</PrimaryLink>
+      <PageActions backHref={taxChargeModule.routes.list} className="mb-6">
+        <PrimaryLink href={taxChargeModule.routes.edit(data.id)}>Edit</PrimaryLink>
         <SecondaryButton variant="danger" disabled={isConfirming} onClick={handleDelete}>
           {isConfirming ? "Deleting..." : "Delete"}
         </SecondaryButton>
@@ -89,7 +83,10 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
 
       <DetailMetadataCard>
         <DetailField label="Name" value={data.name} />
-        <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
+        <DetailField
+          label="Status"
+          value={<StatusBadge active={data.is_active} />}
+        />
         <DetailField
           label="Charge type"
           value={<span className="capitalize">{data.charge_type}</span>}
@@ -97,10 +94,6 @@ export function ChargeDetailPage({ moduleId }: ChargeDetailPageProps) {
         <DetailField
           label="Amount"
           value={formatChargeAmount(data.amount, data.charge_type)}
-        />
-        <DetailField
-          label="Applicability"
-          value={formatChargeApplicability(data.applicability)}
         />
         <DetailField label="Created" value={formatDateTime(data.created_at)} />
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />

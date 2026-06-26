@@ -19,6 +19,7 @@ import type {
   PurchasePlanningStatus,
 } from "@/lib/api/production";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { consumptionProposalsApi } from "@/lib/api/consumption-proposals";
 import { productionApi } from "@/lib/api/production";
 import { formatCount } from "@/lib/format";
 import {
@@ -155,7 +156,7 @@ function SummaryTab({
 }
 
 export function ProductionDashboard() {
-  const { canViewFinancials } = useAdminPermissions();
+  const { canViewFinancials, canManageFinancialRecords } = useAdminPermissions();
   const queryClient = useQueryClient();
   const [deliveryDate, setDeliveryDate] = useState("");
   const [showDeliveryDayBatchesOnly, setShowDeliveryDayBatchesOnly] = useState(true);
@@ -179,15 +180,30 @@ export function ProductionDashboard() {
     enabled: Boolean(deliveryDate) && activeTab === "purchase",
   });
 
+  const pendingConsumptionQuery = useQuery({
+    queryKey: ["consumption-proposals", "by-date", deliveryDate],
+    queryFn: () => consumptionProposalsApi.getPendingForDate(deliveryDate),
+    enabled: Boolean(deliveryDate) && canManageFinancialRecords,
+  });
+
+  const readinessQuery = useQuery({
+    queryKey: ["inventory-readiness", deliveryDate],
+    queryFn: () => productionApi.getInventoryReadiness(deliveryDate),
+    enabled: Boolean(deliveryDate) && activeTab === "readiness" && canManageFinancialRecords,
+  });
+
   const exportMutation = useMutation({
+    meta: { successMessage: "Production CSV exported successfully." },
     mutationFn: () => productionApi.exportCsv(deliveryDate),
   });
 
   const purchaseExportMutation = useMutation({
+    meta: { successMessage: "Purchase plan CSV exported successfully." },
     mutationFn: () => productionApi.exportPurchaseCsv(deliveryDate),
   });
 
   const batchUpdateMutation = useMutation({
+    meta: { successMessage: "Production batch updated successfully." },
     mutationFn: (payload: { batchId: string; status?: ProductionBatchStatus; notes?: string | null }) =>
       productionApi.updatePlanningBatch(payload.batchId, {
         status: payload.status,
@@ -199,6 +215,7 @@ export function ProductionDashboard() {
   });
 
   const purchaseStatusMutation = useMutation({
+    meta: { successMessage: "Purchase status updated successfully." },
     mutationFn: (payload: {
       product_item_id: string;
       purchase_status: PurchasePlanningStatus;
@@ -307,6 +324,23 @@ export function ProductionDashboard() {
             <span className="font-medium text-text-primary">{selectedBatchLabel}</span>
           </p>
         ) : null}
+
+        {canManageFinancialRecords &&
+        deliveryDate &&
+        pendingConsumptionQuery.data?.status === "pending_review" ? (
+          <div className="mt-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+            <p className="text-sm font-medium text-warning">Stock review pending for this date</p>
+            <p className="mt-1 text-sm text-text-secondary">
+              Delivered orders have proposed inventory deductions awaiting approval.
+            </p>
+            <Link
+              href={routes.inventory.consumption.detail(pendingConsumptionQuery.data.id)}
+              className="mt-2 inline-block text-sm font-medium text-primary hover:underline"
+            >
+              Review stock consumption
+            </Link>
+          </div>
+        ) : null}
       </SectionCard>
 
       {!deliveryDate ? (
@@ -382,6 +416,69 @@ export function ProductionDashboard() {
                 )}
               />
             </SectionCard>
+          ) : null}
+
+          {activeTab === "readiness" ? (
+            canManageFinancialRecords ? (
+              readinessQuery.isLoading ? (
+                <p className="text-sm text-text-muted">Loading stock readiness…</p>
+              ) : readinessQuery.isError ? (
+                <p className="text-sm text-danger">Unable to load stock readiness.</p>
+              ) : readinessQuery.data ? (
+                <div className="space-y-6">
+                  {readinessQuery.data.shortfall_count > 0 ? (
+                    <div className="rounded-lg border border-warning/30 bg-warning/10 px-4 py-3">
+                      <p className="text-sm font-medium text-warning">
+                        {readinessQuery.data.shortfall_count} tracked item
+                        {readinessQuery.data.shortfall_count === 1 ? "" : "s"} short for this date
+                      </p>
+                      <p className="mt-1 text-sm text-text-secondary">
+                        Review the purchase plan or receive stock before production.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("purchase")}
+                        className="mt-2 text-sm font-medium text-primary hover:underline"
+                      >
+                        Open purchase planning
+                      </button>
+                    </div>
+                  ) : null}
+
+                  <SectionCard
+                    title="Stock readiness"
+                    description="Production demand compared with current on-hand balances for tracked items."
+                  >
+                    <SimpleTable
+                      headers={["Item", "Needed", "On hand", "Gap", "Status"]}
+                      rows={readinessQuery.data.lines.map((line) => [
+                        line.product_item_name,
+                        formatQuantity(line.quantity_needed, line.unit),
+                        line.track_inventory
+                          ? formatQuantity(line.quantity_on_hand, line.unit)
+                          : "—",
+                        line.track_inventory ? (
+                          <span className={line.is_short ? "text-warning" : undefined}>
+                            {formatQuantity(line.quantity_gap, line.unit)}
+                          </span>
+                        ) : (
+                          "—"
+                        ),
+                        !line.track_inventory ? (
+                          <span className="text-text-muted">Not tracked</span>
+                        ) : line.is_short ? (
+                          <span className="text-warning">Short</span>
+                        ) : (
+                          <span className="text-success">OK</span>
+                        ),
+                      ])}
+                    />
+                  </SectionCard>
+                </div>
+              ) : null
+            ) : (
+              <EmptyState message="Stock readiness is available to super-admin users." />
+            )
           ) : null}
 
           {activeTab === "purchase" ? (

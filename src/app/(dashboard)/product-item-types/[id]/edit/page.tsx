@@ -8,10 +8,10 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductItemTypeForm } from "@/components/product-item-types/ProductItemTypeForm";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemTypeFormValues } from "@/lib/validation/product";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function EditProductItemTypePage() {
   const params = useParams<{ id: string }>();
@@ -42,10 +42,10 @@ export default function EditProductItemTypePage() {
         updated,
         { alsoInvalidate: [["product-item-types", "all"], ["product-items"]] },
       );
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.productItemTypes.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update product item type.");
+      notifyActionError(err, "Unable to update product item type.", setError);
     } finally {
       setIsSubmitting(false);
     }

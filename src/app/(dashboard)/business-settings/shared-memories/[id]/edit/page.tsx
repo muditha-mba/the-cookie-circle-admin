@@ -27,6 +27,7 @@ export default function EditSharedMemoryPage({ params }: EditSharedMemoryPagePro
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: "Changes saved successfully." },
     mutationFn: (values: SharedMemoryFormValues) => sharedMemoriesApi.update(id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["shared-memories"] });

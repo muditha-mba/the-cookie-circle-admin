@@ -9,12 +9,12 @@ import { z } from "zod";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { routes } from "@/config/routes";
 import { useAuth } from "@/providers/AuthProvider";
-import type { ApiError } from "@/lib/api/types";
 import {
   loginPasswordSchema,
   normalizedEmailSchema,
 } from "@/lib/validation/auth";
 import { cn } from "@/lib/utils";
+import { notifyActionError } from "@/lib/forms/feedback";
 
 const loginSchema = z.object({
   email: normalizedEmailSchema,
@@ -47,8 +47,7 @@ export function LoginForm() {
     try {
       await login(values.email, values.password);
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to sign in. Please try again.");
+      notifyActionError(err, "Unable to sign in. Please try again.", setError);
     }
   });
 

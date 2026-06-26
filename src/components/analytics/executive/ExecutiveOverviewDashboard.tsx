@@ -8,6 +8,8 @@ import { AnalyticsDateRangeControls } from "@/components/analytics/AnalyticsDate
 import { AnalyticsGranularityToggle } from "@/components/analytics/AnalyticsGranularityToggle";
 import { AnalyticsInsightCard } from "@/components/analytics/AnalyticsInsightCard";
 import { AnalyticsKpiCard, AnalyticsKpiGridSkeleton } from "@/components/analytics/AnalyticsKpiCard";
+import { useAdminPermissions } from "@/hooks/useAdminPermissions";
+import { inventoryApi } from "@/lib/api/inventory";
 import {
   AnalyticsChartCard,
   AnalyticsDonutChart,
@@ -31,6 +33,7 @@ function formatRangeLabel(start: string, end: string) {
 }
 
 export function ExecutiveOverviewDashboard() {
+  const { canManageFinancialRecords } = useAdminPermissions();
   const {
     preset,
     customStart,
@@ -87,6 +90,22 @@ export function ExecutiveOverviewDashboard() {
   const operationsSnapshotQuery = useQuery({
     queryKey: ["analytics", "executive-operations-snapshot"],
     queryFn: () => analyticsApi.getExecutiveOperationsSnapshot(),
+  });
+
+  const purchasesQuery = useQuery({
+    queryKey: [
+      "inventory-expense-summary",
+      kpisQuery.data?.date_range.start_date,
+      kpisQuery.data?.date_range.end_date,
+    ],
+    queryFn: () =>
+      inventoryApi.getExpenseSummary(
+        kpisQuery.data!.date_range.start_date,
+        kpisQuery.data!.date_range.end_date,
+      ),
+    enabled:
+      canManageFinancialRecords &&
+      Boolean(kpisQuery.data?.date_range.start_date && kpisQuery.data?.date_range.end_date),
   });
 
   const kpis = kpisQuery.data;
@@ -180,6 +199,8 @@ export function ExecutiveOverviewDashboard() {
           <Link href={routes.analytics.orders} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Orders</Link>
           <Link href={routes.analytics.production} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Production</Link>
           <Link href={routes.analytics.operations} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Operations</Link>
+          <Link href={routes.analytics.overhead} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Overhead</Link>
+          <Link href={routes.analytics.discounts} className="rounded-md border border-border px-3 py-1.5 text-sm text-primary hover:bg-surface-hover">Discounts</Link>
         </div>
       </div>
 
@@ -232,6 +253,69 @@ export function ExecutiveOverviewDashboard() {
           <AnalyticsKpiCard variant="orders" label="Orders Awaiting Delivery" value={(operationsSnapshotQuery.data?.orders_awaiting_delivery ?? 0).toLocaleString("en-LK")} />
         </dl>
       </AnalyticsChartCard>
+
+      {canManageFinancialRecords ? (
+        <AnalyticsChartCard category="revenue" title="Purchase Spend">
+          <dl className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <AnalyticsKpiCard
+              variant="revenue"
+              label="Confirmed receipt spend"
+              value={
+                purchasesQuery.isLoading
+                  ? "—"
+                  : formatCurrency(purchasesQuery.data?.total_amount ?? "0")
+              }
+              dateRangeLabel={rangeLabel}
+            />
+            <AnalyticsKpiCard
+              variant="orders"
+              label="Confirmed receipts"
+              value={
+                purchasesQuery.isLoading
+                  ? "—"
+                  : (purchasesQuery.data?.receipt_count ?? 0).toLocaleString("en-LK")
+              }
+              dateRangeLabel={rangeLabel}
+            />
+            <AnalyticsKpiCard
+              variant="profit"
+              label="Top supplier spend"
+              value={
+                purchasesQuery.isLoading
+                  ? "—"
+                  : purchasesQuery.data?.by_supplier[0]
+                    ? formatCurrency(purchasesQuery.data.by_supplier[0].total_amount)
+                    : "—"
+              }
+              dateRangeLabel={
+                purchasesQuery.data?.by_supplier[0]?.supplier_name ?? rangeLabel
+              }
+            />
+          </dl>
+          {purchasesQuery.data && purchasesQuery.data.by_item_type.length > 0 ? (
+            <div className="mt-4 overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border text-left text-xs uppercase tracking-wide text-text-secondary">
+                    <th className="py-2 pr-4 font-medium">Item type</th>
+                    <th className="py-2 font-medium">Spend</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border/70">
+                  {purchasesQuery.data.by_item_type.map((row) => (
+                    <tr key={row.item_type_id}>
+                      <td className="py-2 pr-4 text-text-primary">{row.item_type_name}</td>
+                      <td className="py-2 tabular-nums text-text-secondary">
+                        {formatCurrency(row.total_amount)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ) : null}
+        </AnalyticsChartCard>
+      ) : null}
 
     </div>
   );

@@ -52,12 +52,14 @@ export function SecondaryButton({
   disabled,
   children,
   variant = "default",
+  className,
 }: {
   type?: "button" | "submit";
   onClick?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
   variant?: "default" | "danger";
+  className?: string;
 }) {
   return (
     <button
@@ -68,6 +70,7 @@ export function SecondaryButton({
         buttonClassName,
         variant === "danger" && "border-danger/30 text-danger hover:bg-danger/10",
         disabled && "cursor-not-allowed opacity-50",
+        className,
       )}
     >
       {children}
@@ -79,16 +82,18 @@ export function PrimaryButton({
   type = "submit",
   disabled,
   children,
+  className,
 }: {
   type?: "button" | "submit";
   disabled?: boolean;
   children: React.ReactNode;
+  className?: string;
 }) {
   return (
     <button
       type={type}
       disabled={disabled}
-      className={cn(primaryClassName, disabled && "cursor-not-allowed opacity-50")}
+      className={cn(primaryClassName, disabled && "cursor-not-allowed opacity-50", className)}
     >
       {children}
     </button>

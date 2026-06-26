@@ -30,6 +30,7 @@ export function SharedMemoryList() {
   });
 
   const toggleMutation = useMutation({
+    meta: { successMessage: "Visibility updated successfully." },
     mutationFn: ({ id, is_active }: { id: string; is_active: boolean }) =>
       sharedMemoriesApi.update(id, { is_active }),
     onSuccess: () => {
@@ -42,6 +43,7 @@ export function SharedMemoryList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Shared memory deleted successfully." },
     mutationFn: (id: string) => sharedMemoriesApi.delete(id),
     onSuccess: () => {
       setActionError(null);

@@ -8,10 +8,10 @@ import { CustomerForm } from "@/components/customers/CustomerForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { customersApi } from "@/lib/api/customers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { CustomerFormValues } from "@/lib/validation/customer";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function EditCustomerPage() {
   const params = useParams<{ id: string }>();
@@ -47,10 +47,10 @@ export default function EditCustomerPage() {
         user_id: values.user_id || null,
       });
       cacheEntitySave(queryClient, ["customers", params.id], ["customers"], updated);
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.customers.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update customer.");
+      notifyActionError(err, "Unable to update customer.", setError);
     } finally {
       setIsSubmitting(false);
     }

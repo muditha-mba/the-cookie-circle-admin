@@ -1,5 +1,14 @@
 /** Display formatting helpers. */
 
+export const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+export function formatYearMonth(year: number, month: number): string {
+  return `${MONTH_NAMES[month - 1] ?? month} ${year}`;
+}
+
 function toDisplayNumber(value: string | number): number | null {
   const amount = typeof value === "string" ? Number(value) : value;
   return Number.isNaN(amount) ? null : amount;

@@ -2,10 +2,14 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   Boxes,
+  ClipboardList,
   Layers,
+  ListChecks,
   LayoutDashboard,
   Factory,
+  Image,
   MapPin,
+  Megaphone,
   Truck,
   Package,
   Percent,
@@ -14,6 +18,7 @@ import {
   ShoppingCart,
   Star,
   Tags,
+  TicketPercent,
   Users,
   Wallet,
   Wrench,
@@ -188,6 +193,44 @@ export const navigationSections: NavSectionConfig[] = [
         enabled: true,
         requiresFinancialAccess: true,
       },
+      {
+        id: "discount-rules",
+        title: "Discount Rules",
+        href: routes.discounts.rules.list,
+        icon: TicketPercent,
+        enabled: true,
+        requiresSuperAdmin: true,
+      },
+      {
+        id: "eligible-customers",
+        title: "Eligible Customers",
+        href: routes.discounts.eligibleCustomers,
+        icon: Users,
+        enabled: true,
+        requiresSuperAdmin: true,
+      },
+      {
+        id: "discount-history",
+        title: "Discount History",
+        href: routes.discounts.history,
+        icon: ScrollText,
+        enabled: true,
+        requiresSuperAdmin: true,
+      },
+    ],
+  },
+  {
+    id: "marketing",
+    title: "Marketing",
+    items: [
+      {
+        id: "promotion-slides",
+        title: "Promotion Slides",
+        href: routes.promotions.slides.list,
+        icon: Image,
+        enabled: true,
+        requiresSuperAdmin: true,
+      },
     ],
   },
   {
@@ -227,13 +270,53 @@ export const navigationSections: NavSectionConfig[] = [
     ],
   },
   /**
-   * Reserved for Phase 8+ inventory modules. Add items here when stock
-   * management ships — no sidebar structure changes required.
+   * Inventory & stock management (Phase 1).
    */
   {
     id: "inventory",
     title: "Inventory",
-    items: [],
+    items: [
+      {
+        id: "inventory-overview",
+        title: "Stock Overview",
+        href: routes.inventory.overview,
+        icon: Boxes,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "inventory-lots",
+        title: "Lots",
+        href: routes.inventory.lots,
+        icon: Layers,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "inventory-movements",
+        title: "Movements",
+        href: routes.inventory.movements,
+        icon: ClipboardList,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "purchase-receipts",
+        title: "Purchase Receipts",
+        href: routes.inventory.receipts.list,
+        icon: Wallet,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+      {
+        id: "consumption-proposals",
+        title: "Stock Reviews",
+        href: routes.inventory.consumption.list,
+        icon: ListChecks,
+        enabled: true,
+        requiresFinancialAccess: true,
+      },
+    ],
   },
 ];
 
@@ -265,12 +348,25 @@ export const navigation: NavItemConfig[] = [
   ...navigationSections.flatMap((section) => section.items),
 ];
 
-export function isNavItemActive(item: NavItemConfig, pathname: string): boolean {
+function navItemMatchesPath(item: NavItemConfig, pathname: string): boolean {
   if (item.href === routes.dashboard) {
     return pathname === routes.dashboard;
   }
 
   return pathname === item.href || pathname.startsWith(`${item.href}/`);
+}
+
+export function isNavItemActive(item: NavItemConfig, pathname: string): boolean {
+  const matches = navigation.filter((nav) => navItemMatchesPath(nav, pathname));
+  if (matches.length === 0) {
+    return false;
+  }
+
+  const bestMatch = matches.reduce((best, current) =>
+    current.href.length > best.href.length ? current : best,
+  );
+
+  return bestMatch.id === item.id;
 }
 
 /** Modules not yet enabled — used for dashboard placeholders. */

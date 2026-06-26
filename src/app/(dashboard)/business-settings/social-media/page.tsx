@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { BusinessSettingsPageShell } from "@/components/business-settings/BusinessSettingsPageShell";
 import { SocialMediaForm } from "@/components/business-settings/SocialMediaForm";
-import type { ApiError } from "@/lib/api/types";
 import { socialMediaApi } from "@/lib/api/social-media";
 import type { SocialMediaSettingsFormValues } from "@/lib/validation/social-media";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function SocialMediaSettingsPage() {
   const queryClient = useQueryClient();
@@ -31,9 +31,9 @@ export default function SocialMediaSettingsPage() {
         })),
       );
       queryClient.setQueryData(["social-media-settings"], updated);
+      notifyActionSuccess("Social media settings saved successfully.");
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update social media settings.");
+      notifyActionError(err, "Unable to update social media settings.", setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -49,6 +49,7 @@ export function DeliveryAreaList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Delivery area deleted successfully." },
     mutationFn: (id: string) => deliveryAreasApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["delivery-areas"] });

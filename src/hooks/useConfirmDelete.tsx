@@ -10,6 +10,9 @@ import {
 type ConfirmDeleteRequest = {
   message?: string;
   title?: string;
+  confirmLabel?: string;
+  confirmingLabel?: string;
+  confirmVariant?: "default" | "danger";
   onConfirm: () => void | Promise<void>;
 };
 
@@ -47,6 +50,9 @@ export function useConfirmDelete() {
       open={Boolean(pending)}
       title={pending?.title}
       message={pending?.message ?? DEFAULT_DELETE_CONFIRM_MESSAGE}
+      confirmLabel={pending?.confirmLabel}
+      confirmingLabel={pending?.confirmingLabel}
+      confirmVariant={pending?.confirmVariant}
       isConfirming={isConfirming}
       onConfirm={() => void handleConfirm()}
       onCancel={handleCancel}

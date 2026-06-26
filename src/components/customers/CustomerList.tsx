@@ -79,6 +79,7 @@ export function CustomerList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Customer deleted successfully." },
     mutationFn: (id: string) => customersApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["customers"] });

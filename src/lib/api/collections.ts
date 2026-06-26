@@ -1,6 +1,5 @@
 import { apiClient } from "@/lib/api/client";
 import type { PaginatedResponse, ListQueryParams } from "@/lib/api/pagination";
-import type { AttachedCharge } from "@/lib/api/products";
 
 export type ProductCategorySummary = {
   id: string;
@@ -40,9 +39,6 @@ export type CollectionItemLine = {
 export type CollectionDetail = CollectionSummary & {
   allowed_categories: ProductCategorySummary[];
   item_lines: CollectionItemLine[];
-  utility_charges: AttachedCharge[];
-  labour_charges: AttachedCharge[];
-  tax_charges: AttachedCharge[];
   package: {
     id: string;
     code: string;
@@ -65,9 +61,6 @@ export type CollectionCreate = {
   is_public?: boolean;
   allowed_category_ids: string[];
   item_lines?: CollectionItemLineInput[];
-  utility_charge_ids?: string[];
-  labour_charge_ids?: string[];
-  tax_charge_ids?: string[];
 };
 
 export type CollectionUpdate = Partial<CollectionCreate>;

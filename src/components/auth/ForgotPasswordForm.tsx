@@ -8,9 +8,10 @@ import { z } from "zod";
 
 import { routes } from "@/config/routes";
 import { authApi } from "@/lib/api/auth";
-import type { ApiError } from "@/lib/api/types";
 import { normalizedEmailSchema } from "@/lib/validation/auth";
 import { cn } from "@/lib/utils";
+import { appToast } from "@/lib/toast";
+import { notifyActionError } from "@/lib/forms/feedback";
 
 const forgotPasswordSchema = z.object({
   email: normalizedEmailSchema,
@@ -37,9 +38,9 @@ export function ForgotPasswordForm() {
     try {
       const response = await authApi.forgotPassword({ email: values.email });
       setMessage(response.message);
+      appToast.info(response.message);
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to process request.");
+      notifyActionError(err, "Unable to process request.", setError);
     }
   });
 

@@ -5,36 +5,35 @@ import { useForm } from "react-hook-form";
 
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { PrimaryButton } from "@/components/data/PageActions";
-import { chargeSchema, type ChargeFormValues } from "@/lib/validation/charge";
+import { taxChargeSchema, type TaxChargeFormValues } from "@/lib/validation/charge";
 
-type ChargeFormProps = {
-  defaultValues?: Partial<ChargeFormValues>;
+type TaxChargeFormProps = {
+  defaultValues?: Partial<TaxChargeFormValues>;
   submitLabel: string;
   isSubmitting?: boolean;
   error?: string | null;
-  onSubmit: (values: ChargeFormValues) => Promise<void>;
+  onSubmit: (values: TaxChargeFormValues) => Promise<void>;
 };
 
-export function ChargeForm({
+export function TaxChargeForm({
   defaultValues,
   submitLabel,
   isSubmitting = false,
   error,
   onSubmit,
-}: ChargeFormProps) {
+}: TaxChargeFormProps) {
   const {
     register,
     handleSubmit,
     watch,
     formState: { errors },
-  } = useForm<ChargeFormValues>({
-    resolver: zodResolver(chargeSchema),
+  } = useForm<TaxChargeFormValues>({
+    resolver: zodResolver(taxChargeSchema),
     defaultValues: {
       name: "",
       description: "",
-      charge_type: "fixed",
-      amount: 1,
-      applicability: "both",
+      charge_type: "percentage",
+      amount: 0,
       is_active: true,
       ...defaultValues,
     },
@@ -59,23 +58,11 @@ export function ChargeForm({
       >
         <textarea
           id="description"
-          rows={4}
+          rows={3}
           className={formInputClassName}
+          placeholder="Optional description of what this tax is for"
           {...register("description")}
         />
-      </FormField>
-
-      <FormField
-        label="Applicability"
-        htmlFor="applicability"
-        error={errors.applicability?.message}
-        hint="Where this charge can be attached"
-      >
-        <select id="applicability" className={formInputClassName} {...register("applicability")}>
-          <option value="product">Product only</option>
-          <option value="collection">Collection only</option>
-          <option value="both">Product and collection</option>
-        </select>
       </FormField>
 
       <FormField
@@ -84,26 +71,21 @@ export function ChargeForm({
         error={errors.charge_type?.message}
       >
         <select id="charge_type" className={formInputClassName} {...register("charge_type")}>
-          <option value="fixed">Fixed amount (LKR)</option>
           <option value="percentage">Percentage (%)</option>
+          <option value="fixed">Fixed amount (LKR)</option>
         </select>
       </FormField>
 
       <FormField
-        label={chargeType === "percentage" ? "Amount (%)" : "Amount (LKR)"}
+        label={chargeType === "percentage" ? "Rate (%)" : "Amount (LKR)"}
         htmlFor="amount"
         error={errors.amount?.message}
-        hint={
-          chargeType === "percentage"
-            ? "Enter a value between 0 and 100"
-            : "Fixed charge in Sri Lankan Rupees"
-        }
       >
         <input
           id="amount"
           type="number"
           min={0}
-          step={chargeType === "percentage" ? "0.01" : "0.01"}
+          step="0.01"
           max={chargeType === "percentage" ? 100 : undefined}
           className={formInputClassName}
           {...register("amount", { valueAsNumber: true })}
@@ -118,7 +100,7 @@ export function ChargeForm({
             className="h-4 w-4 rounded border-border"
             {...register("is_active")}
           />
-          Active
+          Active — apply to all orders
         </label>
       </FormField>
 

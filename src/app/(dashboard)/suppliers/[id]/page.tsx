@@ -12,9 +12,9 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { routes } from "@/config/routes";
 import { useConfirmDelete } from "@/hooks/useConfirmDelete";
 import { suppliersApi } from "@/lib/api/suppliers";
-import type { ApiError } from "@/lib/api/types";
 import { formatDateTime } from "@/lib/format";
 import { cacheEntityRemove } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function SupplierDetailPage() {
   const params = useParams<{ id: string }>();
@@ -41,11 +41,11 @@ export default function SupplierDetailPage() {
         try {
           await suppliersApi.delete(data.id);
           cacheEntityRemove(queryClient, ["suppliers", data.id], ["suppliers"]);
+          notifyActionSuccess("Supplier deleted successfully.");
           router.push(routes.suppliers.list);
         } catch (err) {
-          const apiError = err as ApiError;
-          setDeleteError(apiError.message ?? "Unable to delete supplier.");
-        }
+      notifyActionError(err, "Unable to delete supplier.", setDeleteError);
+    }
       },
     });
   };

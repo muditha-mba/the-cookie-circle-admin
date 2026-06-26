@@ -23,6 +23,7 @@ export default function EditFaqPage() {
   });
 
   const updateMutation = useMutation({
+    meta: { successMessage: "Changes saved successfully." },
     mutationFn: (values: FaqFormValues) => faqsApi.update(params.id, values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["faqs"] });

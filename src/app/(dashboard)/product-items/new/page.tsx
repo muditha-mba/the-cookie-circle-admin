@@ -8,12 +8,12 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductItemForm } from "@/components/product-items/ProductItemForm";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function NewProductItemPage() {
   const router = useRouter();
@@ -45,6 +45,9 @@ export default function NewProductItemPage() {
         purchase_unit: values.purchase_unit,
         primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
+        track_inventory: values.track_inventory,
+        reorder_level: values.reorder_level ?? null,
+        reorder_unit: values.reorder_unit || null,
       });
       cacheEntitySave(
         queryClient,
@@ -53,10 +56,10 @@ export default function NewProductItemPage() {
         created,
         { alsoInvalidate: [["products"], ["collections"]] },
       );
+      notifyActionSuccess("Product item created successfully.");
       router.push(routes.productItems.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create product item.");
+      notifyActionError(err, "Unable to create product item.", setError);
     } finally {
       setIsSubmitting(false);
     }

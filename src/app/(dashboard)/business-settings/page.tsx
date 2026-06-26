@@ -5,9 +5,9 @@ import { useState } from "react";
 
 import { BusinessSettingsForm } from "@/components/business-settings/BusinessSettingsForm";
 import { BusinessSettingsPageShell } from "@/components/business-settings/BusinessSettingsPageShell";
-import type { ApiError } from "@/lib/api/types";
 import { businessSettingsApi } from "@/lib/api/business-settings";
 import type { BusinessSettingsFormValues } from "@/lib/validation/business-settings";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function BusinessSettingsPage() {
   const queryClient = useQueryClient();
@@ -25,9 +25,9 @@ export default function BusinessSettingsPage() {
     try {
       const updated = await businessSettingsApi.update(values);
       queryClient.setQueryData(["business-settings"], updated);
+      notifyActionSuccess("Settings saved successfully.");
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update settings.");
+      notifyActionError(err, "Unable to update settings.", setError);
     } finally {
       setIsSubmitting(false);
     }

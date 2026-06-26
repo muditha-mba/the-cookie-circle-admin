@@ -8,9 +8,9 @@ import { OrderForm } from "@/components/orders/OrderForm";
 import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { ordersApi } from "@/lib/api/orders";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 import {
   toOrderDeliveryPayload,
   toValidCollectionLines,
@@ -42,10 +42,10 @@ export default function NewOrderPage() {
         ...toOrderDeliveryPayload(values),
       });
       cacheEntitySave(queryClient, ["orders", created.id], ["orders"], created);
+      notifyActionSuccess("Order created successfully.");
       router.push(routes.orders.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create order.");
+      notifyActionError(err, "Unable to create order.", setError);
     } finally {
       setIsSubmitting(false);
     }

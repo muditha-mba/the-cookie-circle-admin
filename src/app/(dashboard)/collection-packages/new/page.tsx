@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { CollectionPackageFormValues } from "@/lib/validation/collection-package";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function NewCollectionPackagePage() {
   const router = useRouter();
@@ -37,10 +37,10 @@ export default function NewCollectionPackagePage() {
         created,
         { alsoInvalidate: [["collections"]] },
       );
+      notifyActionSuccess("Package created successfully.");
       router.push(routes.collectionPackages.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create collection package.");
+      notifyActionError(err, "Unable to create collection package.", setError);
     } finally {
       setIsSubmitting(false);
     }

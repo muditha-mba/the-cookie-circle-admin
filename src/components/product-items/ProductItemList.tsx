@@ -51,6 +51,7 @@ export function ProductItemList() {
   });
 
   const deleteMutation = useMutation({
+    meta: { successMessage: "Product item deleted successfully." },
     mutationFn: (id: string) => productItemsApi.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["product-items"] });

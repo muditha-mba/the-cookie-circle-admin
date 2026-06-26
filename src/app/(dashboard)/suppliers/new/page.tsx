@@ -9,9 +9,9 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { routes } from "@/config/routes";
 import { suppliersApi } from "@/lib/api/suppliers";
-import type { ApiError } from "@/lib/api/types";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { SupplierFormValues } from "@/lib/validation/supplier";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 function toPayload(values: SupplierFormValues) {
   return {
@@ -36,10 +36,10 @@ export default function NewSupplierPage() {
     try {
       const created = await suppliersApi.create(toPayload(values));
       cacheEntitySave(queryClient, ["suppliers", created.id], ["suppliers"], created);
+      notifyActionSuccess("Supplier created successfully.");
       router.push(routes.suppliers.detail(created.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to create supplier.");
+      notifyActionError(err, "Unable to create supplier.", setError);
     } finally {
       setIsSubmitting(false);
     }

@@ -26,9 +26,6 @@ export const productSchema = z.object({
   is_active: z.boolean(),
   is_public: z.boolean(),
   recipe_lines: z.array(recipeLineSchema),
-  utility_charge_ids: z.array(z.string().uuid()),
-  labour_charge_ids: z.array(z.string().uuid()),
-  tax_charge_ids: z.array(z.string().uuid()),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

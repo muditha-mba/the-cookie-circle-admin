@@ -1,5 +1,5 @@
-import { ChargeDetailPage } from "@/components/charges/ChargeDetailPage";
+import { TaxChargeDetailPage } from "@/components/charges/TaxChargeDetailPage";
 
-export default function TaxChargeDetailPage() {
-  return <ChargeDetailPage moduleId="tax-charges" />;
+export default function TaxChargeDetailRoute() {
+  return <TaxChargeDetailPage />;
 }

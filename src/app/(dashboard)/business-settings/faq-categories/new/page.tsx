@@ -22,6 +22,7 @@ export default function NewFaqCategoryPage() {
   });
 
   const createMutation = useMutation({
+    meta: { successMessage: "FAQ category created successfully." },
     mutationFn: (values: FaqCategoryFormValues) => faqCategoriesApi.create(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["faq-categories"] });

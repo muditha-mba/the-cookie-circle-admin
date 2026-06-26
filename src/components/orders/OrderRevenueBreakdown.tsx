@@ -88,6 +88,28 @@ export function OrderRevenueBreakdown({
           amount={snapshot.delivery_cost_snapshot}
         />
       ) : null}
+      {Number(snapshot.discount_amount_snapshot ?? "0") > 0 ? (
+        <div className="flex justify-between gap-4">
+          <dt className="text-text-secondary">
+            Discount
+            {snapshot.discount_type_snapshot === "percentage" && snapshot.discount_value_snapshot
+              ? ` (${snapshot.discount_value_snapshot}%)`
+              : ""}
+          </dt>
+          <dd className="tabular-nums text-green-600">
+            − {formatCurrency(snapshot.discount_amount_snapshot!)}
+          </dd>
+        </div>
+      ) : null}
+      {snapshot.tax_lines_snapshot && snapshot.tax_lines_snapshot.length > 0 ? (
+        snapshot.tax_lines_snapshot.map((tax) => (
+          <BreakdownRow
+            key={tax.tax_id}
+            label={`${tax.name} (${tax.charge_type === "percentage" ? `${tax.configured_amount}%` : "flat"})`}
+            amount={tax.applied_amount}
+          />
+        ))
+      ) : null}
     </>
   );
 }

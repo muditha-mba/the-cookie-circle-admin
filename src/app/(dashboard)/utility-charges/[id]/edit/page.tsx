@@ -1,5 +1,9 @@
-import { ChargeEditPage } from "@/components/charges/ChargeEditPage";
+"use client";
+
+import { OverheadChargeEditPage } from "@/components/charges/OverheadChargeEditPage";
+import { utilityChargeModule } from "@/config/charge-modules";
+import { utilityChargesApi } from "@/lib/api/utility-charges";
 
 export default function EditUtilityChargePage() {
-  return <ChargeEditPage moduleId="utility-charges" />;
+  return <OverheadChargeEditPage module={utilityChargeModule} api={utilityChargesApi} />;
 }

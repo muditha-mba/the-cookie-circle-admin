@@ -9,7 +9,12 @@ export type OrderSource =
   | "manual"
   | "walk_in"
   | "phone";
-export type PaymentMethod = "cash_on_delivery" | "bank_transfer" | "stripe" | "manual";
+export type PaymentMethod =
+  | "cash_on_delivery"
+  | "bank_transfer"
+  | "online_card"
+  | "online_bank_debit"
+  | "manual";
 export type PaymentStatus = "pending" | "paid" | "failed" | "refunded";
 export type OrderStatus =
   | "draft"
@@ -84,15 +89,31 @@ export type OrderCollectionLine = {
   selections?: OrderCollectionLineSelection[];
 };
 
+export type TaxLineSnapshot = {
+  tax_id: string;
+  name: string;
+  charge_type: "fixed" | "percentage";
+  configured_amount: string;
+  applied_amount: string;
+};
+
 export type OrderFinancialSnapshot = {
   products_subtotal_snapshot: string;
   collections_subtotal_snapshot: string;
+  pre_discount_subtotal_snapshot?: string;
+  discount_amount_snapshot?: string;
+  discount_type_snapshot?: string | null;
+  discount_value_snapshot?: string | null;
+  discount_source_snapshot?: string | null;
+  gross_revenue_snapshot?: string;
   delivery_fee_snapshot: string;
   delivery_cost_snapshot: string;
   package_fee_revenue_snapshot: string;
   packaging_cost_snapshot: string;
   products_cost_snapshot: string;
   collections_cost_snapshot: string;
+  total_tax_snapshot: string;
+  tax_lines_snapshot: TaxLineSnapshot[];
   total_revenue_snapshot: string;
   total_cost_snapshot: string;
   total_profit_snapshot: string;
@@ -199,6 +220,8 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
   packaging_cost_snapshot: string;
   products_cost_snapshot: string;
   collections_cost_snapshot: string;
+  total_tax_snapshot: string;
+  tax_lines_snapshot: TaxLineSnapshot[];
   total_revenue_snapshot: string;
   financial_performance: OrderFinancialPerformance | null;
   product_lines: OrderProductLine[];
@@ -209,6 +232,11 @@ export type OrderDetail = OrderDeliveryFields & OrderBillingFields & {
     id: string;
     rating: number;
   } | null;
+  inventory_consumption?: {
+    consumed_at: string | null;
+    applied_proposal_id: string | null;
+    pending_proposal_id: string | null;
+  };
   created_at: string;
   updated_at: string;
 };

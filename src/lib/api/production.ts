@@ -1,5 +1,6 @@
 import { env } from "@/config/env";
 import { apiClient } from "@/lib/api/client";
+import type { InventoryReadiness } from "@/lib/api/inventory";
 import { getAccessToken } from "@/lib/auth/token-storage";
 
 export type ProductionBatchOption = {
@@ -195,4 +196,9 @@ export const productionApi = {
       deliveryDate,
       `purchase-list-${deliveryDate}.csv`,
     ),
+
+  getInventoryReadiness: (deliveryDate: string) =>
+    apiClient.get<InventoryReadiness>(`${BASE}/inventory-readiness`, {
+      params: { delivery_date: deliveryDate },
+    }),
 };

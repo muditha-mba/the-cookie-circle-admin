@@ -88,6 +88,8 @@ export const routes = {
     collections: "/analytics/collections",
     orders: "/analytics/orders",
     operations: "/analytics/operations",
+    overhead: "/analytics/overhead",
+    discounts: "/analytics/discounts",
   },
   productItemTypes: {
     list: "/product-item-types",
@@ -119,6 +121,39 @@ export const routes = {
     detail: (id: string) => `/tax-charges/${id}`,
     edit: (id: string) => `/tax-charges/${id}/edit`,
   },
+  discounts: {
+    rules: {
+      list: "/discounts/rules",
+      create: "/discounts/rules/new",
+      detail: (id: string) => `/discounts/rules/${id}`,
+      edit: (id: string) => `/discounts/rules/${id}/edit`,
+    },
+    eligibleCustomers: "/discounts/eligible-customers",
+    history: "/discounts/history",
+    auditEvents: "/discounts/audit-events",
+  },
+  promotions: {
+    slides: {
+      list: "/promotions/slides",
+      create: "/promotions/slides/new",
+      edit: (id: string) => `/promotions/slides/${id}/edit`,
+    },
+  },
+  inventory: {
+    overview: "/inventory",
+    lots: "/inventory/lots",
+    movements: "/inventory/movements",
+    receipts: {
+      list: "/inventory/receipts",
+      create: "/inventory/receipts/new",
+      detail: (id: string) => `/inventory/receipts/${id}`,
+      edit: (id: string) => `/inventory/receipts/${id}/edit`,
+    },
+    consumption: {
+      list: "/inventory/consumption",
+      detail: (id: string) => `/inventory/consumption/${id}`,
+    },
+  },
 } as const;
 
 export type RouteKey = keyof Omit<
@@ -137,6 +172,7 @@ export type RouteKey = keyof Omit<
   | "utilityCharges"
   | "labourCharges"
   | "taxCharges"
+  | "inventory"
   | "analytics"
 >;
 
@@ -157,6 +193,12 @@ const protectedPrefixes = [
   routes.utilityCharges.list,
   routes.labourCharges.list,
   routes.taxCharges.list,
+  routes.discounts.rules.list,
+  routes.discounts.eligibleCustomers,
+  routes.discounts.history,
+  routes.promotions.slides.list,
+  routes.inventory.overview,
+  routes.inventory.consumption.list,
 ] as const;
 
 export const protectedRoutes = [routes.dashboard, ...protectedPrefixes] as const;

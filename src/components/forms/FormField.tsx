@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { InfoHint } from "@/components/ui/InfoHint";
 import { cn } from "@/lib/utils";
 
 type FormFieldProps = {
@@ -7,6 +8,8 @@ type FormFieldProps = {
   htmlFor: string;
   error?: string;
   hint?: string;
+  /** Short help shown in an info popover next to the label. */
+  info?: ReactNode;
   children: ReactNode;
   className?: string;
 };
@@ -22,14 +25,18 @@ export function FormField({
   htmlFor,
   error,
   hint,
+  info,
   children,
   className,
 }: FormFieldProps) {
   return (
     <div className={cn("space-y-2", className)}>
-      <label htmlFor={htmlFor} className="text-sm font-medium text-text-primary">
-        {label}
-      </label>
+      <div className="flex items-center gap-1.5">
+        <label htmlFor={htmlFor} className="text-sm font-medium text-text-primary">
+          {label}
+        </label>
+        {info ? <InfoHint label={`About ${label}`}>{info}</InfoHint> : null}
+      </div>
       {children}
       {hint && !error ? <p className="text-xs text-text-muted">{hint}</p> : null}
       {error ? <p className="text-xs text-danger">{error}</p> : null}

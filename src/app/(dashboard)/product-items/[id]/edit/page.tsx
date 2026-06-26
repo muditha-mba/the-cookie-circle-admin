@@ -8,12 +8,12 @@ import { PageActions } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 import { ProductItemForm } from "@/components/product-items/ProductItemForm";
 import { routes } from "@/config/routes";
-import type { ApiError } from "@/lib/api/types";
 import { productItemTypesApi } from "@/lib/api/product-item-types";
 import { productItemsApi } from "@/lib/api/product-items";
 import { suppliersApi } from "@/lib/api/suppliers";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import type { ProductItemFormValues } from "@/lib/validation/product";
+import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 
 export default function EditProductItemPage() {
   const params = useParams<{ id: string }>();
@@ -52,6 +52,9 @@ export default function EditProductItemPage() {
         purchase_unit: values.purchase_unit,
         primary_supplier_id: values.primary_supplier_id || null,
         is_active: values.is_active,
+        track_inventory: values.track_inventory,
+        reorder_level: values.reorder_level ?? null,
+        reorder_unit: values.reorder_unit || null,
       });
       cacheEntitySave(
         queryClient,
@@ -60,10 +63,10 @@ export default function EditProductItemPage() {
         updated,
         { alsoInvalidate: [["products"], ["collections"]] },
       );
+      notifyActionSuccess("Changes saved successfully.");
       router.push(routes.productItems.detail(params.id));
     } catch (err) {
-      const apiError = err as ApiError;
-      setError(apiError.message ?? "Unable to update product item.");
+      notifyActionError(err, "Unable to update product item.", setError);
     } finally {
       setIsSubmitting(false);
     }
@@ -104,6 +107,9 @@ export default function EditProductItemPage() {
           purchase_unit: data.purchase_unit,
           primary_supplier_id: data.primary_supplier_id ?? "",
           is_active: data.is_active,
+          track_inventory: data.track_inventory,
+          reorder_level: data.reorder_level ? Number(data.reorder_level) : null,
+          reorder_unit: data.reorder_unit ?? "",
         }}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}

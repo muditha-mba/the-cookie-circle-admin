@@ -47,7 +47,7 @@ export function CollectionSearchSelect({
     if (selected?.id === value) {
       return;
     }
-    if (initialCollection?.id === value) {
+    if (initialCollection?.id === value && initialCollection.package_size > 0) {
       setSelected(initialCollection);
       return;
     }
