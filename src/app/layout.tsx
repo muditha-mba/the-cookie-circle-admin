@@ -14,6 +14,14 @@ export const metadata: Metadata = {
     template: `%s | ${env.appName}`,
   },
   description: "Business management platform for The Cookie Circle.",
+  robots: {
+    index: false,
+    follow: false,
+    googleBot: {
+      index: false,
+      follow: false,
+    },
+  },
   icons: {
     icon: branding.logo.favicon,
     shortcut: branding.logo.favicon,
