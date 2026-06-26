@@ -24,11 +24,29 @@ function parseAppEnv(value: string | undefined): AppEnv {
 
 const appEnv = parseAppEnv(process.env.NEXT_PUBLIC_APP_ENV);
 
+const apiUrl = requireEnv(
+  "NEXT_PUBLIC_API_URL",
+  appEnv === "development" ? "http://localhost:8000" : undefined,
+);
+const appUrl = requireEnv(
+  "NEXT_PUBLIC_APP_URL",
+  appEnv === "development" ? "http://localhost:3001" : undefined,
+);
+
+if (
+  (appEnv === "staging" || appEnv === "production") &&
+  (apiUrl.includes("localhost") || apiUrl.includes("127.0.0.1"))
+) {
+  throw new Error(
+    `NEXT_PUBLIC_API_URL must be a public HTTPS URL when NEXT_PUBLIC_APP_ENV=${appEnv}`,
+  );
+}
+
 export const env = {
   appEnv,
   appName: requireEnv("NEXT_PUBLIC_APP_NAME", "The Cookie Circle Admin"),
-  appUrl: requireEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3001"),
-  apiUrl: requireEnv("NEXT_PUBLIC_API_URL", "http://localhost:8000"),
+  appUrl,
+  apiUrl,
   isDevelopment: appEnv === "development",
   isStaging: appEnv === "staging",
   isProduction: appEnv === "production",
