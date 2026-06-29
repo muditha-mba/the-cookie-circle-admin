@@ -131,8 +131,8 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           label="Customer total"
           value={formatCurrency(order.total_revenue_snapshot)}
         />
-        <DetailField label="Customer notes" value={order.customer_notes || "—"} fullWidth />
-        <DetailField label="Internal notes" value={order.internal_notes || "—"} fullWidth />
+        <DetailField label="Customer notes" value={order.customer_notes || "—"} fullWidth multiline />
+        <DetailField label="Internal notes" value={order.internal_notes || "—"} fullWidth multiline />
       </DetailMetadataCard>
 
       <OrderBankTransferInstructions order={order} />
@@ -199,7 +199,9 @@ export function OrderDetailView({ order }: OrderDetailViewProps) {
           </div>
           <div className="sm:col-span-2">
             <dt className="text-text-secondary">Delivery notes</dt>
-            <dd className="text-text-primary">{order.delivery_notes ?? "—"}</dd>
+            <dd className="whitespace-pre-wrap text-text-primary">
+              {order.delivery_notes ?? "—"}
+            </dd>
           </div>
         </dl>
         {order.delivery_latitude != null && order.delivery_longitude != null ? (

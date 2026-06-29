@@ -7,6 +7,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { Plus } from "lucide-react";
 
 import { DetailField } from "@/components/data/DetailField";
+import { MultilineText } from "@/components/data/MultilineText";
 import { DetailMetadataCard } from "@/components/data/DetailMetadataCard";
 import { PageActions, PrimaryLink, SecondaryButton } from "@/components/data/PageActions";
 import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
@@ -117,7 +118,7 @@ export function OverheadChargeDetailPage({ module, api }: OverheadChargeDetailPa
     {
       header: "Notes",
       accessorKey: "notes",
-      cell: ({ row }) => row.original.notes || "—",
+      cell: ({ row }) => <MultilineText value={row.original.notes} />,
     },
     {
       header: "Added",

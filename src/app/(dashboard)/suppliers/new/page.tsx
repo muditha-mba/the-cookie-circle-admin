@@ -19,6 +19,7 @@ function toPayload(values: SupplierFormValues) {
     contact_person: values.contact_person || null,
     email: values.email || null,
     phone: values.phone || null,
+    address: values.address || null,
     notes: values.notes || null,
     is_active: values.is_active,
   };

@@ -10,6 +10,7 @@ export const supplierSchema = z.object({
     .optional()
     .or(z.literal("")),
   phone: z.string().trim().max(50).optional().or(z.literal("")),
+  address: z.string().trim().max(2000).optional().or(z.literal("")),
   notes: z.string().trim().max(10000).optional().or(z.literal("")),
   is_active: z.boolean(),
 });

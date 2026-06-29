@@ -216,6 +216,7 @@ export function ConsumptionProposalDetail({ proposalId }: ConsumptionProposalDet
             )
           }
           fullWidth
+          multiline={!isPending}
         />
       </DetailMetadataCard>
 

@@ -33,6 +33,7 @@ export function SupplierForm({
       contact_person: "",
       email: "",
       phone: "",
+      address: "",
       notes: "",
       is_active: true,
       ...defaultValues,
@@ -78,6 +79,10 @@ export function SupplierForm({
           <input id="phone" className={formInputClassName} {...register("phone")} />
         </FormField>
       </div>
+
+      <FormField label="Address" htmlFor="address" error={errors.address?.message}>
+        <textarea id="address" rows={3} className={formInputClassName} {...register("address")} />
+      </FormField>
 
       <FormField label="Notes" htmlFor="notes" error={errors.notes?.message}>
         <textarea id="notes" rows={4} className={formInputClassName} {...register("notes")} />

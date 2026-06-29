@@ -84,8 +84,9 @@ export default function SupplierDetailPage() {
         <DetailField label="Contact person" value={data.contact_person || "—"} />
         <DetailField label="Email" value={data.email || "—"} />
         <DetailField label="Phone" value={data.phone || "—"} />
+        <DetailField label="Address" value={data.address || "—"} fullWidth multiline />
         <DetailField label="Updated" value={formatDateTime(data.updated_at)} />
-        <DetailField label="Notes" value={data.notes || "—"} fullWidth />
+        <DetailField label="Notes" value={data.notes || "—"} fullWidth multiline />
       </DetailMetadataCard>
     </DashboardPageShell>
   );
