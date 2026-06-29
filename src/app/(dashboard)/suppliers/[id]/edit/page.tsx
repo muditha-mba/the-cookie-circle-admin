@@ -19,6 +19,7 @@ function toPayload(values: SupplierFormValues) {
     contact_person: values.contact_person || null,
     email: values.email || null,
     phone: values.phone || null,
+    address: values.address || null,
     notes: values.notes || null,
     is_active: values.is_active,
   };
@@ -79,6 +80,7 @@ export default function EditSupplierPage() {
           contact_person: data.contact_person ?? "",
           email: data.email ?? "",
           phone: data.phone ?? "",
+          address: data.address ?? "",
           notes: data.notes ?? "",
           is_active: data.is_active,
         }}

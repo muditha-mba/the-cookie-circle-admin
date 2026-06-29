@@ -5,6 +5,7 @@ import type { ColumnDef } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 
 import { DataTable } from "@/components/data/DataTable";
+import { MultilineText } from "@/components/data/MultilineText";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
 import type { InventoryMovement } from "@/lib/api/inventory";
@@ -64,7 +65,11 @@ export function InventoryMovementList() {
           return `${prefix}${value.toLocaleString()} ${row.original.unit}`;
         },
       },
-      { header: "Notes", accessorKey: "notes", cell: ({ row }) => row.original.notes ?? "—" },
+      {
+        header: "Notes",
+        accessorKey: "notes",
+        cell: ({ row }) => <MultilineText value={row.original.notes} />,
+      },
     ],
     [],
   );

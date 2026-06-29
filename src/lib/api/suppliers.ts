@@ -7,6 +7,7 @@ export type Supplier = {
   contact_person: string | null;
   email: string | null;
   phone: string | null;
+  address: string | null;
   notes: string | null;
   is_active: boolean;
   created_at: string;
@@ -18,6 +19,7 @@ export type SupplierCreate = {
   contact_person?: string | null;
   email?: string | null;
   phone?: string | null;
+  address?: string | null;
   notes?: string | null;
   is_active?: boolean;
 };

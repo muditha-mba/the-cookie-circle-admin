@@ -145,7 +145,7 @@ export default function PurchaseReceiptDetailPage() {
           label="Confirmed"
           value={data.confirmed_at ? formatDateTime(data.confirmed_at) : "—"}
         />
-        <DetailField label="Notes" value={data.notes || "—"} fullWidth />
+        <DetailField label="Notes" value={data.notes || "—"} fullWidth multiline />
       </DetailMetadataCard>
 
       <section className="mt-8 space-y-4">

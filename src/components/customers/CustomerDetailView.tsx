@@ -173,7 +173,7 @@ function OverviewPanel({
           fullWidth
         />
         <DetailField label="Landmark" value={customer.landmark ?? "—"} />
-        <DetailField label="Profile notes" value={customer.notes || "—"} fullWidth />
+        <DetailField label="Profile notes" value={customer.notes || "—"} fullWidth multiline />
         {customer.user ? (
           <DetailField label="Linked user" value={customer.user.email} />
         ) : null}
