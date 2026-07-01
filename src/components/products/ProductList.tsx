@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import { DataTable } from "@/components/data/DataTable";
+import { TableRowActionButton } from "@/components/data/TableRowActions";
 import { ListToolbar, type SortOption } from "@/components/data/ListToolbar";
 import { Pagination } from "@/components/data/Pagination";
 import { PrimaryLink } from "@/components/data/PageActions";
@@ -40,7 +41,13 @@ export function ProductList() {
   const router = useRouter();
   const queryClient = useQueryClient();
   const { canViewFinancials, canManageRecords } = useAdminPermissions();
-  const { confirmDelete, deleteDialog } = useConfirmDelete();
+  const { confirmDelete, deleteDialog, isConfirming: isDeleteConfirming } =
+    useConfirmDelete();
+  const {
+    confirmDelete: confirmDuplicate,
+    deleteDialog: duplicateDialog,
+    isConfirming: isDuplicateConfirming,
+  } = useConfirmDelete();
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [sortBy, setSortBy] = useState("created_at");
@@ -66,6 +73,21 @@ export function ProductList() {
       queryClient.invalidateQueries({ queryKey: ["products"] });
     },
   });
+
+  const duplicateMutation = useMutation({
+    meta: { successMessage: "Product duplicated successfully." },
+    mutationFn: (id: string) => productsApi.duplicate(id),
+    onSuccess: (product) => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+      router.push(routes.products.edit(product.id));
+    },
+  });
+
+  const isActionPending =
+    deleteMutation.isPending ||
+    duplicateMutation.isPending ||
+    isDeleteConfirming ||
+    isDuplicateConfirming;
 
   const sortOptions = useMemo(
     () =>
@@ -127,19 +149,50 @@ export function ProductList() {
           getEditHref: (row) => routes.products.edit(row.id),
           onDelete: (row) => deleteMutation.mutate(row.id),
           confirmDelete,
-          deleteDisabled: deleteMutation.isPending,
+          deleteDisabled: isActionPending,
           getDeleteMessage: (row) =>
             `Are you sure you want to delete "${row.name}"? This action cannot be undone.`,
+          trailingActions: (row) => (
+            <TableRowActionButton
+              variant="duplicate"
+              disabled={isActionPending}
+              onClick={() =>
+                confirmDuplicate({
+                  title: "Duplicate product",
+                  message: [
+                    `This will create a new product named "Copy of ${row.name}".`,
+                    "The copy will include the same category, pricing, recipe, notes, and visibility settings.",
+                    "You can review and edit the new product before using it.",
+                  ].join("\n\n"),
+                  confirmLabel: "Duplicate",
+                  confirmingLabel: "Duplicating...",
+                  confirmVariant: "default",
+                  onConfirm: () => duplicateMutation.mutateAsync(row.id),
+                })
+              }
+            >
+              Duplicate
+            </TableRowActionButton>
+          ),
         }),
       );
     }
 
     return base;
-  }, [canManageRecords, canViewFinancials, confirmDelete, deleteMutation]);
+  }, [
+    canManageRecords,
+    canViewFinancials,
+    confirmDelete,
+    confirmDuplicate,
+    deleteMutation,
+    duplicateMutation,
+    isActionPending,
+  ]);
 
   return (
     <div className="space-y-6">
       {deleteDialog}
+      {duplicateDialog}
       <ListToolbar
         search={search}
         onSearchChange={(value) => {

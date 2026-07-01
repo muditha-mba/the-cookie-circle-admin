@@ -21,6 +21,7 @@ export type CreateTableActionsColumnOptions<T> = {
   deleteDisabled?: boolean;
   canDelete?: (row: T) => boolean;
   extraActions?: (row: T) => ReactNode;
+  trailingActions?: (row: T) => ReactNode;
 };
 
 export function createTableActionsColumn<T>(
@@ -41,6 +42,7 @@ export function createTableActionsColumn<T>(
     deleteDisabled = false,
     canDelete,
     extraActions,
+    trailingActions,
   } = options;
 
   return {
@@ -67,6 +69,7 @@ export function createTableActionsColumn<T>(
           }
           deleteDisabled={deleteDisabled}
           extra={extraActions?.(record)}
+          trailingExtra={trailingActions?.(record)}
         />
       );
     },

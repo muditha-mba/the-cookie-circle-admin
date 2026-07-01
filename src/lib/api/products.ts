@@ -87,6 +87,8 @@ export const productsApi = {
 
   delete: (id: string) => apiClient.delete<void>(`${BASE}/${id}`),
 
+  duplicate: (id: string) => apiClient.post<ProductDetail>(`${BASE}/${id}/duplicate`),
+
   previewCost: (payload: ProductCostPreviewRequest) =>
     apiClient.post<ProductCostBreakdown>(`${BASE}/cost-preview`, payload),
 };
