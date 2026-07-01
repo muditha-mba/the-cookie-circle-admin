@@ -25,6 +25,10 @@ const actionVariants = {
     actionButtonBase,
     "border-danger/30 bg-danger/10 text-danger hover:bg-danger/15",
   ),
+  duplicate: cn(
+    actionButtonBase,
+    "border-info/30 bg-info/10 text-info hover:bg-info/15",
+  ),
   extra: cn(
     actionButtonBase,
     "border-warning/30 bg-warning/10 text-warning hover:bg-warning/15",
@@ -41,6 +45,7 @@ type TableRowActionsProps = {
   onDelete?: () => void;
   deleteDisabled?: boolean;
   extra?: ReactNode;
+  trailingExtra?: ReactNode;
   className?: string;
 };
 
@@ -127,18 +132,19 @@ export function TableRowActions({
   onDelete,
   deleteDisabled = false,
   extra,
+  trailingExtra,
   className,
 }: TableRowActionsProps) {
   const hasView = Boolean(viewHref || onView);
   const hasEdit = Boolean(editHref || onEdit);
   const hasDelete = Boolean(onDelete);
 
-  if (!hasView && !hasEdit && !hasDelete && !extra) {
+  if (!hasView && !hasEdit && !hasDelete && !extra && !trailingExtra) {
     return <span className="text-sm text-text-muted">—</span>;
   }
 
   return (
-    <div className={cn("flex min-w-[11rem] flex-nowrap items-center gap-1.5", className)}>
+    <div className={cn("flex min-w-[16rem] flex-nowrap items-center gap-1.5", className)}>
       {extra}
 
       {hasView ? (
@@ -187,6 +193,8 @@ export function TableRowActions({
           Delete
         </ActionControl>
       ) : null}
+
+      {trailingExtra}
     </div>
   );
 }
