@@ -167,7 +167,9 @@ export function ProductList() {
                   confirmLabel: "Duplicate",
                   confirmingLabel: "Duplicating...",
                   confirmVariant: "default",
-                  onConfirm: () => duplicateMutation.mutateAsync(row.id),
+                  onConfirm: async () => {
+                    await duplicateMutation.mutateAsync(row.id);
+                  },
                 })
               }
             >
