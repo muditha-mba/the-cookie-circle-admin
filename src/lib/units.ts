@@ -61,6 +61,12 @@ export function isKnownUnit(value: string): boolean {
   return UNIT_VALUE_SET.has(normalizeUnit(value));
 }
 
+/** Count & packaging units should show exact decimals plus a rounded kitchen suggestion. */
+export function isDiscreteUnit(value: string): boolean {
+  const unit = MEASUREMENT_UNITS.find((entry) => entry.value === normalizeUnit(value));
+  return unit?.group === "Count & packaging";
+}
+
 export function isAllowedUnit(value: string, extraValues: string[] = []): boolean {
   const normalized = normalizeUnit(value);
   if (!normalized) {

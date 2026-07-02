@@ -87,7 +87,7 @@ export default function CollectionDetailPage() {
 
       <DetailMetadataCard>
         <DetailField
-          label="Package"
+          label="Package type"
           value={<CollectionPackageBadge name={data.package.name} tone={data.package.badge_tone} />}
         />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
@@ -107,18 +107,35 @@ export default function CollectionDetailPage() {
         <DetailField label="Description" value={data.description || "—"} />
       </DetailMetadataCard>
 
-      {data.item_lines.length > 0 ? (
-        <section className="mt-8 rounded-lg border border-border bg-surface p-6">
-          <h2 className="text-lg font-semibold text-text-primary mb-4">Packaging items</h2>
-          <ul className="space-y-2 text-sm">
-            {data.item_lines.map((line) => (
-              <li key={line.id}>
-                {line.product_item_name} — {formatQuantity(line.quantity, line.unit)}
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
+      <section className="mt-8 rounded-lg border border-border bg-surface p-6">
+        <h2 className="mb-4 text-lg font-semibold text-text-primary">Packaging items</h2>
+        {data.item_lines.length > 0 ? (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[420px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-border text-text-secondary">
+                  <th className="pb-2 font-medium">Item</th>
+                  <th className="pb-2 font-medium">Quantity</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.item_lines.map((line) => (
+                  <tr key={line.id} className="border-b border-border/60 last:border-0">
+                    <td className="py-2.5 font-medium text-text-primary">
+                      {line.product_item_name}
+                    </td>
+                    <td className="py-2.5 text-text-secondary">
+                      {formatQuantity(line.quantity, line.unit)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-sm text-text-muted">No packaging items configured for this collection.</p>
+        )}
+      </section>
     </DashboardPageShell>
   );
 }

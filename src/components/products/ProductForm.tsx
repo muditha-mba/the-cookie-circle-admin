@@ -39,6 +39,7 @@ export function ProductForm({
   const { canViewFinancials } = useAdminPermissions();
   const [productItems, setProductItems] = useState<ProductItem[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [categoriesReady, setCategoriesReady] = useState(false);
   const [preview, setPreview] = useState<ProductCostBreakdown | null>(null);
   const [previewError, setPreviewError] = useState<string | null>(null);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
@@ -89,6 +90,7 @@ export function ProductForm({
       ]);
       setProductItems(items.items);
       setCategories(categoryRows.map((row) => ({ id: row.id, name: row.name })));
+      setCategoriesReady(true);
     })();
   }, []);
 
@@ -193,14 +195,31 @@ export function ProductForm({
         </FormField>
 
         <FormField label="Category" htmlFor="category_id" error={errors.category_id?.message}>
-          <select id="category_id" className={formInputClassName} {...register("category_id")}>
-            <option value="">Select category</option>
-            {categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}
-              </option>
-            ))}
-          </select>
+          <Controller
+            control={control}
+            name="category_id"
+            render={({ field }) => (
+              <select
+                key={categoriesReady ? "categories-ready" : "categories-loading"}
+                id="category_id"
+                className={formInputClassName}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                disabled={!categoriesReady}
+              >
+                <option value="">
+                  {categoriesReady ? "Select category" : "Loading categories..."}
+                </option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
         </FormField>
 
         {canViewFinancials ? (

@@ -46,6 +46,11 @@ export type ProductCostBreakdown = {
 };
 
 export type ProductDetail = ProductSummary & {
+  category: {
+    id: string;
+    code: string;
+    name: string;
+  };
   recipe_lines: RecipeLine[];
   cost_breakdown: ProductCostBreakdown;
 };
