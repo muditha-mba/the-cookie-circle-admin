@@ -94,6 +94,7 @@ export default function ProductDetailPage() {
       {deleteError ? <p className="mb-4 text-sm text-danger">{deleteError}</p> : null}
 
       <DetailMetadataCard>
+        <DetailField label="Category" value={data.category.name} />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
         {canViewFinancials ? (
           <>

@@ -89,6 +89,7 @@ export default function EditCollectionPage() {
             quantity: Number(line.quantity),
           })),
         }}
+        initialItemLines={data.item_lines}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}
         error={error}

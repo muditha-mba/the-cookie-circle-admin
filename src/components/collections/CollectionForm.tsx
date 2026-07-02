@@ -2,12 +2,13 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useFieldArray, useForm } from "react-hook-form";
 
 import { FormField, formInputClassName } from "@/components/forms/FormField";
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import { PrimaryButton } from "@/components/data/PageActions";
+import type { CollectionItemLine } from "@/lib/api/collections";
 import type { CollectionPackage } from "@/lib/api/collection-packages";
 import { collectionPackagesApi } from "@/lib/api/collection-packages";
 import { productCategoriesApi } from "@/lib/api/product-categories";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 type CollectionFormProps = {
   defaultValues?: Partial<CollectionFormValues>;
+  initialItemLines?: CollectionItemLine[];
   submitLabel: string;
   isSubmitting?: boolean;
   error?: string | null;
@@ -30,6 +32,7 @@ type CollectionFormProps = {
 
 export function CollectionForm({
   defaultValues,
+  initialItemLines = [],
   submitLabel,
   isSubmitting = false,
   error,
@@ -39,6 +42,7 @@ export function CollectionForm({
   const [packages, setPackages] = useState<CollectionPackage[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
   const [packagingItems, setPackagingItems] = useState<ProductItem[]>([]);
+  const [optionsReady, setOptionsReady] = useState(false);
 
   const form = useForm<CollectionFormValues>({
     resolver: zodResolver(collectionSchema),
@@ -61,6 +65,8 @@ export function CollectionForm({
     name: "item_lines",
   });
 
+  const itemLines = form.watch("item_lines");
+
   useEffect(() => {
     void Promise.all([
       collectionPackagesApi.list({ page: 1, page_size: 100, sort_by: "name", sort_order: "asc" }),
@@ -72,8 +78,47 @@ export function CollectionForm({
       setPackagingItems(
         itemsRes.items.filter((item) => isPackagingItemType(item.item_type.name)),
       );
+      setOptionsReady(true);
     });
   }, []);
+
+  const selectedPackagingIds = useMemo(
+    () =>
+      new Set(
+        itemLines
+          .map((line) => line.product_item_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    [itemLines],
+  );
+
+  const savedPackagingIds = useMemo(
+    () => new Set(initialItemLines.map((line) => line.product_item_id)),
+    [initialItemLines],
+  );
+
+  const packagingOptions = useMemo(() => {
+    const options = new Map<string, { id: string; label: string }>();
+
+    for (const item of packagingItems) {
+      if (item.is_active || selectedPackagingIds.has(item.id) || savedPackagingIds.has(item.id)) {
+        options.set(item.id, { id: item.id, label: item.name });
+      }
+    }
+
+    for (const line of initialItemLines) {
+      if (!options.has(line.product_item_id)) {
+        options.set(line.product_item_id, {
+          id: line.product_item_id,
+          label: line.product_item_name,
+        });
+      }
+    }
+
+    return Array.from(options.values()).sort((left, right) =>
+      left.label.localeCompare(right.label),
+    );
+  }, [initialItemLines, packagingItems, savedPackagingIds, selectedPackagingIds]);
 
   return (
     <form
@@ -98,14 +143,31 @@ export function CollectionForm({
         </FormField>
 
         <FormField label="Package type" htmlFor="package_id" error={form.formState.errors.package_id?.message}>
-          <select id="package_id" className={formInputClassName} {...form.register("package_id")}>
-            <option value="">Select package</option>
-            {packages.map((pkg) => (
-              <option key={pkg.id} value={pkg.id}>
-                {pkg.name}
-              </option>
-            ))}
-          </select>
+          <Controller
+            control={form.control}
+            name="package_id"
+            render={({ field }) => (
+              <select
+                key={optionsReady ? "packages-ready" : "packages-loading"}
+                id="package_id"
+                className={formInputClassName}
+                value={field.value ?? ""}
+                onChange={field.onChange}
+                onBlur={field.onBlur}
+                ref={field.ref}
+                disabled={!optionsReady}
+              >
+                <option value="">
+                  {optionsReady ? "Select package" : "Loading packages..."}
+                </option>
+                {packages.map((pkg) => (
+                  <option key={pkg.id} value={pkg.id}>
+                    {pkg.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
         </FormField>
 
         <div className={cn("grid gap-4", canViewFinancials ? "sm:grid-cols-2" : "sm:grid-cols-1")}>
@@ -192,41 +254,58 @@ export function CollectionForm({
             Add item
           </button>
         </div>
-        {fields.map((field, index) => (
-          <div key={field.id} className="grid gap-3 sm:grid-cols-[1fr_120px_auto] items-end">
-            <FormField label="Packaging item" htmlFor={`item_lines.${index}.product_item_id`}>
-              <select
-                id={`item_lines.${index}.product_item_id`}
-                className={formInputClassName}
-                {...form.register(`item_lines.${index}.product_item_id`)}
+        {fields.length === 0 ? (
+          <p className="text-sm text-text-muted">No packaging items added yet.</p>
+        ) : (
+          fields.map((field, index) => (
+            <div key={field.id} className="grid gap-3 sm:grid-cols-[1fr_120px_auto] items-end">
+              <FormField label="Packaging item" htmlFor={`item_lines.${index}.product_item_id`}>
+                <Controller
+                  control={form.control}
+                  name={`item_lines.${index}.product_item_id`}
+                  render={({ field: itemField }) => (
+                    <select
+                      key={`${field.id}-${optionsReady ? "ready" : "loading"}`}
+                      id={`item_lines.${index}.product_item_id`}
+                      className={formInputClassName}
+                      value={itemField.value ?? ""}
+                      onChange={itemField.onChange}
+                      onBlur={itemField.onBlur}
+                      ref={itemField.ref}
+                      disabled={!optionsReady}
+                    >
+                      <option value="">
+                        {optionsReady ? "Select item" : "Loading items..."}
+                      </option>
+                      {packagingOptions.map((item) => (
+                        <option key={item.id} value={item.id}>
+                          {item.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                />
+              </FormField>
+              <FormField label="Qty" htmlFor={`item_lines.${index}.quantity`}>
+                <input
+                  id={`item_lines.${index}.quantity`}
+                  type="number"
+                  min={0.0001}
+                  step="any"
+                  className={formInputClassName}
+                  {...form.register(`item_lines.${index}.quantity`, { valueAsNumber: true })}
+                />
+              </FormField>
+              <button
+                type="button"
+                className="mb-2 rounded-md border border-border p-2 text-text-muted hover:text-red-600"
+                onClick={() => remove(index)}
               >
-                <option value="">Select item</option>
-                {packagingItems.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </select>
-            </FormField>
-            <FormField label="Qty" htmlFor={`item_lines.${index}.quantity`}>
-              <input
-                id={`item_lines.${index}.quantity`}
-                type="number"
-                min={0.0001}
-                step="any"
-                className={formInputClassName}
-                {...form.register(`item_lines.${index}.quantity`, { valueAsNumber: true })}
-              />
-            </FormField>
-            <button
-              type="button"
-              className="mb-2 rounded-md border border-border p-2 text-text-muted hover:text-red-600"
-              onClick={() => remove(index)}
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        ))}
+                <Trash2 size={16} />
+              </button>
+            </div>
+          ))
+        )}
       </section>
 
       {error && <p className="text-sm text-red-600">{error}</p>}

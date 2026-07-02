@@ -80,11 +80,13 @@ export function SecondaryButton({
 
 export function PrimaryButton({
   type = "submit",
+  onClick,
   disabled,
   children,
   className,
 }: {
   type?: "button" | "submit";
+  onClick?: () => void;
   disabled?: boolean;
   children: React.ReactNode;
   className?: string;
@@ -92,6 +94,7 @@ export function PrimaryButton({
   return (
     <button
       type={type}
+      onClick={onClick}
       disabled={disabled}
       className={cn(primaryClassName, disabled && "cursor-not-allowed opacity-50", className)}
     >
