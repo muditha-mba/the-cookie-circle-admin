@@ -23,6 +23,7 @@ import {
   Wallet,
   Wrench,
   QrCode,
+  Calculator,
 } from "lucide-react";
 
 import { routes } from "@/config/routes";
@@ -257,6 +258,13 @@ export const navigationSections: NavSectionConfig[] = [
         title: "QR Generator",
         href: routes.tools.qrGenerator,
         icon: QrCode,
+        enabled: true,
+      },
+      {
+        id: "recipe-calculator",
+        title: "Recipe Calculator",
+        href: routes.tools.recipeCalculator,
+        icon: Calculator,
         enabled: true,
       },
     ],

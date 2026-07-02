@@ -141,6 +141,7 @@ export const routes = {
   },
   tools: {
     qrGenerator: "/tools/qr-generator",
+    recipeCalculator: "/tools/recipe-calculator",
   },
   inventory: {
     overview: "/inventory",
@@ -201,6 +202,7 @@ const protectedPrefixes = [
   routes.discounts.history,
   routes.promotions.slides.list,
   routes.tools.qrGenerator,
+  routes.tools.recipeCalculator,
   routes.inventory.overview,
   routes.inventory.consumption.list,
 ] as const;
