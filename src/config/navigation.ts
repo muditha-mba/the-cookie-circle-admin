@@ -99,14 +99,14 @@ export const navigationSections: NavSectionConfig[] = [
       },
       {
         id: "collection-packages",
-        title: "Collection Packages",
+        title: "Collections",
         href: routes.collectionPackages.list,
         icon: Layers,
         enabled: true,
       },
       {
         id: "collections",
-        title: "Collections",
+        title: "Packages",
         href: routes.collections.list,
         icon: Layers,
         enabled: true,

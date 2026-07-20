@@ -53,6 +53,12 @@ export function OrderRevenueBreakdown({
               amount={snapshot.products_cost_snapshot}
             />
           ) : null}
+          {Number(snapshot.package_fee_revenue_snapshot) > 0 ? (
+            <BreakdownRow
+              label="Packaging fee (included in products)"
+              amount={snapshot.package_fee_revenue_snapshot}
+            />
+          ) : null}
         </>
       ) : null}
 
@@ -69,12 +75,12 @@ export function OrderRevenueBreakdown({
             />
           ) : null}
           <BreakdownRow
-            label="Packaging fee"
+            label="Packaging fee (included in collections)"
             amount={snapshot.package_fee_revenue_snapshot}
           />
           {showCosts ? (
             <BreakdownRow
-              label="Packaging cost"
+              label="Packaging cost (materials)"
               amount={snapshot.packaging_cost_snapshot}
             />
           ) : null}

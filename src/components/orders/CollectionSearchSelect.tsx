@@ -7,6 +7,7 @@ import { formInputClassName } from "@/components/forms/FormField";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import type { CollectionSummary } from "@/lib/api/collections";
 import { collectionsApi } from "@/lib/api/collections";
+import { formatCollectionDisplayName, formatPackageTypeDisplayName } from "@/lib/collection-display-name";
 import { formatCount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,11 @@ export type CollectionSearchOption = Pick<
   CollectionSummary,
   "id" | "name" | "package_size" | "package_name"
 >;
+
+function collectionOptionLabel(name: string): string {
+  const displayName = formatCollectionDisplayName(name);
+  return displayName === name ? name : `${displayName} (${name})`;
+}
 
 type CollectionSearchSelectProps = {
   value: string;
@@ -122,7 +128,7 @@ export function CollectionSearchSelect({
   const inputValue = open
     ? query
     : selected
-      ? `${selected.name} · ${formatCount(selected.package_size)} cookies`
+      ? `${collectionOptionLabel(selected.name)} · ${formatCount(selected.package_size)} cookies`
       : "";
 
   return (
@@ -198,11 +204,11 @@ export function CollectionSearchSelect({
                   onClick={() => handleSelect(collection)}
                 >
                   <span className="block font-medium text-text-primary">
-                    {collection.name}
+                    {collectionOptionLabel(collection.name)}
                     <span className="font-normal text-text-muted">
                       {" "}
                       · {formatCount(collection.package_size)} cookies ·{" "}
-                      {collection.package_name}
+                      {formatPackageTypeDisplayName(collection.package_name)}
                     </span>
                   </span>
                   <span className="mt-0.5 block font-mono text-xs text-text-muted">

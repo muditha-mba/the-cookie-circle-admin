@@ -48,6 +48,8 @@ export function BusinessSettingsForm({
       bank_transfer_enabled: defaultValues.bank_transfer_enabled,
       cod_enabled: defaultValues.cod_enabled,
       discounts_enabled: defaultValues.discounts_enabled,
+      catering_packaging_fee_mode: defaultValues.catering_packaging_fee_mode,
+      catering_packaging_fee_amount: Number(defaultValues.catering_packaging_fee_amount),
       bank_name: defaultValues.bank_transfer_details.bank_name,
       bank_account_name: defaultValues.bank_transfer_details.account_name,
       bank_account_number: defaultValues.bank_transfer_details.account_number,
@@ -56,7 +58,8 @@ export function BusinessSettingsForm({
     },
   });
 
-  const { register, handleSubmit, formState: { errors } } = form;
+  const { register, handleSubmit, watch, formState: { errors } } = form;
+  const cateringFeeMode = watch("catering_packaging_fee_mode");
 
   return (
     <form
@@ -129,6 +132,48 @@ export function BusinessSettingsForm({
           step="0.01"
           className={formInputClassName}
           {...register("delivery_fee", { valueAsNumber: true })}
+        />
+      </FormField>
+
+      <div className="border-t border-border pt-6">
+        <h3 className="text-sm font-semibold text-text-primary">Catering packaging fee</h3>
+        <p className="mt-1 text-xs text-text-muted">
+          Applied to catering orders and embedded in the cookies subtotal (same as collection
+          packaging fees). Set amount to 0 to disable.
+        </p>
+      </div>
+
+      <FormField
+        label="Fee mode"
+        htmlFor="catering_packaging_fee_mode"
+        error={errors.catering_packaging_fee_mode?.message}
+      >
+        <select
+          id="catering_packaging_fee_mode"
+          className={formInputClassName}
+          {...register("catering_packaging_fee_mode")}
+        >
+          <option value="flat">Flat fee per order</option>
+          <option value="per_cookie">Per cookie</option>
+        </select>
+      </FormField>
+
+      <FormField
+        label={
+          cateringFeeMode === "per_cookie"
+            ? "Packaging fee per cookie (LKR)"
+            : "Flat packaging fee (LKR)"
+        }
+        htmlFor="catering_packaging_fee_amount"
+        error={errors.catering_packaging_fee_amount?.message}
+      >
+        <input
+          id="catering_packaging_fee_amount"
+          type="number"
+          min={0}
+          step="0.01"
+          className={formInputClassName}
+          {...register("catering_packaging_fee_amount", { valueAsNumber: true })}
         />
       </FormField>
 
