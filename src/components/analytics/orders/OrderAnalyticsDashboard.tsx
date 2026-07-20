@@ -151,7 +151,7 @@ const performanceColumns: ColumnDef<OrderAnalyticsPerformanceRow>[] = [
   },
   {
     accessorKey: "package_fee_revenue_snapshot",
-    header: "Package fees",
+    header: "Packaging fees",
     cell: ({ row }) => (
       <span className="tabular-nums">
         {formatCurrency(row.original.package_fee_revenue_snapshot)}
@@ -536,7 +536,7 @@ export function OrderAnalyticsDashboard() {
               />
               <AnalyticsKpiCard
                 variant="orders"
-                label="Package fee revenue"
+                label="Packaging fee revenue"
                 value={formatCurrency(kpis.package_fee_revenue.value)}
                 dateRangeLabel={rangeLabel}
                 trendPercentage={kpis.package_fee_revenue.trend_percentage}

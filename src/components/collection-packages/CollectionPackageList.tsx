@@ -80,6 +80,25 @@ export function CollectionPackageList() {
         ),
       },
       {
+        header: "Quantity range",
+        id: "quantity_range",
+        cell: ({ row }) => (
+          <span className="tabular-nums text-text-secondary">
+            {row.original.min_quantity} – {row.original.max_quantity}
+          </span>
+        ),
+      },
+      {
+        header: "Packaging fee",
+        id: "packaging_fee",
+        cell: ({ row }) => (
+          <span className="text-text-secondary">
+            {row.original.packaging_fee_mode === "per_cookie" ? "Per cookie" : "Flat"} ·{" "}
+            {row.original.packaging_fee_amount}
+          </span>
+        ),
+      },
+      {
         header: "Status",
         accessorKey: "is_active",
         cell: ({ row }) => <StatusBadge active={row.original.is_active} />,
@@ -109,7 +128,7 @@ export function CollectionPackageList() {
           setSearch(value);
           setPage(1);
         }}
-        searchPlaceholder="Search collection packages..."
+        searchPlaceholder="Search collections..."
         sortBy={sortBy}
         sortOrder={sortOrder}
         sortOptions={SORT_OPTIONS}
@@ -118,11 +137,11 @@ export function CollectionPackageList() {
           setPage(1);
         }}
         onSortOrderChange={setSortOrder}
-        actions={<PrimaryLink href={routes.collectionPackages.create}>Add package</PrimaryLink>}
+        actions={<PrimaryLink href={routes.collectionPackages.create}>Add collection</PrimaryLink>}
       />
 
       {isError ? (
-        <p className="text-sm text-danger">Unable to load collection packages.</p>
+        <p className="text-sm text-danger">Unable to load collections.</p>
       ) : (
         <DataTable
           columns={columns}
@@ -144,12 +163,12 @@ export function CollectionPackageList() {
 
       {!isLoading && data?.total === 0 ? (
         <p className="text-center text-sm text-text-secondary">
-          No collection packages yet.{" "}
+          No collections yet.{" "}
           <Link
             href={routes.collectionPackages.create}
             className="text-text-primary underline-offset-4 hover:underline"
           >
-            Create your first package
+            Create your first collection
           </Link>
         </p>
       ) : null}

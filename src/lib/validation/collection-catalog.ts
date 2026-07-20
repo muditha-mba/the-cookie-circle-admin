@@ -15,7 +15,7 @@ export const collectionSchema = z.object({
     .or(z.literal("")),
   package_id: z.string().uuid("Select a package"),
   package_size: z.number().int().positive("Package size must be at least 1"),
-  package_fee: z.number().min(0, "Package fee must be zero or greater"),
+  package_fee: z.number().min(0, "Legacy package fee must be zero or greater"),
   is_active: z.boolean(),
   is_public: z.boolean(),
   allowed_category_ids: z

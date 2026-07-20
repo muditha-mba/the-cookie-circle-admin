@@ -29,6 +29,8 @@ export type BusinessSettings = {
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
   discounts_enabled: boolean;
+  catering_packaging_fee_mode: "flat" | "per_cookie";
+  catering_packaging_fee_amount: string;
   bank_transfer_details: BankTransferDetails;
 };
 
@@ -44,6 +46,8 @@ export type BusinessSettingsUpdate = Partial<{
   bank_transfer_enabled: boolean;
   cod_enabled: boolean;
   discounts_enabled: boolean;
+  catering_packaging_fee_mode: "flat" | "per_cookie";
+  catering_packaging_fee_amount: number;
   bank_name: string;
   bank_account_name: string;
   bank_account_number: string;

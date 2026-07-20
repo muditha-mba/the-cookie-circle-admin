@@ -4,8 +4,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 export default function CollectionPackagesPage() {
   return (
     <DashboardPageShell
-      title="Collection Packages"
-      description="Manage package definitions used by collections."
+      title="Collections"
+      description="Butter, Mix & Match, and Special Edition — customer-facing collection types with quantity ranges and packaging fees."
     >
       <CollectionPackageList />
     </DashboardPageShell>

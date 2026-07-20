@@ -11,6 +11,7 @@ import { routes } from "@/config/routes";
 import type { OrderCollectionLine } from "@/lib/api/orders";
 import { ordersApi } from "@/lib/api/orders";
 import type { CollectionSearchOption } from "@/components/orders/CollectionSearchSelect";
+import { formatCollectionDisplayName } from "@/lib/collection-display-name";
 import { cacheEntitySave } from "@/lib/query/mutation-cache";
 import { notifyActionError, notifyActionSuccess } from "@/lib/forms/feedback";
 import {
@@ -28,9 +29,9 @@ function collectionLineToSearchOption(line: OrderCollectionLine): CollectionSear
 
   return {
     id: line.collection_id,
-    name: line.collection_name_snapshot,
+    name: formatCollectionDisplayName(line.collection_name_snapshot),
     package_size: snapshotCookies > 0 ? snapshotCookies : selectionCookies,
-    package_name: "Package",
+    package_name: "Collection type",
   };
 }
 

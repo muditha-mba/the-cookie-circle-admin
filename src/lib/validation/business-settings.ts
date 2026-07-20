@@ -20,6 +20,8 @@ export const businessSettingsSchema = z.object({
   bank_transfer_enabled: z.boolean(),
   cod_enabled: z.boolean(),
   discounts_enabled: z.boolean(),
+  catering_packaging_fee_mode: z.enum(["flat", "per_cookie"]),
+  catering_packaging_fee_amount: z.number().min(0, "Fee cannot be negative"),
   bank_name: z.string().max(120),
   bank_account_name: z.string().max(120),
   bank_account_number: z.string().max(40),
