@@ -789,7 +789,7 @@ export function CollectionAnalyticsDashboard() {
                   isLoading={packagePerformanceQuery.isLoading}
                   isError={packagePerformanceQuery.isError}
                   emptyTitle="No package orders in this period"
-                  emptyDescription="Orders are counted from collection lines per package."
+                  emptyDescription="Orders are counted from collection lines per collection type."
                 />
               </AnalyticsChartCard>
               <AnalyticsChartCard

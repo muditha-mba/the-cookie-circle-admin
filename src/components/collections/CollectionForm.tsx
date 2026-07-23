@@ -142,7 +142,7 @@ export function CollectionForm({
           />
         </FormField>
 
-        <FormField label="Package type" htmlFor="package_id" error={form.formState.errors.package_id?.message}>
+        <FormField label="Collection type" htmlFor="package_id" error={form.formState.errors.package_id?.message}>
           <Controller
             control={form.control}
             name="package_id"
@@ -158,7 +158,7 @@ export function CollectionForm({
                 disabled={!optionsReady}
               >
                 <option value="">
-                  {optionsReady ? "Select package" : "Loading packages..."}
+                  {optionsReady ? "Select collection type" : "Loading collections..."}
                 </option>
                 {packages.map((pkg) => (
                   <option key={pkg.id} value={pkg.id}>
@@ -181,7 +181,7 @@ export function CollectionForm({
             />
           </FormField>
           {canViewFinancials ? (
-            <FormField label="Package fee (LKR)" htmlFor="package_fee" error={form.formState.errors.package_fee?.message}>
+            <FormField label="Legacy package fee (LKR)" htmlFor="package_fee" error={form.formState.errors.package_fee?.message}>
               <input
                 id="package_fee"
                 type="number"

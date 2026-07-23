@@ -36,6 +36,10 @@ export default function EditCollectionPackagePage() {
         description: values.description || null,
         badge_tone: values.badge_tone,
         is_active: values.is_active,
+        min_quantity: values.min_quantity,
+        max_quantity: values.max_quantity,
+        packaging_fee_mode: values.packaging_fee_mode,
+        packaging_fee_amount: values.packaging_fee_amount,
       });
       cacheEntitySave(
         queryClient,
@@ -47,7 +51,7 @@ export default function EditCollectionPackagePage() {
       notifyActionSuccess("Changes saved successfully.");
       router.push(routes.collectionPackages.detail(params.id));
     } catch (err) {
-      notifyActionError(err, "Unable to update collection package.", setError);
+      notifyActionError(err, "Unable to update collection.", setError);
     } finally {
       setIsSubmitting(false);
     }
@@ -55,7 +59,7 @@ export default function EditCollectionPackagePage() {
 
   if (isLoading) {
     return (
-      <DashboardPageShell title="Edit Collection Package" description="Loading...">
+      <DashboardPageShell title="Edit Collection" description="Loading...">
         <div className="h-40 animate-pulse rounded-lg bg-surface-hover" />
       </DashboardPageShell>
     );
@@ -63,8 +67,8 @@ export default function EditCollectionPackagePage() {
 
   if (isError || !data) {
     return (
-      <DashboardPageShell title="Edit Collection Package" description="Not found">
-        <p className="text-sm text-danger">Collection package not found.</p>
+      <DashboardPageShell title="Edit Collection" description="Not found">
+        <p className="text-sm text-danger">Collection not found.</p>
         <PageActions backHref={routes.collectionPackages.list} className="mt-6" />
       </DashboardPageShell>
     );
@@ -73,7 +77,7 @@ export default function EditCollectionPackagePage() {
   return (
     <DashboardPageShell
       title={`Edit ${data.name}`}
-      description="Update package metadata and badge style."
+      description="Update quantity range, packaging fee, and visibility."
     >
       <PageActions backHref={routes.collectionPackages.detail(params.id)} className="mb-6" />
       <CollectionPackageForm
@@ -83,6 +87,10 @@ export default function EditCollectionPackagePage() {
           description: data.description ?? "",
           badge_tone: data.badge_tone,
           is_active: data.is_active,
+          min_quantity: data.min_quantity,
+          max_quantity: data.max_quantity,
+          packaging_fee_mode: data.packaging_fee_mode,
+          packaging_fee_amount: Number(data.packaging_fee_amount),
         }}
         submitLabel="Save changes"
         isSubmitting={isSubmitting}

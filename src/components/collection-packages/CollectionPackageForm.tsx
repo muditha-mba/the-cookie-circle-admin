@@ -18,6 +18,11 @@ const BADGE_TONE_OPTIONS = [
   { value: "neutral", label: "Neutral" },
 ] as const;
 
+const FEE_MODE_OPTIONS = [
+  { value: "flat", label: "Flat fee per order" },
+  { value: "per_cookie", label: "Fee per cookie" },
+] as const;
+
 function toPackageCode(name: string): string {
   return name
     .trim()
@@ -56,12 +61,17 @@ export function CollectionPackageForm({
       description: "",
       badge_tone: "violet",
       is_active: true,
+      min_quantity: 4,
+      max_quantity: 30,
+      packaging_fee_mode: "flat",
+      packaging_fee_amount: 0,
       ...defaultValues,
     },
   });
   const lastAutoCodeRef = useRef("");
   const nameValue = watch("name");
   const codeValue = watch("code");
+  const feeMode = watch("packaging_fee_mode");
 
   useEffect(() => {
     const generated = toPackageCode(nameValue ?? "");
@@ -69,7 +79,6 @@ export function CollectionPackageForm({
       return;
     }
 
-    // Auto-fill until the user customizes code manually.
     if (!codeValue || codeValue === lastAutoCodeRef.current) {
       setValue("code", generated, { shouldValidate: true });
       lastAutoCodeRef.current = generated;
@@ -122,6 +131,89 @@ export function CollectionPackageForm({
         </select>
       </FormField>
 
+      <div className="space-y-4 border-t border-border pt-6">
+        <div>
+          <h3 className="text-sm font-semibold text-text-primary">Order quantity range</h3>
+          <p className="mt-1 text-xs text-text-muted">
+            Customers can order any cookie count within this range for this collection.
+          </p>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <FormField
+            label="Minimum cookies"
+            htmlFor="min_quantity"
+            error={errors.min_quantity?.message}
+          >
+            <input
+              id="min_quantity"
+              type="number"
+              min={1}
+              step={1}
+              className={formInputClassName}
+              {...register("min_quantity", { valueAsNumber: true })}
+            />
+          </FormField>
+          <FormField
+            label="Maximum cookies"
+            htmlFor="max_quantity"
+            error={errors.max_quantity?.message}
+          >
+            <input
+              id="max_quantity"
+              type="number"
+              min={1}
+              step={1}
+              className={formInputClassName}
+              {...register("max_quantity", { valueAsNumber: true })}
+            />
+          </FormField>
+        </div>
+      </div>
+
+      <div className="space-y-4 border-t border-border pt-6">
+        <div>
+          <h3 className="text-sm font-semibold text-text-primary">Packaging fee</h3>
+          <p className="mt-1 text-xs text-text-muted">
+            Added to the cookie subtotal on the customer quote and checkout.
+          </p>
+        </div>
+        <FormField
+          label="Fee mode"
+          htmlFor="packaging_fee_mode"
+          error={errors.packaging_fee_mode?.message}
+        >
+          <select
+            id="packaging_fee_mode"
+            className={formInputClassName}
+            {...register("packaging_fee_mode")}
+          >
+            {FEE_MODE_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </FormField>
+        <FormField
+          label={
+            feeMode === "per_cookie"
+              ? "Fee per cookie (LKR)"
+              : "Flat packaging fee (LKR)"
+          }
+          htmlFor="packaging_fee_amount"
+          error={errors.packaging_fee_amount?.message}
+        >
+          <input
+            id="packaging_fee_amount"
+            type="number"
+            min={0}
+            step="0.01"
+            className={formInputClassName}
+            {...register("packaging_fee_amount", { valueAsNumber: true })}
+          />
+        </FormField>
+      </div>
+
       <FormField label="Status" htmlFor="is_active">
         <label className="flex items-center gap-2 text-sm text-text-primary">
           <input
@@ -130,7 +222,7 @@ export function CollectionPackageForm({
             className="h-4 w-4 rounded border-border"
             {...register("is_active")}
           />
-          Active
+          Active (visible on website when at least one public package exists)
         </label>
       </FormField>
 

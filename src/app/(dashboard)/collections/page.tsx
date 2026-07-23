@@ -4,8 +4,8 @@ import { DashboardPageShell } from "@/components/layout/DashboardPageShell";
 export default function CollectionsPage() {
   return (
     <DashboardPageShell
-      title="Collections"
-      description="Manage customer-facing bundles and collection profitability."
+      title="Packages"
+      description="Size packages (Tea, Warm, Gathering, etc.). Keep one public orderable package per collection type for the website."
     >
       <CollectionList />
     </DashboardPageShell>

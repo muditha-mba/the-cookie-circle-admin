@@ -33,10 +33,11 @@ export function OrderFinancialPerformance({
             Financial performance
           </h3>
           <p className="mt-1 text-xs text-text-muted">
-            Whole order — customer total including delivery and packaging fees, minus
-            collections or products production cost, packaging materials, and estimated
-            delivery cost. Margin is profit as a percentage of total order revenue. Values
-            are frozen when the order is saved.
+            Whole order — customer total includes delivery. Packaging fees are already
+            embedded in collections revenue (shown separately below as a breakdown only).
+            Profit subtracts production cost, packaging materials, and estimated delivery
+            cost. Margin is profit as a percentage of total order revenue. Values are frozen
+            when the order is saved.
           </p>
         </div>
         {is_historical_snapshot ? (

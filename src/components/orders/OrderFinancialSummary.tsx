@@ -7,6 +7,7 @@ import type {
   OrderFinancialSnapshot,
   OrderProductLine,
 } from "@/lib/api/orders";
+import { formatCollectionDisplayName } from "@/lib/collection-display-name";
 import type { OrderFinancialBreakdownType } from "@/lib/orders/financial-display";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { formatQuantityDisplay } from "@/lib/orders/financial-display";
@@ -100,7 +101,9 @@ export function OrderFinancialSummary({
               <tbody>
                 {collectionLines.map((line) => (
                   <tr key={line.id} className="border-b border-border/60 last:border-0">
-                    <td className="py-2.5 text-text-primary">{line.collection_name_snapshot}</td>
+                    <td className="py-2.5 text-text-primary">
+                      {formatCollectionDisplayName(line.collection_name_snapshot)}
+                    </td>
                     <td className="py-2.5 text-text-secondary">
                       {formatQuantityDisplay(line.quantity)}
                     </td>

@@ -87,7 +87,7 @@ export default function CollectionDetailPage() {
 
       <DetailMetadataCard>
         <DetailField
-          label="Package type"
+          label="Collection type"
           value={<CollectionPackageBadge name={data.package.name} tone={data.package.badge_tone} />}
         />
         <DetailField label="Status" value={<StatusBadge active={data.is_active} />} />
@@ -97,7 +97,7 @@ export default function CollectionDetailPage() {
           value={`${formatCount(data.package_size)} cookies`}
         />
         {canViewFinancials ? (
-          <DetailField label="Package fee" value={formatCurrency(data.package_fee)} />
+          <DetailField label="Legacy package fee" value={formatCurrency(data.package_fee)} />
         ) : null}
         <DetailField
           label="Allowed categories"

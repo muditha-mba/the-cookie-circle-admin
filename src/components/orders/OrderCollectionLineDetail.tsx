@@ -5,6 +5,7 @@ import { ChevronDown } from "lucide-react";
 
 import { useAdminPermissions } from "@/hooks/useAdminPermissions";
 import type { OrderCollectionLine, OrderCollectionLineSelection } from "@/lib/api/orders";
+import { formatCollectionDisplayName } from "@/lib/collection-display-name";
 import { formatCurrency, formatPercent } from "@/lib/format";
 import { formatQuantityDisplay, marginToneClass, parseAmount } from "@/lib/orders/financial-display";
 import { cn } from "@/lib/utils";
@@ -46,16 +47,27 @@ function buildInsights(selections: OrderCollectionLineSelection[]): CookieInsigh
     return [];
   }
 
-  const pick = (label: string, selector: (row: (typeof rows)[number]) => number) => {
+  const pickHighest = (
+    label: string,
+    selector: (row: (typeof rows)[number]) => number,
+  ) => {
     const best = [...rows].sort((a, b) => selector(b) - selector(a))[0];
     return { label, name: best.name, value: selector(best) };
   };
 
+  const pickLowest = (
+    label: string,
+    selector: (row: (typeof rows)[number]) => number,
+  ) => {
+    const best = [...rows].sort((a, b) => selector(a) - selector(b))[0];
+    return { label, name: best.name, value: selector(best) };
+  };
+
   return [
-    pick("Highest revenue cookie", (row) => row.revenue),
-    pick("Highest profit cookie", (row) => row.profit),
-    pick("Highest margin cookie", (row) => row.margin),
-    pick("Lowest margin cookie", (row) => row.margin),
+    pickHighest("Highest revenue cookie", (row) => row.revenue),
+    pickHighest("Highest profit cookie", (row) => row.profit),
+    pickHighest("Highest margin cookie", (row) => row.margin),
+    pickLowest("Lowest margin cookie", (row) => row.margin),
   ];
 }
 
@@ -92,9 +104,11 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
   const packProfit = parseAmount(line.collection_profit_snapshot) ?? 0;
   const packMargin = parseAmount(line.margin_percentage_snapshot) ?? 0;
 
-  const lineTitle = line.total_cookies_per_pack
-    ? `${line.collection_name_snapshot} (${formatQuantityDisplay(line.total_cookies_per_pack)} cookies per pack)`
-    : line.collection_name_snapshot;
+  const displayName = formatCollectionDisplayName(line.collection_name_snapshot);
+  const lineTitle =
+    totalCookies > 0
+      ? `${displayName} (${formatQuantityDisplay(totalCookies)} cookies)`
+      : displayName;
 
   return (
     <section className="space-y-4 rounded-lg border border-border bg-surface p-5">
@@ -105,7 +119,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
           </h3>
           <p className="mt-1 text-base font-medium text-text-primary">{lineTitle}</p>
           <p className="mt-1 text-xs text-text-muted">
-            Order quantity: {formatQuantityDisplay(line.quantity)} pack
+            Order quantity: {formatQuantityDisplay(line.quantity)} collection
             {packQty === 1 ? "" : "s"}
           </p>
         </div>
@@ -169,7 +183,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
               </div>
             )}
             <p className="mt-3 text-sm text-text-secondary">
-              Total cookies per pack:{" "}
+              Total cookies in this collection:{" "}
               <span className="font-medium text-text-primary">
                 {totalCookies > 0 ? formatQuantityDisplay(totalCookies) : "—"}
               </span>
@@ -179,10 +193,11 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
       </div>
 
       {financialReady && canViewFinancials ? (
-        <SectionCard title="Cookie financial breakdown (per pack)">
+        <SectionCard title="Cookie financial breakdown (per collection)">
           <p className="mb-3 text-xs text-text-muted">
-            Per collection pack — cookie pricing and production cost only. Delivery is not included
-            here; see Financial performance above for the full order.
+            Per collection — cookie pricing and production cost only. Packaging fee is shown in
+            price construction below. Delivery is not included here; see Financial performance
+            above for the full order.
           </p>
           <div className="overflow-x-auto">
             <table className="w-full min-w-[980px] text-left text-sm">
@@ -248,26 +263,26 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
 
           <dl className="mt-4 grid gap-2 border-t border-border/70 pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
             <div>
-              <dt className="text-text-secondary">Pack revenue</dt>
+              <dt className="text-text-secondary">Collection revenue</dt>
               <dd className="tabular-nums font-medium">{formatCurrency(packRevenue)}</dd>
             </div>
             <div>
-              <dt className="text-text-secondary">Pack cost</dt>
+              <dt className="text-text-secondary">Collection cost</dt>
               <dd className="tabular-nums">{formatCurrency(packCost)}</dd>
             </div>
             <div>
-              <dt className="text-text-secondary">Pack profit</dt>
+              <dt className="text-text-secondary">Collection profit</dt>
               <dd className="tabular-nums font-medium">{formatCurrency(packProfit)}</dd>
             </div>
             <div>
-              <dt className="text-text-secondary">Pack margin</dt>
+              <dt className="text-text-secondary">Collection margin</dt>
               <dd className={cn("tabular-nums font-medium", marginToneClass(packMargin))}>
                 {formatPercent(packMargin)}
               </dd>
             </div>
           </dl>
           <p className="mt-2 text-xs text-text-muted">
-            Pack totals reflect one collection pack, not the full order.
+            Totals reflect one collection (cookies + packaging fee in revenue), not the full order.
           </p>
         </SectionCard>
       ) : (
@@ -279,7 +294,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
 
       <div className="grid gap-4 lg:grid-cols-2">
         {canViewFinancials ? (
-          <SectionCard title="Price construction (per pack snapshot)">
+          <SectionCard title="Price construction (per collection snapshot)">
             <dl className="space-y-2 text-sm">
               <div className="flex justify-between gap-4">
                 <dt className="text-text-secondary">Selected cookie revenue</dt>
@@ -290,7 +305,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-text-secondary">Package fee</dt>
+                <dt className="text-text-secondary">Packaging fee (included in selling price)</dt>
                 <dd className="tabular-nums text-text-primary">
                   {line.package_fee_snapshot != null
                     ? formatCurrency(line.package_fee_snapshot)
@@ -298,7 +313,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
                 </dd>
               </div>
               <div className="flex justify-between gap-4 border-t border-border/70 pt-2 font-medium">
-                <dt className="text-text-primary">Collection selling price snapshot</dt>
+                <dt className="text-text-primary">Collection selling price</dt>
                 <dd className="tabular-nums text-text-primary">
                   {formatCurrency(line.collection_selling_price_snapshot)}
                 </dd>
@@ -307,7 +322,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
           </SectionCard>
         ) : null}
 
-        <SectionCard title="Production requirements (per pack)">
+        <SectionCard title="Production requirements (per collection)">
           {selections.length === 0 ? (
             <p className="text-sm text-text-muted">No production selections recorded.</p>
           ) : (
@@ -327,7 +342,7 @@ export function OrderCollectionLineDetail({ line }: OrderCollectionLineDetailPro
       </div>
 
       {canViewFinancials && insights.length > 0 ? (
-        <SectionCard title="Cookie insights (per pack snapshot)">
+        <SectionCard title="Cookie insights (per collection)">
           <dl className="grid gap-3 text-sm sm:grid-cols-2">
             {insights.map((insight) => (
               <div key={insight.label}>

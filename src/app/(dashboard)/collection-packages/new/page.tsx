@@ -29,6 +29,10 @@ export default function NewCollectionPackagePage() {
         description: values.description || null,
         badge_tone: values.badge_tone,
         is_active: values.is_active,
+        min_quantity: values.min_quantity,
+        max_quantity: values.max_quantity,
+        packaging_fee_mode: values.packaging_fee_mode,
+        packaging_fee_amount: values.packaging_fee_amount,
       });
       cacheEntitySave(
         queryClient,
@@ -37,10 +41,10 @@ export default function NewCollectionPackagePage() {
         created,
         { alsoInvalidate: [["collections"]] },
       );
-      notifyActionSuccess("Package created successfully.");
+      notifyActionSuccess("Collection created successfully.");
       router.push(routes.collectionPackages.detail(created.id));
     } catch (err) {
-      notifyActionError(err, "Unable to create collection package.", setError);
+      notifyActionError(err, "Unable to create collection.", setError);
     } finally {
       setIsSubmitting(false);
     }
@@ -48,12 +52,12 @@ export default function NewCollectionPackagePage() {
 
   return (
     <DashboardPageShell
-      title="Create Collection Package"
-      description="Add a new package category for collections."
+      title="Create Collection"
+      description="Add a collection type customers can order (Butter, Mix, Special)."
     >
       <PageActions backHref={routes.collectionPackages.list} className="mb-6" />
       <CollectionPackageForm
-        submitLabel="Create package"
+        submitLabel="Create collection"
         isSubmitting={isSubmitting}
         error={error}
         onSubmit={handleSubmit}
